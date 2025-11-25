@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile — Movie Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f9ff',
+              100: '#e6f0ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af'
+            }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
+        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="navProfileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
+            <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <!-- Profile Header -->
+      <section class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6 shadow-lg">
+        <div class="flex flex-col md:flex-row gap-6 items-start">
+          <!-- Profile Picture -->
+          <div class="shrink-0">
+            <div id="profilePicture" class="h-32 w-32 rounded-full bg-slate-700 flex items-center justify-center text-4xl font-bold text-slate-300 overflow-hidden">
+              <span id="profileInitials">U</span>
+            </div>
+          </div>
+
+          <!-- Profile Info -->
+          <div class="flex-1 space-y-4">
+            <div>
+              <h1 id="profileName" class="text-3xl font-bold tracking-tight text-slate-100">Loading...</h1>
+              <p id="profileBio" class="text-slate-400 mt-2 text-sm max-w-2xl">Bio will appear here...</p>
+            </div>
+
+            <div class="flex flex-wrap gap-4 text-sm">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                </svg>
+                <span class="text-slate-300">Favorite Genre: <span id="favGenre" class="text-brand-400 font-medium">—</span></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="text-slate-400">Joined <span id="joinedDate">—</span></span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div id="actionButtons" class="flex flex-wrap gap-3">
+              <!-- Dynamically populated based on context -->
+            </div>
+
+            <!-- Friendship Status Alert -->
+            <div id="friendshipAlert" class="hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabbed Content -->
+      <section class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 shadow-lg overflow-hidden">
+        <!-- Tab Navigation -->
+        <div role="tablist" class="flex border-b border-slate-700/60 bg-slate-900/40">
+          <button id="tab-watchlist" role="tab" aria-selected="true" aria-controls="panel-watchlist" data-tab="watchlist" class="px-6 py-3 text-sm font-medium border-b-2 border-brand-600 text-brand-400 transition-colors">
+            Watchlist
+          </button>
+          <button id="tab-reviews" role="tab" aria-selected="false" aria-controls="panel-reviews" data-tab="reviews" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+            Reviews
+          </button>
+          <button id="tab-friends" role="tab" aria-selected="false" aria-controls="panel-friends" data-tab="friends" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+            Friends
+          </button>
+        </div>
+
+        <!-- Tab Panels -->
+        <div class="p-6">
+          <!-- Panel 1: Watchlist -->
+          <div id="panel-watchlist" role="tabpanel" aria-labelledby="tab-watchlist" class="space-y-6">
+            <div class="space-y-4">
+              <div>
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+                  Watching
+                </h3>
+                <div id="watchlistWatching" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div class="animate-pulse bg-slate-700/50 rounded-lg h-64"></div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                  Completed
+                </h3>
+                <div id="watchlistCompleted" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div class="animate-pulse bg-slate-700/50 rounded-lg h-64"></div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+                  To Watch
+                </h3>
+                <div id="watchlistToWatch" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div class="animate-pulse bg-slate-700/50 rounded-lg h-64"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Reviews -->
+          <div id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews" hidden class="space-y-4">
+            <div id="reviewsList">
+              <div class="animate-pulse bg-slate-700/50 rounded-lg h-32"></div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Friends -->
+          <div id="panel-friends" role="tabpanel" aria-labelledby="tab-friends" hidden>
+            <div id="friendsList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div class="animate-pulse bg-slate-700/50 rounded-lg h-40"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">All rights reserved.</span>
+      <span class="opacity-70">User Profile 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    let currentUserId = null;
+    let profileUserId = null;
+    let profileData = null;
+    let friendshipStatus = null;
+
+    function getUserId() {
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get('id');
+      if (idParam === 'me' || !idParam) return 'me';
+      return parseInt(idParam) || 'me';
+    }
+
+    async function loadCurrentUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) throw new Error('Not authenticated');
+        const data = await res.json();
+        const user = data.user || data;
+        currentUserId = user.user_id || user.id;
+        return currentUserId;
+      } catch (err) {
+        console.error('Failed to load current user:', err);
+        return null;
+      }
+    }
+
+    async function loadProfile() {
+      const targetId = getUserId();
+      await loadCurrentUser();
+
+      // Determine actual user ID
+      if (targetId === 'me') {
+        profileUserId = currentUserId;
+      } else {
+        profileUserId = targetId;
+      }
+
+      try {
+        const res = await fetch(`/api/users/${profileUserId}`);
+        if (!res.ok) throw new Error('User not found');
+        const data = await res.json();
+        profileData = data.user || data;
+
+        // Populate profile header
+        document.getElementById('profileName').textContent = profileData.name || 'Unknown User';
+        document.getElementById('profileBio').textContent = profileData.bio || 'No bio provided.';
+        document.getElementById('favGenre').textContent = profileData.fav_genre || 'None';
+        document.getElementById('joinedDate').textContent = profileData.joined_date ? new Date(profileData.joined_date).toLocaleDateString() : 'Unknown';
+
+        // Profile picture or initials
+        const picEl = document.getElementById('profilePicture');
+        const initialsEl = document.getElementById('profileInitials');
+        if (profileData.profile_picture) {
+          picEl.innerHTML = `<img src="${profileData.profile_picture}" alt="${profileData.name}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />`;
+        } else {
+          const initials = (profileData.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          initialsEl.textContent = initials;
+        }
+
+        // Load friendship status if viewing another user
+        if (profileUserId !== currentUserId) {
+          await loadFriendshipStatus();
+        }
+
+        // Render action buttons
+        renderActionButtons();
+
+        // Load tabs
+        await Promise.all([
+          loadWatchlist(),
+          loadReviews(),
+          loadFriends()
+        ]);
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        document.getElementById('profileName').textContent = 'Error Loading Profile';
+        document.getElementById('profileBio').textContent = err.message;
+      }
+    }
+
+    async function loadFriendshipStatus() {
+      if (!currentUserId || profileUserId === currentUserId) return;
+
+      try {
+        const res = await fetch(`/api/friendship/status?user_id=${profileUserId}`);
+        if (res.ok) {
+          const data = await res.json();
+          friendshipStatus = data.status; // 'accepted', 'pending', 'none'
+        }
+      } catch (err) {
+        console.error('Failed to load friendship status:', err);
+      }
+    }
+
+    function renderActionButtons() {
+      const container = document.getElementById('actionButtons');
+      container.innerHTML = '';
+
+      if (profileUserId === currentUserId) {
+        // Self profile
+        const editBtn = document.createElement('a');
+        editBtn.href = './settings.html';
+        editBtn.className = 'inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-md text-sm font-medium transition-colors';
+        editBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Edit Profile`;
+        container.appendChild(editBtn);
+      } else {
+        // Other user's profile
+        if (friendshipStatus === 'accepted') {
+          // Already friends
+          const friendBadge = document.createElement('span');
+          friendBadge.className = 'inline-flex items-center gap-2 px-4 py-2 bg-green-600/20 border border-green-600/40 rounded-md text-sm font-medium text-green-300';
+          friendBadge.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg> Friends`;
+          container.appendChild(friendBadge);
+        } else if (friendshipStatus === 'pending') {
+          // Request pending
+          const pendingBadge = document.createElement('span');
+          pendingBadge.className = 'inline-flex items-center gap-2 px-4 py-2 bg-yellow-600/20 border border-yellow-600/40 rounded-md text-sm font-medium text-yellow-300';
+          pendingBadge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Request Pending`;
+          container.appendChild(pendingBadge);
+        } else {
+          // No friendship
+          const addFriendBtn = document.createElement('button');
+          addFriendBtn.id = 'addFriendBtn';
+          addFriendBtn.className = 'inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-md text-sm font-medium transition-colors';
+          addFriendBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg> Send Friend Request`;
+          addFriendBtn.addEventListener('click', sendFriendRequest);
+          container.appendChild(addFriendBtn);
+        }
+
+        // Message button
+        const messageBtn = document.createElement('a');
+        messageBtn.href = `./messages.html?user_id=${profileUserId}`;
+        messageBtn.className = 'inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-medium transition-colors';
+        messageBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Send Message`;
+        container.appendChild(messageBtn);
+      }
+    }
+
+    async function sendFriendRequest() {
+      const btn = document.getElementById('addFriendBtn');
+      if (!btn) return;
+
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...`;
+
+      try {
+        const res = await fetch('/api/friendship/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friend_id: profileUserId })
+        });
+
+        if (!res.ok) throw new Error('Failed to send request');
+
+        const alertEl = document.getElementById('friendshipAlert');
+        alertEl.className = 'px-4 py-3 rounded-md bg-green-600/20 border border-green-600/40 text-green-300 text-sm';
+        alertEl.textContent = 'Friend request sent successfully!';
+        alertEl.classList.remove('hidden');
+
+        friendshipStatus = 'pending';
+        renderActionButtons();
+
+        setTimeout(() => alertEl.classList.add('hidden'), 5000);
+      } catch (err) {
+        const alertEl = document.getElementById('friendshipAlert');
+        alertEl.className = 'px-4 py-3 rounded-md bg-red-600/20 border border-red-600/40 text-red-300 text-sm';
+        alertEl.textContent = err.message;
+        alertEl.classList.remove('hidden');
+
+        btn.disabled = false;
+        renderActionButtons();
+      }
+    }
+
+    async function loadWatchlist() {
+      const watching = document.getElementById('watchlistWatching');
+      const completed = document.getElementById('watchlistCompleted');
+      const toWatch = document.getElementById('watchlistToWatch');
+
+      watching.innerHTML = '';
+      completed.innerHTML = '';
+      toWatch.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/users/${profileUserId}/watchlist`);
+        if (!res.ok) throw new Error('Failed to load watchlist');
+        const items = await res.json();
+
+        const grouped = {
+          watching: items.filter(i => i.status === 'watching'),
+          completed: items.filter(i => i.status === 'completed'),
+          'to-watch': items.filter(i => i.status === 'to-watch')
+        };
+
+        if (grouped.watching.length === 0) watching.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No movies currently watching.</p>';
+        else grouped.watching.forEach(item => watching.appendChild(createWatchlistCard(item)));
+
+        if (grouped.completed.length === 0) completed.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No completed movies.</p>';
+        else grouped.completed.forEach(item => completed.appendChild(createWatchlistCard(item)));
+
+        if (grouped['to-watch'].length === 0) toWatch.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No movies to watch.</p>';
+        else grouped['to-watch'].forEach(item => toWatch.appendChild(createWatchlistCard(item)));
+      } catch (err) {
+        console.error('Failed to load watchlist:', err);
+        watching.innerHTML = '<p class="text-sm text-red-400 col-span-full">Error loading watchlist.</p>';
+      }
+    }
+
+    function createWatchlistCard(item) {
+      console.log('Creating watchlist card for item:', item);
+      const card = document.createElement('a');
+      card.href = `./movie.html?id=${item.movie_id}`;
+      card.className = 'block bg-slate-800 rounded-lg overflow-hidden border border-slate-700/60 hover:border-brand-600/60 transition-colors group';
+      
+      const posterUrl = item.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster';
+      const title = item.title || item.movie_title || 'Untitled';
+      card.innerHTML = `
+        <div class="aspect-[2/3] bg-slate-700 overflow-hidden">
+          <img src="${posterUrl}" alt="${title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />
+        </div>
+        <div class="p-3">
+          <h4 class="text-sm font-medium line-clamp-2">${title}</h4>
+          ${item.progress_percent ? `<div class="mt-2 h-1.5 rounded-full bg-slate-700 overflow-hidden"><div class="h-full bg-brand-600" style="width:${item.progress_percent}%"></div></div>` : ''}
+        </div>
+      `;
+      return card;
+    }
+
+    async function loadReviews() {
+      const container = document.getElementById('reviewsList');
+      container.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/users/${profileUserId}/reviews`);
+        if (!res.ok) throw new Error('Failed to load reviews');
+        const reviews = await res.json();
+
+        if (reviews.length === 0) {
+          container.innerHTML = '<p class="text-sm text-slate-400">No reviews yet.</p>';
+          return;
+        }
+
+        reviews.forEach(review => {
+          container.appendChild(createReviewItem(review));
+        });
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+        container.innerHTML = '<p class="text-sm text-red-400">Error loading reviews.</p>';
+      }
+    }
+
+    function createReviewItem(review) {
+      const div = document.createElement('div');
+      div.className = 'bg-slate-900/40 rounded-lg p-4 border border-slate-700/40 space-y-2';
+      
+      div.innerHTML = `
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <a href="./movie.html?id=${review.movie_id}" class="font-medium text-brand-400 hover:text-brand-300 transition-colors">${review.movie_title || 'Movie'}</a>
+            <p class="text-xs text-slate-400 mt-1">${review.created_date ? new Date(review.created_date).toLocaleDateString() : 'Unknown date'}</p>
+          </div>
+          ${review.is_spoiler ? '<span class="px-2 py-1 text-xs rounded bg-red-600/20 text-red-300 border border-red-600/40">Spoiler</span>' : ''}
+        </div>
+        <p class="text-sm text-slate-300 ${review.is_spoiler ? 'blur-sm hover:blur-none transition-all cursor-pointer' : ''}">${review.review_text}</p>
+        <div class="flex items-center gap-4 text-xs text-slate-400">
+          <span>${review.helpful_count || 0} found helpful</span>
+        </div>
+      `;
+      return div;
+    }
+
+    async function loadFriends() {
+      const container = document.getElementById('friendsList');
+      container.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/users/${profileUserId}/friends`);
+        if (!res.ok) throw new Error('Failed to load friends');
+        const friends = await res.json();
+
+        if (friends.length === 0) {
+          container.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No friends yet.</p>';
+          return;
+        }
+
+        friends.forEach(friend => {
+          container.appendChild(createFriendCard(friend));
+        });
+      } catch (err) {
+        console.error('Failed to load friends:', err);
+        container.innerHTML = '<p class="text-sm text-red-400 col-span-full">Error loading friends.</p>';
+      }
+    }
+
+    function createFriendCard(friend) {
+      const card = document.createElement('a');
+      card.href = `./profile.html?id=${friend.id || friend.user_id}`;
+      card.className = 'block bg-slate-800 rounded-lg overflow-hidden border border-slate-700/60 hover:border-brand-600/60 transition-colors p-4 text-center group';
+      
+      const initials = (friend.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      
+      card.innerHTML = `
+        <div class="mx-auto h-16 w-16 rounded-full bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-300 mb-3 overflow-hidden group-hover:scale-105 transition-transform">
+          ${friend.profile_picture ? `<img src="${friend.profile_picture}" alt="${friend.name}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />` : initials}
+        </div>
+        <h4 class="text-sm font-medium line-clamp-1">${friend.name || 'Unknown'}</h4>
+      `;
+      return card;
+    }
+
+    // Tab switching logic
+    function initTabs() {
+      const tabs = document.querySelectorAll('[role="tab"]');
+      const panels = {
+        watchlist: document.getElementById('panel-watchlist'),
+        reviews: document.getElementById('panel-reviews'),
+        friends: document.getElementById('panel-friends')
+      };
+
+      function activate(tabName) {
+        tabs.forEach(tab => {
+          const isActive = tab.dataset.tab === tabName;
+          tab.setAttribute('aria-selected', isActive);
+          tab.classList.toggle('border-brand-600', isActive);
+          tab.classList.toggle('text-brand-400', isActive);
+          tab.classList.toggle('border-transparent', !isActive);
+          tab.classList.toggle('text-slate-400', !isActive);
+        });
+
+        Object.entries(panels).forEach(([key, panel]) => {
+          if (key === tabName) {
+            panel.removeAttribute('hidden');
+          } else {
+            panel.setAttribute('hidden', '');
+          }
+        });
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => activate(tab.dataset.tab));
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTabs();
+      await loadProfile();
+    });
+  </script>
+  <script>
+  (function() {
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+            const movies = await res.json();
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year||''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch {}
+        }, 300);
+      });
+    }
+    if (notifBtn) {
+      notifBtn.addEventListener('click', async () => {
+        notifDropdown.classList.toggle('hidden');
+        if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+      });
+    }
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const res = await fetch('/api/notifications?unread=true');
+        const notifs = await res.json();
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch {}
+    }
+    if (profileBtn) { profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden')); }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const user = await res.json();
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name||'U').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatar.textContent = initials;
+        await loadNotifications();
+      } catch {}
+    })();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        alert('Logout functionality - redirect to login page');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) { notifDropdown.classList.add('hidden'); }
+      if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) { profileDropdown.classList.add('hidden'); }
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) { searchResults.classList.add('hidden'); }
+    });
+  })();
+  </script>
+</body>
+</html>

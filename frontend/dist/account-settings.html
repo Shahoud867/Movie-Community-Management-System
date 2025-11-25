@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account Settings — Movie Community</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
+        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
+            <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight mb-2">Account Settings</h1>
+        <p class="text-slate-400 text-sm">Manage your email address and password security.</p>
+      </div>
+
+      <!-- Current Email Display -->
+      <div class="mb-6 bg-slate-800/40 backdrop-blur rounded-xl border border-slate-700/60 p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-300 mb-1">Current Email</p>
+            <p id="currentEmail" class="text-lg font-semibold">loading@example.com</p>
+          </div>
+          <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Change Email Form -->
+      <form id="emailForm" class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6 shadow-lg space-y-5 mb-6" novalidate>
+        <div class="border-b border-slate-700/60 pb-3">
+          <h2 class="text-xl font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Change Email Address
+          </h2>
+        </div>
+
+        <div class="space-y-2">
+          <label for="newEmail" class="block text-sm font-medium">New Email <span class="text-red-400">*</span></label>
+          <input 
+            type="email" 
+            id="newEmail" 
+            name="newEmail" 
+            required
+            autocomplete="email"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="newemail@example.com"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="emailPassword" class="block text-sm font-medium">Current Password <span class="text-red-400">*</span></label>
+          <input 
+            type="password" 
+            id="emailPassword" 
+            name="emailPassword" 
+            required
+            autocomplete="current-password"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="Enter your current password"
+          />
+          <p class="text-xs text-slate-400">Confirm your identity to change email.</p>
+        </div>
+
+        <div id="emailAlerts" class="space-y-2"></div>
+
+        <div class="flex gap-3 pt-2">
+          <button 
+            type="submit" 
+            id="emailSubmitBtn"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-500 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg id="emailSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="emailBtnText">Update Email</span>
+          </button>
+          <button 
+            type="reset"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-medium transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+
+      <!-- Change Password Form -->
+      <form id="passwordForm" class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6 shadow-lg space-y-5" novalidate>
+        <div class="border-b border-slate-700/60 pb-3">
+          <h2 class="text-xl font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            Change Password
+          </h2>
+        </div>
+
+        <div class="space-y-2">
+          <label for="currentPassword" class="block text-sm font-medium">Current Password <span class="text-red-400">*</span></label>
+          <input 
+            type="password" 
+            id="currentPassword" 
+            name="currentPassword" 
+            required
+            autocomplete="current-password"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="Enter current password"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="newPassword" class="block text-sm font-medium">New Password <span class="text-red-400">*</span></label>
+          <input 
+            type="password" 
+            id="newPassword" 
+            name="newPassword" 
+            required
+            minlength="8"
+            autocomplete="new-password"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="Enter new password"
+          />
+          <p class="text-xs text-slate-400">Minimum 8 characters. Use a strong, unique password.</p>
+        </div>
+
+        <div class="space-y-2">
+          <label for="confirmPassword" class="block text-sm font-medium">Confirm New Password <span class="text-red-400">*</span></label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            required
+            minlength="8"
+            autocomplete="new-password"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="Re-enter new password"
+          />
+        </div>
+
+        <!-- Password Strength Indicator -->
+        <div id="passwordStrength" class="hidden space-y-2">
+          <div class="flex gap-1">
+            <div class="h-1.5 flex-1 rounded-full bg-slate-700" data-strength="1"></div>
+            <div class="h-1.5 flex-1 rounded-full bg-slate-700" data-strength="2"></div>
+            <div class="h-1.5 flex-1 rounded-full bg-slate-700" data-strength="3"></div>
+            <div class="h-1.5 flex-1 rounded-full bg-slate-700" data-strength="4"></div>
+          </div>
+          <p id="strengthText" class="text-xs text-slate-400">Password strength: <span class="font-medium">-</span></p>
+        </div>
+
+        <div id="passwordAlerts" class="space-y-2"></div>
+
+        <div class="flex gap-3 pt-2">
+          <button 
+            type="submit" 
+            id="passwordSubmitBtn"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-500 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg id="passwordSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="passwordBtnText">Update Password</span>
+          </button>
+          <button 
+            type="reset"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-medium transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+
+      <!-- Security Notice -->
+      <div class="mt-8 p-5 bg-blue-600/10 border border-blue-600/30 rounded-xl">
+        <div class="flex gap-3">
+          <svg class="w-5 h-5 text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div class="space-y-1">
+            <p class="text-sm font-medium text-blue-300">Security Tip</p>
+            <p class="text-xs text-blue-200/80">Never share your password with anyone. If you suspect unauthorized access to your account, change your password immediately.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">All rights reserved.</span>
+      <span class="opacity-70">Account Settings 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    let currentUser = null;
+
+    // Load current user data
+    async function loadUserData() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) throw new Error('Not authenticated');
+        currentUser = await res.json();
+
+        document.getElementById('currentEmail').textContent = currentUser.email || 'N/A';
+      } catch (err) {
+        console.error('Failed to load user data:', err);
+        showAlert('emailAlerts', 'error', 'Failed to load account information.');
+      }
+    }
+
+    // Show alert message
+    function showAlert(containerId, type, message) {
+      const container = document.getElementById(containerId);
+      const alert = document.createElement('div');
+      
+      const styles = {
+        success: 'bg-green-600/20 border-green-600/40 text-green-300',
+        error: 'bg-red-600/20 border-red-600/40 text-red-300',
+        warning: 'bg-yellow-600/20 border-yellow-600/40 text-yellow-300',
+        info: 'bg-blue-600/20 border-blue-600/40 text-blue-300'
+      };
+
+      alert.className = `px-4 py-3 rounded-md border text-sm ${styles[type] || styles.info}`;
+      alert.textContent = message;
+      
+      container.innerHTML = '';
+      container.appendChild(alert);
+
+      setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Email validation
+    function validateEmail(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return regex.test(email);
+    }
+
+    // Password strength calculator
+    function calculatePasswordStrength(password) {
+      let strength = 0;
+      if (password.length >= 8) strength++;
+      if (password.length >= 12) strength++;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+      if (/\d/.test(password)) strength++;
+      if (/[^a-zA-Z0-9]/.test(password)) strength++;
+      return Math.min(4, strength);
+    }
+
+    function updatePasswordStrength(password) {
+      const strengthDiv = document.getElementById('passwordStrength');
+      const bars = strengthDiv.querySelectorAll('[data-strength]');
+      const textEl = document.getElementById('strengthText');
+      
+      if (!password) {
+        strengthDiv.classList.add('hidden');
+        return;
+      }
+
+      strengthDiv.classList.remove('hidden');
+      const strength = calculatePasswordStrength(password);
+      const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+      const colors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+
+      bars.forEach((bar, index) => {
+        bar.className = 'h-1.5 flex-1 rounded-full';
+        if (index < strength) {
+          bar.classList.add(colors[strength - 1]);
+        } else {
+          bar.classList.add('bg-slate-700');
+        }
+      });
+
+      textEl.innerHTML = `Password strength: <span class="font-medium">${labels[strength - 1] || 'Very Weak'}</span>`;
+    }
+
+    // Handle email change
+    async function handleEmailChange(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const newEmail = form.newEmail.value.trim();
+      const password = form.emailPassword.value.trim();
+
+      if (!newEmail || !password) {
+        showAlert('emailAlerts', 'error', 'All fields are required.');
+        return;
+      }
+
+      if (!validateEmail(newEmail)) {
+        showAlert('emailAlerts', 'error', 'Please enter a valid email address.');
+        return;
+      }
+
+      if (newEmail === currentUser.email) {
+        showAlert('emailAlerts', 'warning', 'New email is the same as current email.');
+        return;
+      }
+
+      const btn = document.getElementById('emailSubmitBtn');
+      const btnText = document.getElementById('emailBtnText');
+      const spinner = document.getElementById('emailSpinner');
+
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+      btnText.textContent = 'Updating...';
+
+      try {
+        const res = await fetch('/api/users/me/email', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: newEmail, password })
+        });
+
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.message || 'Failed to update email');
+        }
+
+        showAlert('emailAlerts', 'success', 'Email updated successfully!');
+        document.getElementById('currentEmail').textContent = newEmail;
+        currentUser.email = newEmail;
+        form.reset();
+      } catch (err) {
+        console.error('Failed to update email:', err);
+        showAlert('emailAlerts', 'error', err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Update Email';
+      }
+    }
+
+    // Handle password change
+    async function handlePasswordChange(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const currentPassword = form.currentPassword.value.trim();
+      const newPassword = form.newPassword.value.trim();
+      const confirmPassword = form.confirmPassword.value.trim();
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showAlert('passwordAlerts', 'error', 'All fields are required.');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        showAlert('passwordAlerts', 'error', 'Password must be at least 8 characters long.');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showAlert('passwordAlerts', 'error', 'New passwords do not match.');
+        return;
+      }
+
+      if (newPassword === currentPassword) {
+        showAlert('passwordAlerts', 'warning', 'New password must be different from current password.');
+        return;
+      }
+
+      const btn = document.getElementById('passwordSubmitBtn');
+      const btnText = document.getElementById('passwordBtnText');
+      const spinner = document.getElementById('passwordSpinner');
+
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+      btnText.textContent = 'Updating...';
+
+      try {
+        const res = await fetch('/api/users/me/password', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+        });
+
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.message || 'Failed to update password');
+        }
+
+        showAlert('passwordAlerts', 'success', 'Password updated successfully!');
+        form.reset();
+        document.getElementById('passwordStrength').classList.add('hidden');
+      } catch (err) {
+        console.error('Failed to update password:', err);
+        showAlert('passwordAlerts', 'error', err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Update Password';
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserData();
+
+      // Email form
+      const emailForm = document.getElementById('emailForm');
+      emailForm.addEventListener('submit', handleEmailChange);
+
+      // Password form
+      const passwordForm = document.getElementById('passwordForm');
+      passwordForm.addEventListener('submit', handlePasswordChange);
+
+      // Password strength indicator
+      const newPasswordInput = document.getElementById('newPassword');
+      newPasswordInput.addEventListener('input', (e) => {
+        updatePasswordStrength(e.target.value);
+      });
+    });
+  </script>
+  <script>
+  (function() {
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+            const movies = await res.json();
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year||''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch {}
+        }, 300);
+      });
+    }
+    if (notifBtn) {
+      notifBtn.addEventListener('click', async () => {
+        notifDropdown.classList.toggle('hidden');
+        if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+      });
+    }
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const res = await fetch('/api/notifications?unread=true');
+        const notifs = await res.json();
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch {}
+    }
+    if (profileBtn) { profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden')); }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const user = await res.json();
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name||'U').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatar.textContent = initials;
+        await loadNotifications();
+      } catch {}
+    })();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        alert('Logout functionality - redirect to login page');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) { notifDropdown.classList.add('hidden'); }
+      if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) { profileDropdown.classList.add('hidden'); }
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) { searchResults.classList.add('hidden'); }
+    });
+  })();
+  </script>
+</body>
+</html>

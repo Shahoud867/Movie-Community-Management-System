@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin • Restricted Words</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+    <div id="sidebar"></div>
+    <main class="flex-1 min-w-0">
+        <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+            <h1 class="text-lg font-semibold">Restricted Words</h1>
+            <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+        </header>
+        <section class="p-4 max-w-4xl">
+            <div class="bg-slate-800/60 border border-slate-700 rounded p-4 mb-4">
+                <h2 class="text-sm font-semibold mb-3">Add Restricted Word</h2>
+                <form id="addForm" class="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-3">
+                    <input id="word" required class="bg-slate-900/60 border border-slate-700 rounded px-3 py-2 text-sm"
+                        placeholder="Word*" />
+                    <select id="severity" required
+                        class="bg-slate-900/60 border border-slate-700 rounded px-3 py-2 text-sm">
+                        <option value="">Select severity</option>
+                        <option value="low">Low - Warning only</option>
+                        <option value="medium">Medium - Requires moderation</option>
+                        <option value="high">High - Auto-block</option>
+                    </select>
+                    <button class="bg-green-600 hover:bg-green-500 rounded px-4 py-2 text-sm font-medium">Add</button>
+                </form>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="text-left py-2 px-2">Word ID</th>
+                            <th class="text-left py-2 px-2">Word</th>
+                            <th class="text-left py-2 px-2">Severity</th>
+                            <th class="text-left py-2 px-2">Added By</th>
+                            <th class="text-left py-2 px-2">Added Date</th>
+                            <th class="text-left py-2 px-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <!-- API Integration: Restricted Words Management with Backend -->
+    <script>
+        (async function () {
+            const sidebar = await fetch('../components/admin-sidebar.html').then(r => r.text());
+            document.getElementById('sidebar').innerHTML = sidebar;
+
+            let editingId = null;
+
+            async function load() {
+                const tbody = document.getElementById('list');
+
+                try {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-slate-400">Loading words...</td></tr>';
+
+                    const response = await fetch('/api/admin/restricted-words', { credentials: 'include' });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to load restricted words');
+                    }
+
+                    const words = await response.json();
+
+                    if (words.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-slate-400">No restricted words found. Add one above!</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = words.map(word => {
+                        const severityBadge = getSeverityBadge(word.severity);
+                        const addedDate = new Date(word.added_date).toLocaleDateString();
+
+                        if (editingId === word.word_id) {
+                            return `<tr class="bg-slate-800/40">
+                <td class="py-2 px-2">${word.word_id}</td>
+                <td class="py-2 px-2 text-slate-500">${word.word}</td>
+                <td class="py-2 px-2">
+                  <select id="editSeverity" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm w-full">
+                    <option value="low" ${word.severity === 'low' ? 'selected' : ''}>Low</option>
+                    <option value="medium" ${word.severity === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="high" ${word.severity === 'high' ? 'selected' : ''}>High</option>
+                  </select>
+                </td>
+                <td class="py-2 px-2 text-slate-400">${word.added_by_name || 'System'}</td>
+                <td class="py-2 px-2 text-slate-400">${addedDate}</td>
+                <td class="py-2 px-2">
+                  <button data-action="save" data-id="${word.word_id}" class="text-green-400 hover:text-green-300 text-xs mr-2">Save</button>
+                  <button data-action="cancel" class="text-slate-400 hover:text-slate-300 text-xs">Cancel</button>
+                </td>
+              </tr>`;
+                        }
+
+                        return `<tr class="hover:bg-slate-800/20">
+              <td class="py-2 px-2 text-slate-400">#${word.word_id}</td>
+              <td class="py-2 px-2 font-medium">${word.word}</td>
+              <td class="py-2 px-2">${severityBadge}</td>
+              <td class="py-2 px-2 text-slate-400">${word.added_by_name || 'System'}</td>
+              <td class="py-2 px-2 text-slate-400">${addedDate}</td>
+              <td class="py-2 px-2">
+                <button data-action="edit" data-id="${word.word_id}" class="text-brand-400 hover:text-brand-300 text-xs mr-2">Edit</button>
+                <button data-action="delete" data-id="${word.word_id}" class="text-red-400 hover:text-red-300 text-xs">Delete</button>
+              </td>
+            </tr>`;
+                    }).join('');
+
+                } catch (error) {
+                    console.error('Load words error:', error);
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-red-400">Failed to load words. Please ensure you are logged in as admin.</td></tr>';
+                }
+            }
+
+            function getSeverityBadge(severity) {
+                const badges = {
+                    low: '<span class="px-2 py-1 bg-yellow-900/30 text-yellow-400 rounded text-xs">Low</span>',
+                    medium: '<span class="px-2 py-1 bg-orange-900/30 text-orange-400 rounded text-xs">Medium</span>',
+                    high: '<span class="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs">High</span>'
+                };
+                return badges[severity] || severity;
+            }
+
+            // Event delegation for all button clicks
+            document.getElementById('list').addEventListener('click', async (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const id = button.dataset.id;
+
+                if (action === 'edit') {
+                    editingId = parseInt(id);
+                    load();
+                } else if (action === 'cancel') {
+                    editingId = null;
+                    load();
+                } else if (action === 'save') {
+                    const severity = document.getElementById('editSeverity').value;
+
+                    if (!severity) {
+                        alert('Severity is required');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/admin/restricted-words/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ severity })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to update word');
+                        }
+
+                        editingId = null;
+                        load();
+                    } catch (error) {
+                        console.error('Save error:', error);
+                        alert('Failed to update word');
+                    }
+                } else if (action === 'delete') {
+                    if (!confirm('Are you sure you want to delete this restricted word?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/admin/restricted-words/${id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to delete word');
+                        }
+
+                        load();
+                    } catch (error) {
+                        console.error('Delete error:', error);
+                        alert('Failed to delete word');
+                    }
+                }
+            });
+
+            document.getElementById('addForm').addEventListener('submit', async e => {
+                e.preventDefault();
+
+                const word = document.getElementById('word').value;
+                const severity = document.getElementById('severity').value;
+
+                try {
+                    const response = await fetch('/api/admin/restricted-words', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ word, severity })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to add word');
+                    }
+
+                    document.getElementById('word').value = '';
+                    document.getElementById('severity').value = '';
+                    load();
+                } catch (error) {
+                    console.error('Add word error:', error);
+                    alert('Failed to add word');
+                }
+            });
+
+            load();
+        })();
+    </script>
+</body>
+
+</html>

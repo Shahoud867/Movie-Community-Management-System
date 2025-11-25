@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Admin Dashboard</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+    </header>
+    <section class="p-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div class="rounded border border-slate-800 bg-slate-800/60 p-4">
+        <p class="text-sm text-slate-400">Total Users</p>
+        <p id="statUsers" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="rounded border border-slate-800 bg-slate-800/60 p-4">
+        <p class="text-sm text-slate-400">Total Movies</p>
+        <p id="statMovies" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="rounded border border-slate-800 bg-slate-800/60 p-4">
+        <p class="text-sm text-slate-400">Flagged Content</p>
+        <p id="statFlagged" class="text-2xl font-semibold">—</p>
+      </div>
+    </section>
+    <section class="p-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div class="rounded border border-slate-800 bg-slate-800/60 p-4">
+        <h2 class="font-medium mb-3">New User Signups</h2>
+        <div id="chartSignups" class="h-40 flex items-end gap-2"></div>
+        <div id="chartLabels" class="mt-2 flex justify-between text-[11px] text-slate-400"></div>
+      </div>
+      <div class="rounded border border-slate-800 bg-slate-800/60 p-4">
+        <h2 class="font-medium mb-3">Recent Activity</h2>
+        <ul id="feed" class="text-sm space-y-2 max-h-40 overflow-auto"></ul>
+      </div>
+    </section>
+  </main>
+  <!-- API Integration: Connect backend to load admin dashboard data -->
+  <script>
+    (async function () {
+      // Load admin sidebar
+      const sidebar = await fetch('../components/admin-sidebar.html').then(r => r.text());
+      document.getElementById('sidebar').innerHTML = sidebar;
+
+      try {
+        // Fetch dashboard data from backend
+        const response = await fetch('/api/admin/dashboard', {
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load dashboard data');
+        }
+
+        const data = await response.json();
+
+        // Update statistics
+        document.getElementById('statUsers').textContent = data.stats.total_users || 0;
+        document.getElementById('statMovies').textContent = data.stats.total_movies || 0;
+        document.getElementById('statFlagged').textContent = data.stats.flagged_content || 0;
+
+        // Render signup chart
+        const chart = document.getElementById('chartSignups');
+        const labels = document.getElementById('chartLabels');
+
+        if (data.signup_chart && data.signup_chart.length > 0) {
+          const maxCount = Math.max(...data.signup_chart.map(d => d.count));
+          chart.innerHTML = data.signup_chart.map(day => {
+            const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+            return `<div class="flex-1 bg-brand-500 rounded-t" style="height: ${height}%" title="${day.count} signups"></div>`;
+          }).join('');
+
+          labels.innerHTML = data.signup_chart.map(day => {
+            const date = new Date(day.date);
+            return `<span>${date.getMonth() + 1}/${date.getDate()}</span>`;
+          }).join('');
+        } else {
+          chart.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-400 text-sm">No signup data available</div>';
+        }
+
+        // Render activity feed
+        const feed = document.getElementById('feed');
+        if (data.recent_activity && data.recent_activity.length > 0) {
+          feed.innerHTML = data.recent_activity.map(activity => {
+            const time = new Date(activity.timestamp).toLocaleString();
+            let icon = '👤';
+            let text = '';
+
+            switch (activity.type) {
+              case 'user_joined':
+                icon = '👤';
+                text = `${activity.user_name} joined the platform`;
+                break;
+              case 'post_created':
+                icon = '📝';
+                text = `${activity.user_name} created a post`;
+                break;
+              case 'event_created':
+                icon = '🎬';
+                text = `${activity.user_name} created an event`;
+                break;
+              default:
+                text = `${activity.user_name} - ${activity.type}`;
+            }
+
+            return `<li class="flex items-start gap-2">
+              <span>${icon}</span>
+              <div class="flex-1">
+                <p class="text-slate-200">${text}</p>
+                <p class="text-xs text-slate-500">${time}</p>
+              </div>
+            </li>`;
+          }).join('');
+        } else {
+          feed.innerHTML = '<li class="text-slate-400">No recent activity</li>';
+        }
+
+      } catch (error) {
+        console.error('Dashboard error:', error);
+        document.getElementById('statUsers').textContent = 'Error';
+        document.getElementById('statMovies').textContent = 'Error';
+        document.getElementById('statFlagged').textContent = 'Error';
+
+        const chart = document.getElementById('chartSignups');
+        chart.innerHTML = '<div class="flex-1 flex items-center justify-center text-red-400 text-sm">Failed to load data. Please login as admin.</div>';
+
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '<li class="text-red-400">Failed to load activity feed. Please login as admin.</li>';
+      }
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Movie System – Welcome</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+        // Tailwind custom brand colors – keep consistent with admin UI
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f9ff',
+                            100: '#e6f0ff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 flex items-center justify-center p-4">
+    <!-- Header with smooth animation -->
+    <header class="w-full text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-extrabold text-white animate-fade-in-up">
+            Movie Community System
+        </h1>
+    </header>
+
+    <div class="max-w-5xl w-full grid gap-8 md:grid-cols-2">
+        <!-- User Card -->
+        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-8 shadow-2xl">
+            <h2 class="text-3xl font-bold text-white mb-4">Movie Explorer</h2>
+            <p class="text-slate-300 mb-6">Discover movies, create watch‑lists, and connect with friends.</p>
+            <div class="flex flex-col gap-3">
+                <a href="login.html"
+                    class="bg-brand-600 hover:bg-brand-700 text-white text-center py-2 rounded transition-colors shadow">
+                    Sign In
+                </a>
+                <a href="register.html"
+                    class="bg-slate-700 hover:bg-slate-600 text-white text-center py-2 rounded transition-colors shadow">
+                    Sign Up
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Card -->
+        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-8 shadow-2xl">
+            <h2 class="text-3xl font-bold text-white mb-4">Admin Panel</h2>
+            <p class="text-slate-300 mb-6">Manage movies, users, moderation, and analytics.</p>
+            <div class="flex flex-col gap-3">
+                <a href="admin/login.html"
+                    class="bg-brand-600 hover:bg-brand-700 text-white text-center py-2 rounded transition-colors shadow">
+                    Admin Sign In
+                </a>
+                <a href="admin/register.html"
+                    class="bg-slate-700 hover:bg-slate-600 text-white text-center py-2 rounded transition-colors shadow">
+                    Admin Sign Up
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin • Content Moderation</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Moderation Queue</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+    </header>
+    <section class="p-4 max-w-4xl">
+      <div class="mb-4 flex gap-2 items-center justify-between">
+        <p class="text-sm text-slate-400">Review flagged content from users.</p>
+        <button id="refreshBtn" class="bg-brand-600 hover:bg-brand-500 rounded px-3 py-2 text-sm">Refresh</button>
+      </div>
+      <div id="queue" class="space-y-3"></div>
+      <div id="emptyState" class="hidden text-center py-12 text-slate-400">
+        <svg class="mx-auto h-12 w-12 text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-sm">No flagged content in queue.</p>
+      </div>
+    </section>
+  </main>
+  <!-- API Integration: Connect backend to manage moderation -->
+  <script>
+    (async function () {
+      document.getElementById('sidebar').innerHTML = await fetch('../components/admin-sidebar.html').then(r => r.text());
+
+      async function load() {
+        const queue = document.getElementById('queue');
+        const emptyState = document.getElementById('emptyState');
+
+        try {
+          const response = await fetch('/api/admin/moderation/flagged');
+          if (!response.ok) throw new Error('Failed to fetch moderation queue');
+
+          const items = await response.json();
+
+          if (items.length === 0) {
+            queue.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            return;
+          }
+
+          emptyState.classList.add('hidden');
+          queue.innerHTML = items.map(item => `
+            <div class="bg-slate-800 rounded-lg p-4 border border-slate-700/50">
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2 py-0.5 rounded text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-wide">${item.content_type}</span>
+                    <span class="text-slate-400 text-sm">Flagged by System</span>
+                  </div>
+                  <div class="text-sm text-slate-300">
+                    <span class="text-slate-500">Reason:</span> ${item.reason}
+                  </div>
+                </div>
+                <div class="text-xs text-slate-500">
+                  ${new Date(item.action_date).toLocaleDateString()}
+                </div>
+              </div>
+              
+              <div class="bg-slate-900/50 rounded p-3 mb-4 text-slate-300 text-sm border border-slate-700/50">
+                ${item.content_text || '<span class="italic text-slate-500">Content not available</span>'}
+              </div>
+              
+              <div class="flex justify-end gap-2">
+                <button data-action="delete" data-id="${item.moderation_id}" class="px-3 py-1.5 rounded text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
+                  Delete Content
+                </button>
+                <button data-action="approve" data-id="${item.moderation_id}" class="px-3 py-1.5 rounded text-sm font-medium bg-brand-600 text-white hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20">
+                  Keep Content
+                </button>
+              </div>
+            </div>
+          `).join('');
+
+        } catch (error) {
+          console.error('Error loading moderation queue:', error);
+          queue.innerHTML = `<div class="text-red-400 text-center py-4">Error loading queue. Please try again.</div>`;
+        }
+      }
+
+      // Event delegation for all button clicks
+      document.getElementById('queue').addEventListener('click', async (e) => {
+        const button = e.target.closest('button[data-action]');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const id = button.dataset.id;
+
+        if (action === 'approve') {
+          if (!confirm('Are you sure you want to keep this content? The flag will be removed.')) return;
+
+          try {
+            const response = await fetch(`/api/admin/moderation/${id}/approve`, {
+              method: 'PATCH'
+            });
+
+            if (response.ok) {
+              load();
+            } else {
+              alert('Failed to approve content');
+            }
+          } catch (error) {
+            console.error('Error approving content:', error);
+            alert('Error approving content');
+          }
+        } else if (action === 'delete') {
+          if (!confirm('Are you sure you want to DELETE this content? This action cannot be undone.')) return;
+
+          try {
+            const response = await fetch(`/api/admin/moderation/${id}`, {
+              method: 'DELETE'
+            });
+
+            if (response.ok) {
+              load();
+            } else {
+              alert('Failed to delete content');
+            }
+          } catch (error) {
+            console.error('Error deleting content:', error);
+            alert('Error deleting content');
+          }
+        }
+      });
+
+      document.getElementById('refreshBtn').addEventListener('click', load);
+      load();
+    })();
+  </script>
+</body>
+
+</html>

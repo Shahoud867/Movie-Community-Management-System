@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User • Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Brand colors – consistent with admin UI
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f9ff',
+              100: '#e6f0ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body
+  class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-slate-800/60 border border-slate-700 rounded-xl p-8 shadow-2xl animate-fade-in-up">
+    <header class="text-center mb-6">
+      <h1 class="text-3xl font-extrabold text-white">Create Account</h1>
+      <p class="text-slate-400 mt-2">Join the Movie Community</p>
+    </header>
+
+    <form id="userRegisterForm" class="space-y-5">
+      <div>
+        <label class="block text-sm text-slate-300 mb-1" for="name">Full Name</label>
+        <input type="text" id="name" name="name" required autocomplete="name"
+          class="w-full px-4 py-2 bg-slate-700/50 text-slate-100 rounded focus:outline-none focus:ring-2 focus:ring-brand-600" />
+      </div>
+      <div>
+        <label class="block text-sm text-slate-300 mb-1" for="email">Email address</label>
+        <input type="email" id="email" name="email" required autocomplete="email"
+          class="w-full px-4 py-2 bg-slate-700/50 text-slate-100 rounded focus:outline-none focus:ring-2 focus:ring-brand-600" />
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <label class="block text-sm text-slate-300 mb-1" for="password">Password</label>
+          <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password"
+            class="w-full px-4 py-2 bg-slate-700/50 text-slate-100 rounded focus:outline-none focus:ring-2 focus:ring-brand-600" />
+        </div>
+        <div>
+          <label class="block text-sm text-slate-300 mb-1" for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6"
+            autocomplete="new-password"
+            class="w-full px-4 py-2 bg-slate-700/50 text-slate-100 rounded focus:outline-none focus:ring-2 focus:ring-brand-600" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-300 mb-1" for="favoriteGenre">Favorite Genre (optional)</label>
+        <select id="favoriteGenre" name="favoriteGenre"
+          class="w-full px-4 py-2 bg-slate-700/50 text-slate-100 rounded focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="">Select a genre</option>
+        </select>
+      </div>
+      <div id="formAlerts" class="space-y-2"></div>
+      <button type="submit"
+        class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2 rounded transition-colors shadow">
+        <span class="submit-label">Create Account</span>
+        <svg class="animate-spin h-4 w-4 hidden inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </button>
+      <div class="flex justify-between text-sm mt-2">
+        <a href="login.html" class="text-brand-400 hover:text-brand-300">Already have an account? Sign In</a>
+        <a href="admin/login.html" class="text-brand-400 hover:text-brand-300">Admin Sign‑In</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Utility for alerts
+    function alertMessage(type, text) {
+      const base = 'rounded px-3 py-2 text-sm';
+      const variants = {
+        success: 'bg-green-600/20 text-green-300 border border-green-600/40',
+        error: 'bg-red-600/20 text-red-300 border border-red-600/40',
+        info: 'bg-slate-600/30 text-slate-200 border border-slate-500/40',
+      };
+      const div = document.createElement('div');
+      div.className = base + ' ' + (variants[type] || variants.info);
+      div.textContent = text;
+      return div;
+    }
+
+    async function loadGenres() {
+      const select = document.getElementById('favoriteGenre');
+      try {
+        const res = await fetch('/api/genres');
+        if (!res.ok) throw new Error('Failed to load genres');
+        const data = await res.json();
+        const genres = data.genres || data;
+        genres.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.genre_id || g.id;
+          opt.textContent = g.genre_name || g.name;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Genre load error:', e);
+        select.appendChild(new Option('Could not load genres', ''));
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGenres();
+      const form = document.getElementById('userRegisterForm');
+      const alerts = document.getElementById('formAlerts');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const spinner = submitBtn.querySelector('svg');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alerts.innerHTML = '';
+        const name = form.name.value.trim();
+        const email = form.email.value.trim();
+        const password = form.password.value;
+        const confirm = form.confirmPassword.value;
+        const favoriteGenre = form.favoriteGenre.value.trim();
+
+        // Basic validation
+        if (!name || !email || !password || !confirm) {
+          alerts.appendChild(alertMessage('error', 'Please fill all required fields.'));
+          return;
+        }
+        if (password.length < 6) {
+          alerts.appendChild(alertMessage('error', 'Password must be at least 6 characters.'));
+          return;
+        }
+        if (password !== confirm) {
+          alerts.appendChild(alertMessage('error', 'Passwords do not match.'));
+          return;
+        }
+
+        submitBtn.disabled = true;
+        spinner.classList.remove('hidden');
+        try {
+          const payload = { name, email, password };
+          if (favoriteGenre) payload.fav_genre = favoriteGenre;
+          const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || 'Registration failed');
+          }
+          alerts.appendChild(alertMessage('success', 'Account created! Redirecting...'));
+          setTimeout(() => { window.location.href = './dashboard.html'; }, 800);
+        } catch (err) {
+          alerts.appendChild(alertMessage('error', err.message));
+        } finally {
+          submitBtn.disabled = false;
+          spinner.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

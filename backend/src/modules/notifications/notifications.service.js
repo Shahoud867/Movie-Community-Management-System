@@ -1,0 +1,130 @@
+const { pool } = require('../../config/db');
+
+/**
+ * Get notifications for a user
+ */
+async function getUserNotifications(userId, unreadOnly = false) {
+  let query = `
+    SELECT 
+      n.notification_id,
+      n.recipient_id,
+      n.sender_id,
+      n.notification_type,
+      n.reference_id,
+      n.message,
+      n.created_date,
+      n.is_seen,
+      n.seen_date,
+      u.name as sender_name,
+      u.profile_picture as sender_picture
+    FROM Notification n
+    LEFT JOIN Users u ON n.sender_id = u.user_id
+    WHERE n.recipient_id = ?
+  `;
+
+  const params = [userId];
+
+  if (unreadOnly) {
+    query += ` AND n.is_seen = 0`;
+  }
+
+  query += ` ORDER BY n.created_date DESC`;
+
+  const [notifications] = await pool.query(query, params);
+  return notifications;
+}
+
+/**
+ * Mark notification as seen
+ */
+async function markAsSeen(notificationId, userId) {
+  const [result] = await pool.query(
+    `UPDATE Notification 
+     SET is_seen = 1, seen_date = NOW() 
+     WHERE notification_id = ? AND recipient_id = ?`,
+    [notificationId, userId]
+  );
+
+  if (result.affectedRows === 0) {
+    throw new Error('Notification not found or access denied');
+  }
+
+  return { notification_id: notificationId, is_seen: true };
+}
+
+/**
+ * Mark all notifications as seen for a user
+ */
+async function markAllAsSeen(userId) {
+  const [result] = await pool.query(
+    `UPDATE Notification 
+     SET is_seen = 1, seen_date = NOW() 
+     WHERE recipient_id = ? AND is_seen = 0`,
+    [userId]
+  );
+
+  return { marked_count: result.affectedRows };
+}
+
+/**
+ * Create a new notification
+ */
+async function createNotification(data) {
+  const { recipient_id, sender_id, notification_type, reference_id, message } = data;
+
+  const [result] = await pool.query(
+    `INSERT INTO Notification (recipient_id, sender_id, notification_type, reference_id, message) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [recipient_id, sender_id || null, notification_type, reference_id || null, message]
+  );
+
+  return {
+    notification_id: result.insertId,
+    recipient_id,
+    sender_id,
+    notification_type,
+    reference_id,
+    message,
+    is_seen: false,
+  };
+}
+
+/**
+ * Delete a notification
+ */
+async function deleteNotification(notificationId, userId) {
+  const [result] = await pool.query(
+    `DELETE FROM Notification 
+     WHERE notification_id = ? AND recipient_id = ?`,
+    [notificationId, userId]
+  );
+
+  if (result.affectedRows === 0) {
+    throw new Error('Notification not found or access denied');
+  }
+
+  return { notification_id: notificationId };
+}
+
+/**
+ * Get unread notification count
+ */
+async function getUnreadCount(userId) {
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) as count 
+     FROM Notification 
+     WHERE recipient_id = ? AND is_seen = 0`,
+    [userId]
+  );
+
+  return { unread_count: rows[0].count };
+}
+
+module.exports = {
+  getUserNotifications,
+  markAsSeen,
+  markAllAsSeen,
+  createNotification,
+  deleteNotification,
+  getUnreadCount,
+};

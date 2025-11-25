@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin • Add New Movie</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Add New Movie</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../movies.html">← Back to Movies</a>
+    </header>
+    <section class="p-4 max-w-2xl">
+      <form id="movieForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Title <span class="text-red-400">*</span></label>
+          <input type="text" id="title" required class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Enter movie title"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Release Year <span class="text-red-400">*</span></label>
+            <input type="number" id="release_year" required min="1800" max="2100" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="2024"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Runtime (minutes)</label>
+            <input type="number" id="runtime_minutes" min="1" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="120"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Director <span class="text-red-400">*</span></label>
+          <input type="text" id="director" required class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Director name"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Description</label>
+          <textarea id="description" rows="4" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Movie description"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Poster URL</label>
+          <input type="url" id="poster_url" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="https://example.com/poster.jpg"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Genres</label>
+          <div id="genreList" class="grid grid-cols-2 gap-2 p-3 bg-slate-800/60 border border-slate-700 rounded max-h-40 overflow-y-auto">
+            <p class="text-slate-500 col-span-2 text-sm">Loading genres...</p>
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="bg-green-600 hover:bg-green-500 rounded px-4 py-2 text-sm font-medium">Save Movie</button>
+          <a href="../movies.html" class="bg-slate-700 hover:bg-slate-600 rounded px-4 py-2 text-sm font-medium inline-block">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+  <!-- API Integration: Connect backend to create movies -->
+  <script>
+    (async function(){
+      const sidebar = await fetch('../../components/admin-sidebar.html').then(r=>r.text());
+      document.getElementById('sidebar').innerHTML = sidebar;
+
+      // Load genres
+      async function loadGenres() {
+        const genreList = document.getElementById('genreList');
+        try {
+          const response = await fetch('/api/admin/genres', { credentials: 'include' });
+          if (!response.ok) throw new Error('Failed to load genres');
+          
+          const genres = await response.json();
+          
+          if (genres.length === 0) {
+            genreList.innerHTML = '<p class="text-sm text-slate-400 col-span-2">No genres available</p>';
+            return;
+          }
+          
+          genreList.innerHTML = genres.map(genre => `
+            <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-700/30 p-2 rounded">
+              <input type="checkbox" name="genres" value="${genre.genre_id}" class="rounded bg-slate-700 border-slate-600">
+              <span>${genre.genre_name}</span>
+            </label>
+          `).join('');
+        } catch (error) {
+          console.error('Load genres error:', error);
+          genreList.innerHTML = '<p class="text-sm text-red-400 col-span-2">Failed to load genres</p>';
+        }
+      }
+
+      document.getElementById('movieForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        
+        const formData = {
+          title: document.getElementById('title').value,
+          synopsis: document.getElementById('description').value,
+          release_year: parseInt(document.getElementById('release_year').value),
+          poster: document.getElementById('poster_url').value,
+          duration_minutes: document.getElementById('runtime_minutes').value ? parseInt(document.getElementById('runtime_minutes').value) : null,
+          language: 'English', // Default language
+          director: document.getElementById('director').value,
+          genres: Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(cb => parseInt(cb.value))
+        };
+        
+        try {
+          const response = await fetch('/api/admin/movies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to create movie');
+          }
+          
+          const result = await response.json();
+          alert('Movie created successfully!');
+          window.location.href = '../movies.html';
+        } catch (error) {
+          console.error('Create movie error:', error);
+          alert(error.message || 'Failed to create movie');
+        }
+      });
+      
+      loadGenres();
+    })();
+  </script>
+</body>
+</html>

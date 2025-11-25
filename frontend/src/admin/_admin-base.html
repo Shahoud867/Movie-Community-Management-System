@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Movie Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: {50:'#f5f9ff',100:'#e6f0ff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af'} } } } };
+  </script>
+  <style>.active{background-color:rgba(30,41,59,.6)}</style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0" id="content">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 id="pageTitle" class="text-lg font-semibold">Admin</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+    </header>
+    <section class="p-4" id="pageBody"></section>
+  </main>
+  <!-- API Integration: Connect backend for admin authentication -->
+  <script>
+    async function requireAdmin() {
+      // TODO: Replace with actual backend authentication
+      // For now, allow access (will be replaced with backend auth)
+      return { is_admin: true, is_super_admin: false, name: 'Admin' };
+    }
+
+    async function loadSidebar(me) {
+      const html = await fetch('../components/admin-sidebar.html').then(r=>r.text());
+      const wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      if (!me.is_super_admin) {
+        wrap.querySelectorAll('[data-super-admin="true"]').forEach(el=> el.remove());
+      }
+      document.getElementById('sidebar').appendChild(wrap.firstElementChild);
+      // Highlight current link
+      const path = location.pathname.split('/').pop();
+      document.querySelectorAll('aside a').forEach(a=>{ if(a.getAttribute('href')===path){ a.classList.add('active'); }});
+    }
+
+    window.AdminShell = { requireAdmin, loadSidebar };
+  </script>
+</body>
+</html>

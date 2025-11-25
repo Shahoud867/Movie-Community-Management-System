@@ -1,0 +1,16 @@
+{
+  "name": "movie-community-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tailwindcss -i ./src/css/input.css -o ./dist/css/styles.css -w",
+    "build:css": "tailwindcss -i ./src/css/input.css -o ./dist/css/styles.css --minify",
+    "copy:html": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path ./dist/admin | Out-Null; New-Item -ItemType Directory -Force -Path ./dist/components | Out-Null; Copy-Item -Path './src/*.html' -Destination './dist' -Force; Copy-Item -Path './src/admin' -Destination './dist' -Recurse -Force; Copy-Item -Path './src/components/*.html' -Destination './dist/components' -Recurse -Force\"",
+    "copy:assets": "powershell -NoProfile -Command \"Copy-Item -Path './src/assets' -Destination './dist' -Recurse -Force\"",
+    "postbuild:html": "node ./scripts/patch-html.js",
+    "build": "npm run build:css && npm run copy:html && npm run copy:assets && npm run postbuild:html"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13"
+  }
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin • Audit Trail</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Audit Trail</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+    </header>
+    <section class="p-4">
+      <!-- Logs Card -->
+      <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
+        <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
+          <h2 class="text-lg font-semibold">Admin Activity Logs</h2>
+          <button id="refreshBtn"
+            class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm transition duration-200">
+            Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-slate-400 border-b border-slate-700">
+              <tr>
+                <th class="text-left py-2 px-2">ID</th>
+                <th class="text-left py-2 px-2">Timestamp</th>
+                <th class="text-left py-2 px-2">Admin</th>
+                <th class="text-left py-2 px-2">Action</th>
+                <th class="text-left py-2 px-2">Entity Type</th>
+                <th class="text-left py-2 px-2">Entity ID</th>
+                <th class="text-left py-2 px-2">Details</th>
+              </tr>
+            </thead>
+            <tbody id="rows" class="divide-y divide-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (async function () {
+      document.getElementById('sidebar').innerHTML = await fetch('../components/admin-sidebar.html').then(r => r.text());
+
+      const rows = document.getElementById('rows');
+
+      async function loadAudit() {
+        try {
+          rows.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">Loading audit logs...</td></tr>';
+
+          const response = await fetch('/api/admin/audit');
+
+          if (!response.ok) {
+            throw new Error('Failed to load audit logs');
+          }
+
+          const logs = await response.json();
+
+          if (logs.length === 0) {
+            rows.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500">No audit logs found.</td></tr>';
+            return;
+          }
+
+          rows.innerHTML = logs.map(log => `
+            <tr class="hover:bg-slate-800/20">
+              <td class="py-2 px-2 text-slate-400">#${log.audit_id}</td>
+              <td class="py-2 px-2 text-slate-400">${new Date(log.operation_timestamp).toLocaleString()}</td>
+              <td class="py-2 px-2">${log.admin_name || 'System'}</td>
+              <td class="py-2 px-2">
+                <span class="px-2 py-1 rounded text-xs font-semibold ${getActionBadge(log.operation)}">
+                  ${log.operation}
+                </span>
+              </td>
+              <td class="py-2 px-2 text-slate-400">${log.target_table || '-'}</td>
+              <td class="py-2 px-2 text-slate-400">#${log.target_id || '-'}</td>
+              <td class="py-2 px-2 text-slate-400 text-xs max-w-xs truncate" title="${log.new_value || log.old_value || ''}">
+                ${log.new_value || log.old_value || '-'}
+              </td>
+            </tr>
+          `).join('');
+
+        } catch (error) {
+          console.error('Load audit error:', error);
+          rows.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-400">Failed to load audit logs. Please try again.</td></tr>';
+        }
+      }
+
+      function getActionBadge(action) {
+        const badges = {
+          'CREATE': 'bg-green-900/30 text-green-400',
+          'UPDATE': 'bg-blue-900/30 text-blue-400',
+          'DELETE': 'bg-red-900/30 text-red-400',
+          'LOGIN': 'bg-purple-900/30 text-purple-400',
+        };
+        return badges[action] || 'bg-slate-900/30 text-slate-400';
+      }
+
+      // Refresh button event listener
+      document.getElementById('refreshBtn').addEventListener('click', loadAudit);
+
+      // Initial load
+      loadAudit();
+    })();
+  </script>
+</body>
+
+</html>

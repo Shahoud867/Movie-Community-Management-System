@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile Settings — Movie Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f9ff',
+              100: '#e6f0ff',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af'
+            }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
+        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
+            <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight mb-2">Edit Your Profile</h1>
+        <p class="text-slate-400 text-sm">Update your personal information and preferences.</p>
+      </div>
+
+      <!-- Settings Form -->
+      <form id="settingsForm" class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6 shadow-lg space-y-6" novalidate>
+        
+        <!-- Profile Picture -->
+        <div class="space-y-3">
+          <label class="block text-sm font-medium">Profile Picture</label>
+          <div class="flex items-center gap-6">
+            <div id="currentPicture" class="h-24 w-24 rounded-full bg-slate-700 flex items-center justify-center text-2xl font-bold text-slate-300 overflow-hidden shrink-0">
+              <span id="pictureInitials">AM</span>
+            </div>
+            <div class="flex-1 space-y-2">
+              <input 
+                type="file" 
+                id="profilePictureInput" 
+                name="profilePicture" 
+                accept="image/*"
+                class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-brand-600 file:text-white hover:file:bg-brand-500 file:cursor-pointer"
+              />
+              <p class="text-xs text-slate-400">JPG, PNG or GIF. Max size 2MB.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div class="space-y-2">
+          <label for="name" class="block text-sm font-medium">Name <span class="text-red-400">*</span></label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            required
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+            placeholder="Your full name"
+          />
+          <p class="text-xs text-slate-400">This is how others will see you on the platform.</p>
+        </div>
+
+        <!-- Bio -->
+        <div class="space-y-2">
+          <label for="bio" class="block text-sm font-medium">Bio</label>
+          <textarea 
+            id="bio" 
+            name="bio" 
+            rows="4"
+            maxlength="500"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors resize-none"
+            placeholder="Tell others a bit about yourself and your movie preferences..."
+          ></textarea>
+          <div class="flex justify-between items-center">
+            <p class="text-xs text-slate-400">Brief description for your profile.</p>
+            <span id="bioCount" class="text-xs text-slate-500">0/500</span>
+          </div>
+        </div>
+
+        <!-- Favorite Genre -->
+        <div class="space-y-2">
+          <label for="favoriteGenre" class="block text-sm font-medium">Favorite Genre</label>
+          <select 
+            id="favoriteGenre" 
+            name="favoriteGenre"
+            class="w-full rounded-md bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5 text-sm transition-colors"
+          >
+            <option value="">Loading genres...</option>
+          </select>
+          <p class="text-xs text-slate-400">Helps us recommend movies you'll love.</p>
+        </div>
+
+        <!-- Alerts -->
+        <div id="formAlerts" class="space-y-2"></div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 pt-4 border-t border-slate-700/60">
+          <button 
+            type="submit" 
+            id="saveButton"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-500 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg id="saveSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="saveButtonText">Save Changes</span>
+          </button>
+          <a 
+            href="./profile.html?id=me" 
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-medium transition-colors"
+          >
+            Cancel
+          </a>
+        </div>
+      </form>
+
+      <!-- Additional Settings Sections (Future) -->
+      <div class="mt-8 p-6 bg-slate-800/40 rounded-xl border border-slate-700/40">
+        <h2 class="text-lg font-semibold mb-2">Other Settings</h2>
+        <p class="text-sm text-slate-400">Password, privacy, and notification settings coming soon.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">All rights reserved.</span>
+      <span class="opacity-70">Profile Settings 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    let currentUser = null;
+    let selectedFile = null;
+
+    // Load current user data
+    async function loadUserData() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) throw new Error('Not authenticated');
+        const data = await res.json();
+        currentUser = data.user || data;
+
+        // Populate form fields
+        document.getElementById('name').value = currentUser.name || '';
+        document.getElementById('bio').value = currentUser.bio || '';
+        
+        // Update bio character count
+        updateBioCount();
+
+        // Update profile picture preview
+        const picEl = document.getElementById('currentPicture');
+        const initialsEl = document.getElementById('pictureInitials');
+        if (currentUser.profile_picture) {
+          picEl.innerHTML = `<img src="${currentUser.profile_picture}" alt="${currentUser.name}" class="w-full h-full object-cover" />`;
+        } else {
+          const initials = (currentUser.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          initialsEl.textContent = initials;
+        }
+
+        // Load and select favorite genre
+        await loadGenres();
+        if (currentUser.fav_genre) {
+          document.getElementById('favoriteGenre').value = currentUser.fav_genre;
+        }
+      } catch (err) {
+        console.error('Failed to load user data:', err);
+        showAlert('error', 'Failed to load your profile data. Please try again.');
+      }
+    }
+
+    // Load genres for dropdown
+    async function loadGenres() {
+      try {
+        const res = await fetch('/api/genres');
+        if (!res.ok) throw new Error('Failed to fetch genres');
+        const genres = await res.json();
+
+        const select = document.getElementById('favoriteGenre');
+        select.innerHTML = '<option value="">Select a genre (optional)</option>';
+        
+        const genreList = genres.genres || genres;
+        genreList.forEach(genre => {
+          const option = document.createElement('option');
+          option.value = genre.genre_id;
+          option.textContent = genre.genre_name;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Failed to load genres:', err);
+        document.getElementById('favoriteGenre').innerHTML = '<option value="">Error loading genres</option>';
+      }
+    }
+
+    // Bio character counter
+    function updateBioCount() {
+      const bioField = document.getElementById('bio');
+      const counter = document.getElementById('bioCount');
+      const length = bioField.value.length;
+      counter.textContent = `${length}/500`;
+      
+      if (length > 450) {
+        counter.classList.add('text-yellow-400');
+        counter.classList.remove('text-slate-500');
+      } else {
+        counter.classList.add('text-slate-500');
+        counter.classList.remove('text-yellow-400');
+      }
+    }
+
+    // Profile picture preview
+    function setupFileUpload() {
+      const fileInput = document.getElementById('profilePictureInput');
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+          showAlert('error', 'File size must be less than 2MB.');
+          fileInput.value = '';
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.match(/image\/(jpeg|jpg|png|gif)/)) {
+          showAlert('error', 'Please upload a valid image file (JPG, PNG, or GIF).');
+          fileInput.value = '';
+          return;
+        }
+
+        selectedFile = file;
+
+        // Preview the image
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const picEl = document.getElementById('currentPicture');
+          picEl.innerHTML = `<img src="${event.target.result}" alt="Preview" class="w-full h-full object-cover" />`;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Show alert message
+    function showAlert(type, message) {
+      const container = document.getElementById('formAlerts');
+      const alert = document.createElement('div');
+      
+      const styles = {
+        success: 'bg-green-600/20 border-green-600/40 text-green-300',
+        error: 'bg-red-600/20 border-red-600/40 text-red-300',
+        info: 'bg-blue-600/20 border-blue-600/40 text-blue-300'
+      };
+
+      alert.className = `px-4 py-3 rounded-md border text-sm ${styles[type] || styles.info}`;
+      alert.textContent = message;
+      
+      container.innerHTML = '';
+      container.appendChild(alert);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Handle form submission
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      // Validate required fields
+      const name = formData.get('name').trim();
+      if (!name) {
+        showAlert('error', 'Name is required.');
+        return;
+      }
+
+      // Prepare update data
+      const updateData = {
+        name,
+        bio: formData.get('bio').trim(),
+        fav_genre: formData.get('favoriteGenre') || null
+      };
+
+      // Handle profile picture upload (in real app, this would upload to server/cloud)
+      if (selectedFile) {
+        // Simulate upload - in real scenario, upload to server and get URL
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          updateData.profile_picture = event.target.result; // Base64 for demo
+          await submitUpdate(updateData);
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        await submitUpdate(updateData);
+      }
+    }
+
+    // Submit update to API
+    async function submitUpdate(data) {
+      const saveBtn = document.getElementById('saveButton');
+      const saveBtnText = document.getElementById('saveButtonText');
+      const spinner = document.getElementById('saveSpinner');
+
+      saveBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      saveBtnText.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/api/users/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.message || 'Failed to update profile');
+        }
+
+        const result = await res.json();
+        showAlert('success', 'Profile updated successfully!');
+
+        // Redirect to profile page after short delay
+        setTimeout(() => {
+          window.location.href = './profile.html?id=me';
+        }, 1500);
+      } catch (err) {
+        console.error('Failed to update profile:', err);
+        showAlert('error', err.message);
+        saveBtn.disabled = false;
+        spinner.classList.add('hidden');
+        saveBtnText.textContent = 'Save Changes';
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserData();
+      setupFileUpload();
+      
+      // Bio counter
+      const bioField = document.getElementById('bio');
+      bioField.addEventListener('input', updateBioCount);
+
+      // Form submission
+      const form = document.getElementById('settingsForm');
+      form.addEventListener('submit', handleSubmit);
+    });
+  </script>
+  <script>
+  (function() {
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+            const movies = await res.json();
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year||''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch {}
+        }, 300);
+      });
+    }
+    if (notifBtn) {
+      notifBtn.addEventListener('click', async () => {
+        notifDropdown.classList.toggle('hidden');
+        if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+      });
+    }
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const res = await fetch('/api/notifications?unread=true');
+        const notifs = await res.json();
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch {}
+    }
+    if (profileBtn) { profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden')); }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const user = await res.json();
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name||'U').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatar.textContent = initials;
+        await loadNotifications();
+      } catch {}
+    })();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        alert('Logout functionality - redirect to login page');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) { notifDropdown.classList.add('hidden'); }
+      if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) { profileDropdown.classList.add('hidden'); }
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) { searchResults.classList.add('hidden'); }
+    });
+  })();
+  </script>
+</body>
+</html>

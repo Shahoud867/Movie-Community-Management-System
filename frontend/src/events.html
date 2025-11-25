@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Find a Watch Party — Movie Community</title>
+  <meta name="description" content="Discover and join upcoming watch parties." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f5f9ff', 100: '#e6f0ff', 500: '#2563eb', 600: '#1d4ed8', 700: '#1e40af' }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip
+    to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div
+          class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">
+          MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..."
+          class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+          autocomplete="off" />
+        <div id="searchResults"
+          class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto">
+        </div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors"
+          aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+            </path>
+          </svg>
+          <span id="notifBadge"
+            class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown"
+          class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60">
+            <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn"
+          class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar"
+            class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="profileDropdown"
+          class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My
+              Profile</a>
+            <a href="./settings.html"
+              class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Find a Watch Party</h1>
+        <a href="./events-new.html"
+          class="inline-flex items-center gap-2 rounded-md bg-brand-600 hover:bg-brand-700 transition-colors px-4 py-2.5 text-sm font-semibold">Host
+          a New Event</a>
+      </div>
+      <section aria-labelledby="eventsHeading" class="space-y-4">
+        <h2 id="eventsHeading" class="sr-only">Upcoming Events</h2>
+        <div id="eventsList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+          <div class="h-32 rounded-lg bg-slate-800/70 border border-slate-700/60 animate-pulse"></div>
+          <div class="h-32 rounded-lg bg-slate-800/70 border border-slate-700/60 animate-pulse"></div>
+          <div class="h-32 rounded-lg bg-slate-800/70 border border-slate-700/60 animate-pulse"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">All rights reserved.</span>
+      <span class="opacity-70">Events 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    async function apiFetch(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Request failed');
+      return res.json();
+    }
+    function formatDateTime(dt) {
+      try { return new Date(dt.replace(' ', 'T')).toLocaleString(); }
+      catch { return dt; }
+    }
+    function createEventCard(evt) {
+      const a = document.createElement('a');
+      a.href = `./event.html?id=${evt.event_id}`;
+      a.className = 'group block rounded-lg bg-slate-800/60 border border-slate-700/60 hover:border-brand-600/60 transition-colors p-4 space-y-2';
+      const movieTitle = evt.movie_title || 'Unknown movie';
+      const when = formatDateTime(evt.event_datetime || '');
+      const cap = typeof evt.capacity === 'number' ? evt.capacity : '?';
+      const cur = typeof evt.current_participants === 'number' ? evt.current_participants : 0;
+      const host = evt.host_name || 'Unknown host';
+      a.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="text-base font-semibold group-hover:text-white">${evt.title || 'Watch Party'}</h3>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-brand-600/20 text-brand-300 border border-brand-600/30">${evt.status || 'Scheduled'}</span>
+        </div>
+        <p class="text-sm text-slate-300">Movie: <span class="font-medium">${movieTitle}</span></p>
+        <p class="text-xs text-slate-400">Host: ${host}</p>
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>${when}</span>
+          <span class="px-2 py-0.5 rounded bg-slate-700/60 text-slate-300 border border-slate-600/60">${cur} / ${cap}</span>
+        </div>
+      `;
+      return a;
+    }
+    async function loadEvents() {
+      const root = document.getElementById('eventsList');
+      root.innerHTML = '<div class="col-span-full text-sm text-slate-400 animate-pulse">Loading events...</div>';
+      try {
+        const events = await apiFetch('/api/events?status=scheduled');
+        root.innerHTML = '';
+        if (!events.length) {
+          root.innerHTML = '<p class="col-span-full text-sm text-slate-400">No upcoming watch parties. <a href="./events-new.html" class="text-brand-400 hover:text-brand-300">Host one!</a></p>';
+          return;
+        }
+        events.forEach(evt => root.appendChild(createEventCard(evt)));
+      } catch (e) {
+        console.error('Failed to load events:', e);
+        root.innerHTML = '<p class="col-span-full text-sm text-red-400">Failed to load events.</p>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadEvents);
+    (function () {
+      let searchTimer = null;
+      const searchInput = document.getElementById('globalSearch');
+      const searchResults = document.getElementById('searchResults');
+      const notifBtn = document.getElementById('notifBtn');
+      const notifDropdown = document.getElementById('notifDropdown');
+      const profileBtn = document.getElementById('profileBtn');
+      const profileDropdown = document.getElementById('profileDropdown');
+      if (searchInput) {
+        searchInput.addEventListener('input', e => {
+          const term = e.target.value.trim();
+          if (searchTimer) clearTimeout(searchTimer);
+          if (!term) { searchResults.classList.add('hidden'); return; }
+          searchTimer = setTimeout(async () => {
+            try {
+              const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+              const movies = await res.json();
+              searchResults.innerHTML = '';
+              if (!movies.length) {
+                searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+                searchResults.classList.remove('hidden');
+                return;
+              }
+              movies.forEach(m => {
+                const a = document.createElement('a');
+                a.href = `./movie.html?id=${m.id}`;
+                a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+                a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year || ''})</span>`;
+                searchResults.appendChild(a);
+              });
+              searchResults.classList.remove('hidden');
+            } catch { }
+          }, 300);
+        });
+      }
+      if (notifBtn) {
+        notifBtn.addEventListener('click', async () => {
+          notifDropdown.classList.toggle('hidden');
+          if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+        });
+      }
+      async function loadNotifications() {
+        const list = document.getElementById('notifList');
+        try {
+          const res = await fetch('/api/notifications?unread=true');
+          const notifs = await res.json();
+          list.innerHTML = '';
+          if (!notifs.length) {
+            list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+            document.getElementById('notifBadge').classList.add('hidden');
+            return;
+          }
+          const badge = document.getElementById('notifBadge');
+          badge.textContent = Math.min(notifs.length, 9);
+          badge.classList.remove('hidden');
+          notifs.slice(0, 5).forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+            div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ', 'T')).toLocaleString()}</p>`;
+            div.addEventListener('click', async () => {
+              await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+              await loadNotifications();
+            });
+            list.appendChild(div);
+          });
+        } catch { }
+      }
+      if (profileBtn) {
+        profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden'));
+      }
+      (async () => {
+        try {
+          const res = await fetch('/api/auth/me');
+          const user = await res.json();
+          document.getElementById('profileName').textContent = user.name || 'User';
+          document.getElementById('profileEmail').textContent = user.email || '';
+          const avatar = document.getElementById('profileAvatar');
+          const initials = (user.name || 'U').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          avatar.textContent = initials;
+          await loadNotifications();
+        } catch { }
+      })();
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); }
+          catch (e) { console.error('Logout error', e); }
+          window.location.href = '/login.html';
+        });
+      }
+      document.addEventListener('click', e => {
+        if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) notifDropdown.classList.add('hidden');
+        if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) profileDropdown.classList.add('hidden');
+        if (searchInput && !searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
+      });
+    })();
+  </script>
+</body>
+
+</html>

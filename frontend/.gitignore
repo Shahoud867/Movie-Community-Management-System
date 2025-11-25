@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+# Keep dist in version control if your server deploys from it.
+# Uncomment the next line to ignore dist instead.
+# dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.env

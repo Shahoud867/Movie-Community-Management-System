@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movie — Movie Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {50:'#f5f9ff',100:'#e6f0ff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af'}
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .star-btn[aria-pressed="true"] svg { filter: drop-shadow(0 0 2px rgba(255,255,255,0.4)); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
+        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
+            <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="flex-1">
+    <!-- Banner/Header -->
+    <section id="movieHeader" class="relative w-full min-h-[280px] flex items-end">
+      <div class="absolute inset-0 bg-slate-800/80" id="bannerBg"></div>
+      <div class="relative z-10 w-full">
+        <div class="max-w-7xl mx-auto px-4 py-8 flex gap-6">
+          <div class="w-40 shrink-0 aspect-[2/3] bg-slate-700 rounded-md flex items-center justify-center text-xs text-slate-300" id="posterPlaceholder">Poster</div>
+          <div class="flex-1 space-y-4">
+            <h1 class="text-3xl font-bold tracking-tight" id="movieTitle">Loading...</h1>
+            <p class="text-sm text-slate-300" id="movieMeta">Year • Duration • Director</p>
+            <p class="text-sm text-slate-200 max-w-2xl" id="movieSynopsis">Fetching synopsis...</p>
+            <div id="genreTags" class="flex flex-wrap gap-2 pt-1" aria-label="Genres"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interaction Panel -->
+    <section class="max-w-7xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[300px_1fr]">
+      <div class="space-y-8">
+        <!-- Rating -->
+        <div class="bg-slate-800/60 backdrop-blur rounded-lg border border-slate-700/60 p-5">
+          <h2 class="text-lg font-semibold mb-3">Your Rating</h2>
+          <div class="flex flex-wrap items-center gap-1 max-w-full" id="ratingStars" role="radiogroup" aria-label="Rate this movie (1 to 10)"></div>
+          <p id="ratingStatus" class="mt-2 text-xs text-slate-400">Not rated yet.</p>
+        </div>
+        <!-- Watchlist Status -->
+        <div class="bg-slate-800/60 backdrop-blur rounded-lg border border-slate-700/60 p-5 space-y-4">
+          <h2 class="text-lg font-semibold">Watchlist</h2>
+          <div class="relative">
+            <button id="watchlistBtn" class="w-full inline-flex items-center justify-between rounded-md bg-brand-600 hover:bg-brand-500 px-3 py-2 text-sm font-medium">Set Status <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg></button>
+            <div id="watchlistMenu" class="absolute left-0 right-0 mt-2 rounded-md border border-slate-700 bg-slate-800 shadow-lg divide-y divide-slate-700 hidden">
+              <button data-status="to-watch" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-700">Want to Watch</button>
+              <button data-status="watching" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-700">Watching</button>
+              <button data-status="completed" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-700">Completed</button>
+            </div>
+          </div>
+          <p id="watchlistStatus" class="text-xs text-slate-400">Not in your watchlist.</p>
+        </div>
+      </div>
+      <!-- Extra: Details + Reviews Tabbed -->
+      <div class="space-y-8">
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-lg p-5">
+          <h2 class="text-lg font-semibold mb-3">Details</h2>
+          <ul class="space-y-1 text-sm" id="extraDetails"></ul>
+        </div>
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-lg p-0">
+          <div class="border-b border-slate-700/60 flex" role="tablist" aria-label="Movie sections">
+            <button class="px-4 py-3 text-sm font-medium bg-slate-800/60 border-r border-slate-700/60 focus:outline-none aria-selected" role="tab" aria-selected="true" id="tab-reviews" data-tab="reviews">Reviews</button>
+            <button class="px-4 py-3 text-sm font-medium bg-slate-900/40 focus:outline-none" role="tab" aria-selected="false" id="tab-discussions" data-tab="discussions">Discussions</button>
+          </div>
+          <div id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews" class="p-5 space-y-6">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <h3 class="text-lg font-semibold">Reviews</h3>
+              <button id="writeReviewBtn" class="inline-flex items-center gap-2 rounded-md bg-brand-600 hover:bg-brand-500 px-4 py-2 text-sm font-medium">Write a Review</button>
+            </div>
+            <form id="reviewForm" class="space-y-3 hidden" novalidate>
+              <textarea id="reviewText" name="reviewText" rows="4" class="w-full rounded-md bg-slate-900/70 border border-slate-700 focus:border-brand-600 focus:ring-brand-600 text-sm p-3" placeholder="Share your thoughts..." required></textarea>
+              <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" id="isSpoiler" class="h-4 w-4 rounded border-slate-600 bg-slate-800"> Contains spoilers</label>
+              <div id="reviewFormAlerts" class="space-y-2"></div>
+              <div class="flex gap-2">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-500 rounded px-4 py-2 text-sm font-medium">Submit</button>
+                <button type="button" id="cancelReview" class="bg-slate-700 hover:bg-slate-600 rounded px-4 py-2 text-sm font-medium">Cancel</button>
+              </div>
+            </form>
+            <ul id="reviewsList" class="space-y-4" aria-label="Reviews list">
+              <li class="text-sm text-slate-400 animate-pulse">Loading reviews...</li>
+            </ul>
+          </div>
+          <div id="panel-discussions" role="tabpanel" aria-labelledby="tab-discussions" hidden class="p-5 space-y-6">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <h3 class="text-lg font-semibold">Discussions</h3>
+              <button id="startDiscussionBtn" class="inline-flex items-center gap-2 rounded-md bg-brand-600 hover:bg-brand-500 px-4 py-2 text-sm font-medium">Start a Discussion</button>
+            </div>
+            <form id="discussionForm" class="space-y-3 hidden" novalidate>
+              <textarea id="discussionText" name="discussionText" rows="3" class="w-full rounded-md bg-slate-900/70 border border-slate-700 focus:border-brand-600 focus:ring-brand-600 text-sm p-3" placeholder="Begin a new topic..." required></textarea>
+              <div id="discussionFormAlerts" class="space-y-2"></div>
+              <div class="flex gap-2">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-500 rounded px-4 py-2 text-sm font-medium">Post</button>
+                <button type="button" id="cancelDiscussion" class="bg-slate-700 hover:bg-slate-600 rounded px-4 py-2 text-sm font-medium">Cancel</button>
+              </div>
+            </form>
+            <ul id="discussionsList" class="space-y-4" aria-label="Discussions list">
+              <li class="text-sm text-slate-400 animate-pulse">Loading discussions...</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">Movie Detail 1.0</span>
+    </div>
+  </footer>
+  <script>
+    // Extract movie ID from query (?id=123) or path /movie/123
+    function getMovieId(){
+      const url = new URL(window.location.href);
+      const qId = url.searchParams.get('id');
+      if(qId) return qId;
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idx = parts.indexOf('movie');
+      if(idx>-1 && parts[idx+1]) return parts[idx+1];
+      return null;
+    }
+
+    const movieId = getMovieId();
+
+    const movieTitleEl = document.getElementById('movieTitle');
+    const movieMetaEl = document.getElementById('movieMeta');
+    const movieSynopsisEl = document.getElementById('movieSynopsis');
+    const genreTagsEl = document.getElementById('genreTags');
+    const posterPlaceholder = document.getElementById('posterPlaceholder');
+    const bannerBg = document.getElementById('bannerBg');
+    const extraDetailsEl = document.getElementById('extraDetails');
+
+    const ratingStarsEl = document.getElementById('ratingStars');
+    const ratingStatusEl = document.getElementById('ratingStatus');
+    let currentRating = null;
+
+    const watchlistBtn = document.getElementById('watchlistBtn');
+    const watchlistMenu = document.getElementById('watchlistMenu');
+    const watchlistStatusEl = document.getElementById('watchlistStatus');
+    let currentWatchlistStatus = null;
+
+    function starSvg(filled){
+      return `<svg class="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 ${filled? 'text-yellow-400':'text-slate-500'}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.382 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.382-2.46a1 1 0 00-1.175 0l-3.382 2.46c-.784.57-1.838-.196-1.539-1.118l1.286-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.287-3.967z"/></svg>`;
+    }
+
+    function renderStars(rating){
+      ratingStarsEl.innerHTML='';
+      for(let i=1;i<=10;i++){
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='star-btn focus:outline-none';
+        btn.setAttribute('role','radio');
+        btn.setAttribute('aria-label', i+' star');
+        btn.setAttribute('aria-pressed', rating===i ? 'true':'false');
+        btn.innerHTML=starSvg(i <= rating);
+        btn.addEventListener('click', ()=> submitRating(i));
+        btn.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); submitRating(i);} });
+        // Hover preview: temporarily show the rating before selection
+        btn.addEventListener('mouseenter', ()=>{
+          [...ratingStarsEl.children].forEach((c, idx)=>{
+            const starIndex = idx+1;
+            c.innerHTML = starSvg(starIndex <= i);
+          });
+        });
+        btn.addEventListener('mouseleave', ()=>{
+          // Restore actual rating display
+          [...ratingStarsEl.children].forEach((c, idx)=>{
+            const starIndex = idx+1;
+            c.innerHTML = starSvg(currentRating ? starIndex <= currentRating : false);
+          });
+        });
+        ratingStarsEl.appendChild(btn);
+      }
+    }
+
+    async function submitRating(value){
+      if(!movieId) return;
+      ratingStatusEl.textContent='Submitting rating...';
+      try {
+        const res = await fetch('/api/ratings', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ movie_id: parseInt(movieId), score: value }) });
+        if(!res.ok) throw new Error('Failed');
+        currentRating=value; renderStars(currentRating);
+        ratingStatusEl.textContent='You rated this '+value+' / 10';
+      } catch(e){ ratingStatusEl.textContent='Failed to save rating.'; }
+    }
+
+    function toggleWatchlistMenu(){ watchlistMenu.classList.toggle('hidden'); }
+    document.addEventListener('click', (e)=>{ if(!watchlistMenu.contains(e.target) && e.target!==watchlistBtn){ watchlistMenu.classList.add('hidden'); }});
+    watchlistBtn.addEventListener('click', toggleWatchlistMenu);
+
+    watchlistMenu.querySelectorAll('button[data-status]').forEach(btn=>{
+      btn.addEventListener('click', ()=> setWatchlistStatus(btn.getAttribute('data-status')));
+    });
+
+    async function setWatchlistStatus(status){
+      watchlistStatusEl.textContent='Updating watchlist...';
+      try {
+        // Decide create vs update (PATCH) based on whether we already have a status
+        let res;
+        if(!currentWatchlistStatus){
+          res = await fetch('/api/watchlist', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ movie_id: parseInt(movieId), status }) });
+        } else {
+          res = await fetch('/api/watchlist/'+encodeURIComponent(movieId), { method:'PATCH', credentials: 'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+        }
+        if(!res.ok) throw new Error('Failed');
+        currentWatchlistStatus=status;
+        watchlistStatusEl.textContent='Status: '+status;
+      } catch(e){ watchlistStatusEl.textContent='Failed to update watchlist.'; }
+      watchlistMenu.classList.add('hidden');
+    }
+
+    async function loadMovie(){
+      if(!movieId){ movieTitleEl.textContent='Movie Not Found'; movieSynopsisEl.textContent='Invalid movie id.'; return; }
+      try {
+        const res = await fetch('/api/movies/'+movieId);
+        if(!res.ok) throw new Error('Movie not found');
+        const m = await res.json();
+        console.log('Movie data:', m); // Debug log
+        movieTitleEl.textContent = m.title || 'Untitled';
+        const metaParts = [m.release_year, m.duration_minutes? m.duration_minutes+' min':null, m.director].filter(Boolean);
+        movieMetaEl.textContent = metaParts.length > 0 ? metaParts.join(' • ') : 'No information available';
+        movieSynopsisEl.textContent = m.synopsis || 'No synopsis available.';
+        if(m.poster){
+          posterPlaceholder.style.backgroundImage = 'url('+m.poster+')';
+          posterPlaceholder.style.backgroundSize='cover';
+          posterPlaceholder.textContent='';
+          bannerBg.style.background = 'linear-gradient(to bottom, rgba(15,23,42,0.6), rgba(15,23,42,0.95)), url('+m.poster+') center/cover no-repeat';
+        }
+        extraDetailsEl.innerHTML = '';
+        [['Director', m.director], ['Duration', m.duration_minutes? m.duration_minutes+' min':null], ['Year', m.release_year], ['Language', m.language], ['Rating', m.average_rating? Number(m.average_rating).toFixed(1):null]].forEach(([k,v])=>{ if(v){ const li=document.createElement('li'); li.innerHTML = `<span class='text-slate-400'>${k}:</span> ${v}`; extraDetailsEl.appendChild(li);} });
+      } catch(e){ console.error('Failed to load movie:', e); movieTitleEl.textContent='Error'; movieSynopsisEl.textContent='Failed to load movie.'; }
+    }
+
+    async function loadGenres(){
+      if(!movieId) return;
+      try {
+        const res = await fetch('/api/movies/'+movieId+'/genres');
+        if(!res.ok) throw new Error();
+        const gs = await res.json();
+        genreTagsEl.innerHTML='';
+        if(!gs.length){ genreTagsEl.innerHTML='<span class="text-xs text-slate-400">No genres.</span>'; return; }
+        gs.forEach(g=>{
+          const tag=document.createElement('a');
+          tag.href='./movies.html?genre='+encodeURIComponent(g.genre_name||g.name||g.id);
+            tag.className='text-[11px] px-2 py-1 rounded-full bg-slate-800 border border-slate-700/60 hover:border-brand-600/60 hover:text-brand-300';
+          tag.textContent=g.genre_name||g.name||g.id;
+          genreTagsEl.appendChild(tag);
+        });
+      } catch(e){ genreTagsEl.innerHTML='<span class="text-xs text-red-400">Failed to load genres.</span>'; }
+    }
+
+    async function loadUserBits(){
+      if(!movieId) return;
+      // Rating - load user's rating for this movie
+      try {
+        const res = await fetch('/api/ratings/'+movieId, { credentials: 'include' });
+        if(res.ok){ const r = await res.json(); currentRating = r.score; }
+      } catch { /* ignore */ }
+      renderStars(currentRating||0);
+      ratingStatusEl.textContent = currentRating? 'You rated this '+currentRating+' / 10' : 'Not rated yet.';
+      
+      // Watchlist - check if movie is in user's watchlist
+      try {
+        const r2 = await fetch('/api/watchlist', { credentials: 'include' });
+        if(r2.ok){ 
+          const items = await r2.json(); 
+          const found = items.find(w => w.movie_id === parseInt(movieId));
+          if(found) currentWatchlistStatus = found.status;
+        }
+      } catch { /* ignore */ }
+      watchlistStatusEl.textContent = currentWatchlistStatus? 'Status: '+currentWatchlistStatus : 'Not in your watchlist.';
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      await loadMovie();
+      await loadGenres();
+      await loadUserBits();
+      setupReviews();
+      setupDiscussions();
+      initTabs();
+    });
+    // Reviews Section Logic
+    const reviewsListEl = document.getElementById('reviewsList');
+    const writeReviewBtn = document.getElementById('writeReviewBtn');
+    const reviewForm = document.getElementById('reviewForm');
+    const cancelReviewBtn = document.getElementById('cancelReview');
+    const reviewTextEl = document.getElementById('reviewText');
+    const isSpoilerEl = document.getElementById('isSpoiler');
+    const reviewFormAlerts = document.getElementById('reviewFormAlerts');
+
+    function alertMsg(type, text){
+      const base='rounded px-3 py-2 text-xs';
+      const map={success:'bg-green-600/20 text-green-300 border border-green-600/30',error:'bg-red-600/20 text-red-300 border border-red-600/30',info:'bg-slate-700/40 text-slate-200 border border-slate-600/30'};
+      const div=document.createElement('div'); div.className=base+' '+(map[type]||map.info); div.textContent=text; return div;
+    }
+
+    function createReviewCard(r){
+      const li=document.createElement('li');
+      li.className='rounded-md bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4';
+      const avatar = r.user_profile_picture ? `<img src="${r.user_profile_picture}" alt="${r.user_name}" class="h-12 w-12 rounded object-cover" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';"/>` : `<div class='h-12 w-12 rounded bg-slate-700 flex items-center justify-center text-[10px] text-slate-300'>${(r.user_name||'U')[0]||'U'}</div>`;
+      const spoilerClass = r.is_spoiler ? 'spoiler-blur cursor-pointer' : '';
+      const spoilerLabel = r.is_spoiler ? `<span class='inline-block text-[10px] px-2 py-1 rounded bg-red-600/30 text-red-300 border border-red-600/40 mr-2'>Spoiler</span>` : '';
+      li.innerHTML=`${avatar}
+        <div class='flex-1 space-y-2'>
+          <div class='flex items-center justify-between'>
+            <p class='text-sm font-medium'>${r.user_name||'Anonymous'}</p>
+            <button data-review-id='${r.review_id}' class='helpful-btn text-[11px] px-2 py-1 rounded bg-slate-700 hover:bg-slate-600'>Helpful (${r.helpful_count||0})</button>
+          </div>
+          <div class='text-sm leading-relaxed ${spoilerClass}' data-spoiler='${r.is_spoiler? 'true':'false'}'>${spoilerLabel + (r.review_text||'')}</div>
+        </div>`;
+      if(r.is_spoiler){
+        const textDiv = li.querySelector('[data-spoiler]');
+        textDiv.addEventListener('click', ()=>{
+          if(textDiv.classList.contains('spoiler-blur')){
+            textDiv.classList.remove('spoiler-blur');
+          }
+        });
+      }
+      return li;
+    }
+
+    async function loadReviews(){
+      if(!movieId) return;
+      reviewsListEl.innerHTML='<li class="text-sm text-slate-400">Loading reviews...</li>';
+      try {
+        const res = await fetch('/api/reviews/movie/'+encodeURIComponent(movieId));
+        if(!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        const items = Array.isArray(data)? data : (data.items||[]);
+        reviewsListEl.innerHTML='';
+        if(!items.length){
+          reviewsListEl.innerHTML='<li class="text-sm text-slate-400">No reviews yet.</li>';
+        } else items.forEach(r=> reviewsListEl.appendChild(createReviewCard(r)));
+      } catch(e){
+        reviewsListEl.innerHTML='<li class="text-sm text-red-400">Failed to load reviews.</li>';
+      }
+    }
+
+    async function submitReview(e){
+      e.preventDefault();
+      reviewFormAlerts.innerHTML='';
+      const text = reviewTextEl.value.trim();
+      const isSpoiler = isSpoilerEl.checked;
+      if(!text){ reviewFormAlerts.appendChild(alertMsg('error','Review text is required.')); return; }
+      try {
+        const res = await fetch('/api/reviews', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ movie_id: parseInt(movieId), review_text: text, is_spoiler: isSpoiler }) });
+        if(!res.ok) throw new Error('Failed');
+        reviewFormAlerts.appendChild(alertMsg('success','Review submitted!'));
+        reviewTextEl.value=''; isSpoilerEl.checked=false;
+        setTimeout(()=>{ reviewForm.classList.add('hidden'); writeReviewBtn.disabled=false; loadReviews(); }, 600);
+      } catch(err){ reviewFormAlerts.appendChild(alertMsg('error','Failed to submit review.')); }
+    }
+
+    async function markHelpful(id, btn){
+      btn.disabled=true; const original=btn.textContent;
+      try {
+        const res = await fetch('/api/reviews/'+id+'/helpful', { method:'POST', credentials: 'include' });
+        if(!res.ok) throw new Error();
+        const data = await res.json().catch(()=>({ helpful_count: parseInt(original.match(/\d+/)||0)+1 }));
+        btn.textContent = 'Helpful ('+ (data.helpful_count||0) +')';
+      } catch { btn.textContent=original; }
+      finally { btn.disabled=false; }
+    }
+
+    function setupReviews(){
+      // Spoiler blur style
+      const style=document.createElement('style');
+      style.textContent='.spoiler-blur{filter:blur(6px); position:relative;} .spoiler-blur:after{content:"Click to reveal"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0.6); font-size:10px; letter-spacing:.5px; color:#94a3b8;}';
+      document.head.appendChild(style);
+      writeReviewBtn.addEventListener('click', ()=>{ reviewForm.classList.remove('hidden'); writeReviewBtn.disabled=true; reviewTextEl.focus(); });
+      cancelReviewBtn.addEventListener('click', ()=>{ reviewForm.classList.add('hidden'); writeReviewBtn.disabled=false; reviewFormAlerts.innerHTML=''; });
+      reviewForm.addEventListener('submit', submitReview);
+      reviewsListEl.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.helpful-btn');
+        if(btn && btn.dataset.reviewId){ markHelpful(btn.dataset.reviewId, btn); }
+      });
+      loadReviews();
+    }
+
+    // Discussions Section Logic
+    const discussionsListEl = document.getElementById('discussionsList');
+    const startDiscussionBtn = document.getElementById('startDiscussionBtn');
+    const discussionForm = document.getElementById('discussionForm');
+    const cancelDiscussionBtn = document.getElementById('cancelDiscussion');
+    const discussionTextEl = document.getElementById('discussionText');
+    const discussionFormAlerts = document.getElementById('discussionFormAlerts');
+
+    function createDiscussionCard(p){
+      const li=document.createElement('li');
+      li.className='rounded-md bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4';
+      const avatar = p.user_profile_picture ? `<img src="${p.user_profile_picture}" alt="${p.user_name}" class="h-12 w-12 rounded object-cover" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';"/>` : `<div class='h-12 w-12 rounded bg-slate-700 flex items-center justify-center text-[10px] text-slate-300'>${(p.user_name||'U')[0]||'U'}</div>`;
+      li.innerHTML=`${avatar}
+        <div class='flex-1 space-y-2'>
+          <div class='flex items-center justify-between'>
+            <p class='text-sm font-medium'>${p.user_name||'Anonymous'}</p>
+            <div class='flex gap-2'>
+              <button data-post-id='${p.post_id}' class='like-post-btn text-[11px] px-2 py-1 rounded bg-slate-700 hover:bg-slate-600'>Like (${p.like_count||0})</button>
+              <a href='./post.html?id=${p.post_id}' class='text-[11px] px-2 py-1 rounded bg-slate-700 hover:bg-slate-600'>Comments (${p.comment_count||0})</a>
+            </div>
+          </div>
+          <a href='./post.html?id=${p.post_id}' class='block text-sm leading-relaxed hover:text-brand-300 transition-colors'>${p.content||''}</a>
+        </div>`;
+      return li;
+    }
+
+    async function loadDiscussions(){
+      if(!movieId) return;
+      discussionsListEl.innerHTML='<li class="text-sm text-slate-400">Loading discussions...</li>';
+      try {
+        const res = await fetch('/api/posts?movie_id='+encodeURIComponent(movieId));
+        if(!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        const items = Array.isArray(data)? data : (data.items||[]);
+        discussionsListEl.innerHTML='';
+        if(!items.length){ discussionsListEl.innerHTML='<li class="text-sm text-slate-400">No discussions yet.</li>'; }
+        else items.forEach(p=> discussionsListEl.appendChild(createDiscussionCard(p)));
+      } catch(e){ discussionsListEl.innerHTML='<li class="text-sm text-red-400">Failed to load discussions.</li>'; }
+    }
+
+    async function submitDiscussion(e){
+      e.preventDefault();
+      discussionFormAlerts.innerHTML='';
+      const text = discussionTextEl.value.trim();
+      if(!text){ discussionFormAlerts.appendChild(alertMsg('error','Content required.')); return; }
+      try {
+        const res = await fetch('/api/posts', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ movie_id: parseInt(movieId), content: text }) });
+        if(!res.ok) throw new Error('Failed');
+        discussionFormAlerts.appendChild(alertMsg('success','Discussion started!'));
+        discussionTextEl.value='';
+        setTimeout(()=>{ discussionForm.classList.add('hidden'); startDiscussionBtn.disabled=false; loadDiscussions(); }, 600);
+      } catch(err){ discussionFormAlerts.appendChild(alertMsg('error','Failed to start discussion.')); }
+    }
+
+    async function likePost(id, btn){
+      btn.disabled=true;
+      const original=btn.textContent;
+      try {
+        const res = await fetch('/api/posts/'+id+'/like', { method:'POST', credentials: 'include' });
+        if(!res.ok) throw new Error();
+        const data = await res.json().catch(()=>({ like_count: parseInt(original.match(/\d+/)||0)+1 }));
+        btn.textContent='Like ('+(data.like_count||0)+')';
+      } catch { btn.textContent=original; }
+      finally { btn.disabled=false; }
+    }
+
+    function setupDiscussions(){
+      startDiscussionBtn.addEventListener('click', ()=>{ discussionForm.classList.remove('hidden'); startDiscussionBtn.disabled=true; discussionTextEl.focus(); });
+      cancelDiscussionBtn.addEventListener('click', ()=>{ discussionForm.classList.add('hidden'); startDiscussionBtn.disabled=false; discussionFormAlerts.innerHTML=''; });
+      discussionForm.addEventListener('submit', submitDiscussion);
+      discussionsListEl.addEventListener('click', (e)=>{
+        const btn=e.target.closest('.like-post-btn');
+        if(btn && btn.dataset.postId){ likePost(btn.dataset.postId, btn); }
+      });
+      loadDiscussions();
+    }
+
+    // Tab switching
+    function initTabs(){
+      const tabButtons=[...document.querySelectorAll('[role=tab]')];
+      const panels={ reviews: document.getElementById('panel-reviews'), discussions: document.getElementById('panel-discussions') };
+      function activate(name){
+        tabButtons.forEach(btn=>{
+          const active = btn.dataset.tab===name;
+          btn.setAttribute('aria-selected', active?'true':'false');
+          btn.classList.toggle('bg-slate-800/60', active);
+          btn.classList.toggle('bg-slate-900/40', !active);
+        });
+        Object.entries(panels).forEach(([k,el])=>{ if(!el) return; if(k===name){ el.removeAttribute('hidden'); } else { el.setAttribute('hidden',''); } });
+      }
+      tabButtons.forEach(btn=> btn.addEventListener('click', ()=> activate(btn.dataset.tab)) );
+      activate('reviews');
+    }
+  </script>
+  <script>
+  (function() {
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+            const movies = await res.json();
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class=\"px-4 py-3 text-sm text-slate-400\">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class=\"font-medium\">${m.title}</span> <span class=\"text-xs text-slate-400\">(${m.release_year||''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch {}
+        }, 300);
+      });
+    }
+    if (notifBtn) {
+      notifBtn.addEventListener('click', async () => {
+        notifDropdown.classList.toggle('hidden');
+        if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+      });
+    }
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const res = await fetch('/api/notifications?unread=true');
+        const notifs = await res.json();
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class=\"px-4 py-3 text-sm text-slate-400\">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class=\"text-xs text-slate-400 mt-1\">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch {}
+    }
+    if (profileBtn) { profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden')); }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const user = await res.json();
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name||'U').split(/\\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatar.textContent = initials;
+        await loadNotifications();
+      } catch {}
+    })();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        alert('Logout functionality - redirect to login page');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) { notifDropdown.classList.add('hidden'); }
+      if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) { profileDropdown.classList.add('hidden'); }
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) { searchResults.classList.add('hidden'); }
+    });
+  })();
+  </script>
+</body>
+</html>

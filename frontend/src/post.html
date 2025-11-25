@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Discussion — Movie Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { brand: {50:'#f5f9ff',100:'#e6f0ff',500:'#2563eb',600:'#1d4ed8',700:'#1e40af'} }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
+        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
+            <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <section class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <a href="javascript:history.back()" class="inline-flex items-center text-sm text-slate-300 hover:text-white">← Back</a>
+
+      <!-- Original Post Card -->
+      <article id="postCard" class="rounded-lg bg-slate-800/50 border border-slate-700/60 p-5">
+        <div class="flex gap-4">
+          <div id="postAvatar" class="h-12 w-12 rounded bg-slate-700 flex items-center justify-center text-[10px] text-slate-300">U</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p id="postUser" class="text-sm font-medium">Loading...</p>
+                <p id="postDate" class="text-xs text-slate-400">—</p>
+              </div>
+              <button id="likePostBtn" class="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600">Like (0)</button>
+            </div>
+            <p id="postContent" class="mt-3 text-sm leading-relaxed">Fetching post...</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Write a Comment -->
+      <section class="rounded-lg bg-slate-800/30 border border-slate-700/50 p-5">
+        <h2 class="text-lg font-semibold mb-3">Write a Comment</h2>
+        <form id="commentForm" class="space-y-3" novalidate>
+          <textarea id="commentText" rows="3" class="w-full rounded-md bg-slate-900/70 border border-slate-700 focus:border-brand-600 focus:ring-brand-600 text-sm p-3" placeholder="Share your thoughts..." required></textarea>
+          <div id="commentFormAlerts" class="space-y-2"></div>
+          <div class="flex gap-2">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-500 rounded px-4 py-2 text-sm font-medium">Submit</button>
+            <button type="reset" class="bg-slate-700 hover:bg-slate-600 rounded px-4 py-2 text-sm font-medium">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Comments List -->
+      <section class="rounded-lg bg-slate-800/30 border border-slate-700/50 p-5">
+        <h2 class="text-lg font-semibold mb-4">Comments</h2>
+        <ul id="commentsList" class="space-y-4" aria-label="Comments list">
+          <li class="text-sm text-slate-400">Loading comments...</li>
+        </ul>
+      </section>
+    </section>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">Post Detail 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    function getPostId(){
+      const url = new URL(window.location.href);
+      const qId = url.searchParams.get('id');
+      if(qId) return qId;
+      const parts = url.pathname.split('/').filter(Boolean);
+      const idx = parts.indexOf('post');
+      if(idx>-1 && parts[idx+1]) return parts[idx+1];
+      return null;
+    }
+
+    const postId = getPostId();
+
+    const postUserEl = document.getElementById('postUser');
+    const postDateEl = document.getElementById('postDate');
+    const postContentEl = document.getElementById('postContent');
+    const postAvatarEl = document.getElementById('postAvatar');
+    const likePostBtn = document.getElementById('likePostBtn');
+
+    const commentsListEl = document.getElementById('commentsList');
+    const commentForm = document.getElementById('commentForm');
+    const commentTextEl = document.getElementById('commentText');
+    const commentFormAlerts = document.getElementById('commentFormAlerts');
+
+    function alertMsg(type, text){
+      const base='rounded px-3 py-2 text-xs';
+      const map={success:'bg-green-600/20 text-green-300 border border-green-600/30',error:'bg-red-600/20 text-red-300 border border-red-600/30',info:'bg-slate-700/40 text-slate-200 border border-slate-600/30'};
+      const div=document.createElement('div'); div.className=base+' '+(map[type]||map.info); div.textContent=text; return div;
+    }
+
+    function renderAvatar(el, name, pic){
+      if(pic){
+        el.innerHTML = '<img src="'+pic+'" alt="'+(name||'User')+'" class="h-12 w-12 rounded object-cover" />';
+      } else {
+        const ch = (name||'U').charAt(0).toUpperCase();
+        el.textContent = ch || 'U';
+      }
+    }
+
+    async function loadPost(){
+      if(!postId){ postContentEl.textContent='Invalid post id.'; return; }
+      try {
+        const res = await fetch('/api/posts/'+postId);
+        if(!res.ok) throw new Error('Not found');
+        const p = await res.json();
+        postUserEl.textContent = p.user?.name || 'Unknown';
+        postDateEl.textContent = p.created_date ? new Date(p.created_date.replace(' ','T')).toLocaleString() : '';
+        postContentEl.textContent = p.content || '';
+        likePostBtn.textContent = 'Like ('+(p.like_count||0)+')';
+        renderAvatar(postAvatarEl, p.user?.name, p.user?.profile_picture);
+      } catch(err){
+        postUserEl.textContent='Error';
+        postContentEl.textContent='Failed to load post.';
+      }
+    }
+
+    async function likePost(){
+      likePostBtn.disabled=true; const original=likePostBtn.textContent;
+      try {
+        const res = await fetch('/api/posts/'+postId+'/like', { method:'POST', credentials: 'include' });
+        if(!res.ok) throw new Error();
+        const data = await res.json().catch(()=>({ like_count: parseInt(original.match(/\d+/)||0)+1 }));
+        likePostBtn.textContent = 'Like ('+(data.like_count||0)+')';
+      } catch { likePostBtn.textContent = original; }
+      finally { likePostBtn.disabled=false; }
+    }
+
+    function createCommentItem(c){
+      const li=document.createElement('li');
+      li.className='rounded-md bg-slate-800/50 border border-slate-700/50 p-4 flex gap-4';
+      const avatar = c.user?.profile_picture
+        ? `<img src="${c.user.profile_picture}" alt="${c.user?.name||'User'}" class="h-10 w-10 rounded object-cover"/>`
+        : `<div class='h-10 w-10 rounded bg-slate-700 flex items-center justify-center text-[10px] text-slate-300'>${(c.user?.name||'U').charAt(0).toUpperCase()}</div>`;
+      li.innerHTML = `${avatar}
+        <div class='flex-1 space-y-1'>
+          <div class='flex items-center justify-between'>
+            <p class='text-sm font-medium'>${c.user?.name||'Anonymous'}</p>
+            <p class='text-[11px] text-slate-400'>${c.created_date ? new Date(c.created_date.replace(' ','T')).toLocaleString() : ''}</p>
+          </div>
+          <div class='text-sm leading-relaxed'>${(c.content||'').replace(/</g,'&lt;')}</div>
+        </div>`;
+      return li;
+    }
+
+    async function loadComments(){
+      commentsListEl.innerHTML = '<li class="text-sm text-slate-400">Loading comments...</li>';
+      try {
+        const res = await fetch('/api/posts/'+postId+'/comments');
+        if(!res.ok) throw new Error();
+        const items = await res.json();
+        commentsListEl.innerHTML='';
+        if(!items.length){ commentsListEl.innerHTML = '<li class="text-sm text-slate-400">No comments yet.</li>'; return; }
+        items.forEach(c=> commentsListEl.appendChild(createCommentItem(c)));
+      } catch {
+        commentsListEl.innerHTML = '<li class="text-sm text-red-400">Failed to load comments.</li>';
+      }
+    }
+
+    async function submitComment(e){
+      e.preventDefault();
+      commentFormAlerts.innerHTML='';
+      const text = commentTextEl.value.trim();
+      if(!text){ commentFormAlerts.appendChild(alertMsg('error','Comment is required.')); return; }
+      try {
+        const res = await fetch('/api/posts/'+postId+'/comments', { method:'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: text }) });
+        if(!res.ok) throw new Error();
+        commentFormAlerts.appendChild(alertMsg('success','Comment posted!'));
+        commentTextEl.value='';
+        setTimeout(()=>{ commentFormAlerts.innerHTML=''; }, 900);
+        await loadPost();
+        await loadComments();
+      } catch { commentFormAlerts.appendChild(alertMsg('error','Failed to post comment.')); }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      likePostBtn.addEventListener('click', likePost);
+      commentForm.addEventListener('submit', submitComment);
+      loadPost();
+      loadComments();
+    });
+  </script>
+  <script>
+  (function() {
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+            const movies = await res.json();
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year||''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch {}
+        }, 300);
+      });
+    }
+    if (notifBtn) {
+      notifBtn.addEventListener('click', async () => {
+        notifDropdown.classList.toggle('hidden');
+        if (!notifDropdown.classList.contains('hidden')) { await loadNotifications(); }
+      });
+    }
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const res = await fetch('/api/notifications?unread=true');
+        const notifs = await res.json();
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch {}
+    }
+    if (profileBtn) { profileBtn.addEventListener('click', () => profileDropdown.classList.toggle('hidden')); }
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const user = await res.json();
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name||'U').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        avatar.textContent = initials;
+        await loadNotifications();
+      } catch {}
+    })();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        alert('Logout functionality - redirect to login page');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) { notifDropdown.classList.add('hidden'); }
+      if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) { profileDropdown.classList.add('hidden'); }
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) { searchResults.classList.add('hidden'); }
+    });
+  })();
+  </script>
+</body>
+</html>

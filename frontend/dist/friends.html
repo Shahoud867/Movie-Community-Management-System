@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Friends — Movie Community</title>
+  <meta name="description" content="Manage your friends and friend requests." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
+  <a href="#main"
+    class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip
+    to content</a>
+  <header class="w-full border-b border-slate-800/60 bg-slate-900">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+        <div
+          class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">
+          MC</div>
+        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      </a>
+      <div class="flex-1 max-w-md relative">
+        <input id="globalSearch" type="search" placeholder="Search movies..."
+          class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+          autocomplete="off" />
+        <div id="searchResults"
+          class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto">
+        </div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
+        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
+        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
+        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
+        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
+        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+      </nav>
+      <div class="relative">
+        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors"
+          aria-label="Notifications">
+          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+            </path>
+          </svg>
+          <span id="notifBadge"
+            class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+        </button>
+        <div id="notifDropdown"
+          class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
+            <span class="text-sm font-semibold">Notifications</span>
+            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+          </div>
+          <div id="notifList" class="divide-y divide-slate-700/60">
+            <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="profileBtn"
+          class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
+          <div id="profileAvatar"
+            class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="profileDropdown"
+          class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
+          <div class="px-4 py-2 border-b border-slate-700/60">
+            <p id="profileName" class="text-sm font-medium">User</p>
+            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+          </div>
+          <div class="py-1">
+            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My
+              Profile</a>
+            <a href="./settings.html"
+              class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
+            <button id="logoutBtn"
+              class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Friends</h1>
+        <div class="flex items-center gap-2">
+          <span id="friendCount" class="px-4 py-2 bg-slate-800/60 rounded-md text-sm border border-slate-700/60">
+            <span class="font-semibold text-brand-400" id="friendCountNum">0</span> friends
+          </span>
+          <span id="requestCount" class="px-4 py-2 bg-slate-800/60 rounded-md text-sm border border-slate-700/60">
+            <span class="font-semibold text-yellow-400" id="requestCountNum">0</span> pending
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <section class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 shadow-lg overflow-hidden">
+        <div role="tablist" class="flex border-b border-slate-700/60 bg-slate-900/40">
+          <button id="tab-friends" role="tab" aria-selected="true" data-tab="friends"
+            class="px-6 py-3 text-sm font-medium border-b-2 border-brand-600 text-brand-400 transition-colors">My
+            Friends</button>
+          <button id="tab-requests" role="tab" aria-selected="false" data-tab="requests"
+            class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors relative">
+            Friend Requests
+            <span id="requestBadge"
+              class="hidden absolute -top-1 -right-1 h-5 w-5 bg-yellow-500 text-slate-900 text-xs font-bold rounded-full flex items-center justify-center">0</span>
+          </button>
+        </div>
+        <div class="p-6 min-h-[400px]">
+          <div id="panel-friends" role="tabpanel" aria-labelledby="tab-friends">
+            <div class="flex items-start justify-between mb-4">
+              <h2 class="text-lg font-semibold">Your Friends</h2>
+              <button id="refreshFriends"
+                class="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 transition-colors">Refresh</button>
+            </div>
+            <div id="friendsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div class="animate-pulse bg-slate-700/50 rounded-lg h-48"></div>
+            </div>
+          </div>
+          <div id="panel-requests" role="tabpanel" aria-labelledby="tab-requests" hidden>
+            <div class="flex items-start justify-between mb-4">
+              <h2 class="text-lg font-semibold">Pending Requests</h2>
+              <button id="refreshRequests"
+                class="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 transition-colors">Refresh</button>
+            </div>
+            <div id="requestsList" class="space-y-3">
+              <div class="animate-pulse bg-slate-700/50 rounded-lg h-24"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="mt-auto border-t border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
+      <span>&copy; 2025 Movie Community</span>
+      <span class="opacity-70">All rights reserved.</span>
+      <span class="opacity-70">Friends Page 1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    // Utility fetch wrapper
+    async function apiFetch(url) {
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Request failed');
+      return res.json();
+    }
+
+    // Load current user for profile dropdown
+    async function loadCurrentUser() {
+      try {
+        const user = await apiFetch('/api/auth/me');
+        document.getElementById('profileName').textContent = user.name || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        const avatar = document.getElementById('profileAvatar');
+        const initials = (user.name || 'U').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        avatar.textContent = initials;
+      } catch (e) { console.error('Failed to load user', e); }
+    }
+
+    // Notifications handling (same as other pages)
+    async function loadNotifications() {
+      const list = document.getElementById('notifList');
+      try {
+        const notifs = await apiFetch('/api/notifications?unread=true');
+        list.innerHTML = '';
+        if (!notifs.length) {
+          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
+          document.getElementById('notifBadge').classList.add('hidden');
+          return;
+        }
+        const badge = document.getElementById('notifBadge');
+        badge.textContent = Math.min(notifs.length, 9);
+        badge.classList.remove('hidden');
+        notifs.slice(0, 5).forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ', 'T')).toLocaleString()}</p>`;
+          div.addEventListener('click', async () => {
+            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+            await loadNotifications();
+          });
+          list.appendChild(div);
+        });
+      } catch (e) { console.error('Notifications error', e); }
+    }
+
+    // Global search (same as other pages)
+    let searchTimer = null;
+    const searchInput = document.getElementById('globalSearch');
+    const searchResults = document.getElementById('searchResults');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        const term = e.target.value.trim();
+        if (searchTimer) clearTimeout(searchTimer);
+        if (!term) { searchResults.classList.add('hidden'); return; }
+        searchTimer = setTimeout(async () => {
+          try {
+            const movies = await apiFetch('/api/movies/search?query=' + encodeURIComponent(term));
+            searchResults.innerHTML = '';
+            if (!movies.length) {
+              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+              searchResults.classList.remove('hidden');
+              return;
+            }
+            movies.forEach(m => {
+              const a = document.createElement('a');
+              a.href = `./movie.html?id=${m.id}`;
+              a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
+              a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year || ''})</span>`;
+              searchResults.appendChild(a);
+            });
+            searchResults.classList.remove('hidden');
+          } catch (e) { console.error('Search error', e); }
+        }, 300);
+      });
+    }
+
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); }
+        catch (e) { console.error('Logout error', e); }
+        window.location.href = '/login.html';
+      });
+    }
+
+    // Friends list
+    async function loadFriends() {
+      const container = document.getElementById('friendsList');
+      container.innerHTML = '';
+      try {
+        const friends = await apiFetch('/api/friends');
+        document.getElementById('friendCountNum').textContent = friends.length;
+        if (friends.length === 0) {
+          container.innerHTML = '<p class="col-span-full text-center py-12 text-slate-400">You have no friends yet. Find people to connect with!</p>';
+          return;
+        }
+        friends.forEach(f => container.appendChild(createFriendCard(f)));
+      } catch (e) {
+        console.error('Failed to load friends', e);
+        container.innerHTML = '<p class="text-sm text-red-400">Failed to load friends.</p>';
+      }
+    }
+
+    function createFriendCard(friend) {
+      const card = document.createElement('div');
+      card.className = 'bg-slate-900/40 rounded-lg border border-slate-700/40 p-4 hover:border-slate-600 transition-colors';
+      const initials = (friend.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const avatar = friend.profile_picture && !friend.profile_picture.includes('.jpg')
+        ? `<img src="${friend.profile_picture}" alt="${friend.name}" class="w-full h-full object-cover" />`
+        : initials;
+      card.innerHTML = `
+        <div class="flex flex-col items-center text-center space-y-3">
+          <a href="./profile.html?id=${friend.id || friend.user_id}" class="group">
+            <div class="h-20 w-20 rounded-full bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-300 overflow-hidden group-hover:scale-105 transition-transform">
+              ${avatar}
+            </div>
+          </a>
+          <div class="flex-1">
+            <a href="./profile.html?id=${friend.id || friend.user_id}" class="font-medium hover:text-brand-400 transition-colors">
+              ${friend.name || 'Unknown'}
+            </a>
+            ${friend.fav_genre ? `<p class="text-xs text-slate-400 mt-1">${friend.fav_genre}</p>` : ''}
+          </div>
+          <button class="remove-friend-btn px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 rounded text-xs font-medium text-red-300 transition-colors" data-friend-id="${friend.id || friend.user_id}" data-friend-name="${friend.name}">Remove</button>
+        </div>
+      `;
+      return card;
+    }
+
+    async function removeFriend(friendId, friendName) {
+      if (!confirm(`Remove ${friendName} from your friends?`)) return;
+      try {
+        const res = await fetch('/api/friendship/remove', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friend_id: friendId })
+        });
+        if (!res.ok) throw new Error('Failed to remove friend');
+        await loadFriends();
+      } catch (e) {
+        console.error('Remove friend error', e);
+        alert('Failed to remove friend. Please try again.');
+      }
+    }
+
+    // Friend requests
+    async function loadRequests() {
+      const container = document.getElementById('requestsList');
+      container.innerHTML = '';
+      try {
+        const requests = await apiFetch('/api/friendship/requests');
+        document.getElementById('requestCountNum').textContent = requests.length;
+        const badge = document.getElementById('requestBadge');
+        if (requests.length > 0) { badge.textContent = requests.length; badge.classList.remove('hidden'); }
+        else { badge.classList.add('hidden'); }
+        if (requests.length === 0) {
+          container.innerHTML = '<p class="col-span-full text-center py-12 text-slate-400">No pending requests.</p>';
+          return;
+        }
+        requests.forEach(r => container.appendChild(createRequestCard(r)));
+      } catch (e) {
+        console.error('Failed to load requests', e);
+        container.innerHTML = '<p class="text-sm text-red-400">Failed to load requests.</p>';
+      }
+    }
+
+    function createRequestCard(request) {
+      const card = document.createElement('div');
+      card.className = 'bg-slate-900/40 rounded-lg border border-slate-700/40 p-4 hover:border-slate-600 transition-colors';
+      card.dataset.requestId = request.friendship_id;
+      const initials = (request.sender_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const avatar = request.sender_profile_picture && !request.sender_profile_picture.includes('.jpg')
+        ? `<img src="${request.sender_profile_picture}" alt="${request.sender_name}" class="w-full h-full object-cover" />`
+        : initials;
+      const timeAgo = formatTimeAgo(request.created_date);
+      card.innerHTML = `
+        <div class="flex items-center gap-4">
+          <a href="./profile.html?id=${request.sender_id}" class="shrink-0 group">
+            <div class="h-14 w-14 rounded-full bg-slate-700 flex items-center justify-center text-lg font-bold text-slate-300 overflow-hidden group-hover:scale-105 transition-transform">
+              ${avatar}
+            </div>
+          </a>
+          <div class="flex-1 min-w-0">
+            <a href="./profile.html?id=${request.sender_id}" class="font-medium hover:text-brand-400 transition-colors">
+              ${request.sender_name || 'Unknown User'}
+            </a>
+            <p class="text-xs text-slate-400 mt-0.5">${timeAgo}</p>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button class="accept-request-btn inline-flex items-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-500 rounded text-sm font-medium transition-colors" data-friendship-id="${request.friendship_id}" data-sender-id="${request.sender_id}">Accept</button>
+            <button class="decline-request-btn inline-flex items-center gap-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium transition-colors" data-friendship-id="${request.friendship_id}" data-sender-id="${request.sender_id}">Decline</button>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    async function respondToRequest(friendshipId, senderId, action) {
+      try {
+        const res = await fetch('/api/friendship/respond', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friendship_id: friendshipId, action })
+        });
+        if (!res.ok) throw new Error(`Failed to ${action} request`);
+        // Animate removal
+        const card = document.querySelector(`[data-request-id="${friendshipId}"]`);
+        if (card) { card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; card.style.transition = 'all 0.2s'; setTimeout(() => card.remove(), 200); }
+        // Refresh lists
+        await loadRequests();
+        if (action === 'accept') await loadFriends();
+      } catch (e) {
+        console.error(`Failed to ${action} request`, e);
+        alert(`Failed to ${action} request. Please try again.`);
+      }
+    }
+
+    function formatTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const seconds = Math.floor((now - date) / 1000);
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+      if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Tab handling
+    function initTabs() {
+      const tabs = document.querySelectorAll('[role="tab"]');
+      const panels = { friends: document.getElementById('panel-friends'), requests: document.getElementById('panel-requests') };
+      function activate(name) {
+        tabs.forEach(t => {
+          const active = t.dataset.tab === name;
+          t.setAttribute('aria-selected', active);
+          t.classList.toggle('border-brand-600', active);
+          t.classList.toggle('text-brand-400', active);
+          t.classList.toggle('border-transparent', !active);
+          t.classList.toggle('text-slate-400', !active);
+        });
+        Object.entries(panels).forEach(([k, p]) => {
+          if (k === name) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+        });
+      }
+      tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
+    }
+
+    // Global click handler to close dropdowns
+    document.addEventListener('click', e => {
+      const notifBtn = document.getElementById('notifBtn');
+      const notifDropdown = document.getElementById('notifDropdown');
+      const profileBtn = document.getElementById('profileBtn');
+      const profileDropdown = document.getElementById('profileDropdown');
+      if (notifBtn && notifDropdown && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) notifDropdown.classList.add('hidden');
+      if (profileBtn && profileDropdown && !profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) profileDropdown.classList.add('hidden');
+      if (searchInput && searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
+    });
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTabs();
+      await loadCurrentUser();
+      await Promise.all([loadFriends(), loadRequests()]);
+      document.getElementById('refreshFriends').addEventListener('click', loadFriends);
+      document.getElementById('refreshRequests').addEventListener('click', loadRequests);
+      // Notification button
+      const notifBtn = document.getElementById('notifBtn');
+      const notifDropdown = document.getElementById('notifDropdown');
+      if (notifBtn) {
+        notifBtn.addEventListener('click', async () => {
+          notifDropdown.classList.toggle('hidden');
+          if (!notifDropdown.classList.contains('hidden')) await loadNotifications();
+        });
+      }
+      // Expose functions for inline handlers (if any)
+      window.removeFriend = removeFriend;
+      window.respondToRequest = respondToRequest;
+    });
+  </script>
+</body>
+
+</html>
