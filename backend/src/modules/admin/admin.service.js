@@ -1,5 +1,6 @@
 const { pool } = require('../../config/db');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 // ========================================
 // ADMIN AUTHENTICATION
@@ -20,9 +21,9 @@ async function adminLogin(email, password) {
 
     const admin = admins[0];
 
-    // For demo purposes, we're comparing plain text passwords
-    // In production, use bcrypt.compare(password, admin.password)
-    if (password !== admin.password) {
+    // Compare password using bcrypt
+    const isValidPassword = await bcrypt.compare(password, admin.password);
+    if (!isValidPassword) {
         throw new Error('Invalid credentials');
     }
 
