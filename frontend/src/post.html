@@ -177,11 +177,25 @@
     async function likePost(){
       likePostBtn.disabled=true; const original=likePostBtn.textContent;
       try {
-        const res = await fetch('/api/posts/'+postId+'/like', { method:'POST', credentials: 'include' });
-        if(!res.ok) throw new Error();
-        const data = await res.json().catch(()=>({ like_count: parseInt(original.match(/\d+/)||0)+1 }));
-        likePostBtn.textContent = 'Like ('+(data.like_count||0)+')';
-      } catch { likePostBtn.textContent = original; }
+        const token = localStorage.getItem('userToken');
+        const res = await fetch('/api/posts/'+postId+'/like', { 
+          method:'POST', 
+          credentials: 'include',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+        const data = await res.json().catch(()=>({}));
+        if(!res.ok) {
+          alert(data.error || 'Failed to like post');
+          likePostBtn.textContent = original;
+          return;
+        }
+        likePostBtn.textContent = (data.liked ? 'Unlike' : 'Like') + ' ('+(data.like_count||0)+')';
+      } catch { 
+        likePostBtn.textContent = original; 
+        alert('Failed to like post');
+      }
       finally { likePostBtn.disabled=false; }
     }
 

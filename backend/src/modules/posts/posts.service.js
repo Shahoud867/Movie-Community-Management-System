@@ -1,4 +1,5 @@
 const { pool } = require('../../config/db');
+const { createNotification } = require('../notifications/notifications.service');
 
 /**
  * Get posts for a specific movie
@@ -144,6 +145,17 @@ async function deletePost(postId, userId) {
  * Like/Unlike a post (toggle)
  */
 async function likePost(postId, userId) {
+  // Get the post to check ownership
+  const post = await getPostById(postId);
+  if (!post) {
+    throw new Error('Post not found');
+  }
+
+  // Prevent self-likes
+  if (post.user_id === userId) {
+    throw new Error('You cannot like your own post');
+  }
+
   // Check if user already liked the post
   const [existing] = await pool.query(
     'SELECT like_id FROM Like_Post WHERE post_id = ? AND user_id = ?',
@@ -188,12 +200,28 @@ async function likePost(postId, userId) {
       throw new Error('Post not found');
     }
 
-    const post = await getPostById(postId);
+    const updatedPost = await getPostById(postId);
+
+    // Create notification for post owner (with sender's name)
+    try {
+      const [likerInfo] = await pool.query('SELECT name FROM Users WHERE user_id = ?', [userId]);
+      const likerName = likerInfo[0]?.name || 'Someone';
+      await createNotification({
+        recipient_id: post.user_id,
+        sender_id: userId,
+        notification_type: 'like',
+        reference_id: postId,
+        message: `${likerName} liked your post`
+      });
+    } catch (err) {
+      // Don't fail the like if notification fails
+      console.error('Failed to create like notification:', err.message);
+    }
 
     return {
       post_id: postId,
       liked: true,
-      like_count: post.like_count,
+      like_count: updatedPost.like_count,
       message: 'Post liked successfully'
     };
   }
@@ -256,6 +284,19 @@ async function createComment(postId, userId, content) {
     'UPDATE Post SET comment_count = comment_count + 1 WHERE post_id = ?',
     [postId]
   );
+
+  // Create notification for post owner (if commenter is not the owner)
+  if (post.user_id !== userId) {
+    const [commenterInfo] = await pool.query('SELECT name FROM Users WHERE user_id = ?', [userId]);
+    const commenterName = commenterInfo[0]?.name || 'Someone';
+    await createNotification({
+      recipient_id: post.user_id,
+      sender_id: userId,
+      notification_type: 'comment',
+      reference_id: postId,
+      message: `${commenterName} commented on your post`
+    });
+  }
 
   return {
     comment_id: result.insertId,

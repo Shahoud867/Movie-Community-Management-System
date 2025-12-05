@@ -120,6 +120,52 @@ async function getUnreadCount(userId) {
   return { unread_count: rows[0].count };
 }
 
+/**
+ * Delete notifications older than 24 hours
+ * This function is called periodically to cleanup old notifications
+ */
+async function cleanupOldNotifications() {
+  const [result] = await pool.query(
+    `DELETE FROM Notification 
+     WHERE created_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)`
+  );
+
+  return { deleted_count: result.affectedRows };
+}
+
+/**
+ * Start the notification cleanup scheduler
+ * Runs every hour to remove notifications older than 24 hours
+ */
+function startCleanupScheduler() {
+  // Run cleanup immediately on startup
+  cleanupOldNotifications()
+    .then(result => {
+      if (result.deleted_count > 0) {
+        console.log(`[Notification Cleanup] Removed ${result.deleted_count} old notifications`);
+      }
+    })
+    .catch(err => {
+      console.error('[Notification Cleanup] Error:', err.message);
+    });
+
+  // Schedule cleanup to run every hour (3600000 ms)
+  const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+  
+  setInterval(async () => {
+    try {
+      const result = await cleanupOldNotifications();
+      if (result.deleted_count > 0) {
+        console.log(`[Notification Cleanup] Removed ${result.deleted_count} old notifications`);
+      }
+    } catch (err) {
+      console.error('[Notification Cleanup] Error:', err.message);
+    }
+  }, CLEANUP_INTERVAL);
+
+  console.log('[Notification Cleanup] Scheduler started - runs every hour');
+}
+
 module.exports = {
   getUserNotifications,
   markAsSeen,
@@ -127,4 +173,6 @@ module.exports = {
   createNotification,
   deleteNotification,
   getUnreadCount,
+  cleanupOldNotifications,
+  startCleanupScheduler,
 };

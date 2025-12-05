@@ -1,6 +1,41 @@
 const { pool } = require('../../config/db');
 
+/**
+ * Get dashboard summary using stored procedure and functions
+ */
 async function getDashboardSummary(userId) {
+  // Try to use stored procedure first
+  try {
+    const [results] = await pool.query('CALL sp_get_user_dashboard(?)', [userId]);
+    // Stored procedure returns multiple result sets
+    const userStats = results[0]?.[0] || {};
+    const recommendedMovies = results[1] || [];
+    const upcomingEvents = results[2] || [];
+    
+    return {
+      watchlist: {
+        total: (userStats.watchlist_count || 0) + (userStats.watched_count || 0),
+        to_watch: userStats.watchlist_count || 0,
+        watching: 0,
+        completed: userStats.watched_count || 0
+      },
+      recommendedMovies,
+      upcomingEvents,
+      userStats: {
+        review_count: userStats.reviews_count || 0,
+        friend_count: userStats.friends_count || 0
+      }
+    };
+  } catch (error) {
+    // Fallback to manual queries if stored procedure doesn't exist
+    return getDashboardSummaryManual(userId);
+  }
+}
+
+/**
+ * Manual fallback for dashboard summary
+ */
+async function getDashboardSummaryManual(userId) {
   // Get user's watchlist stats
   const [watchlistStats] = await pool.query(
     `SELECT 
@@ -77,4 +112,68 @@ async function getDashboardSummary(userId) {
   };
 }
 
-module.exports = { getDashboardSummary };
+/**
+ * Get friend-based movie recommendations using function
+ */
+async function getFriendRecommendations(userId, limit = 10) {
+  try {
+    // Use the database function for friend-based recommendations
+    const [movies] = await pool.query(
+      `SELECT m.movie_id, m.title, m.poster, m.average_rating, m.release_year,
+              fn_get_friend_recommendation_score(?, m.movie_id) AS friend_score,
+              fn_matches_user_preference(?, m.movie_id) AS matches_preference
+       FROM Movie m
+       WHERE m.movie_id NOT IN (SELECT movie_id FROM Watchlist WHERE user_id = ?)
+       HAVING friend_score > 0 OR matches_preference = TRUE
+       ORDER BY friend_score DESC, matches_preference DESC, m.average_rating DESC
+       LIMIT ?`,
+      [userId, userId, userId, limit]
+    );
+    return movies;
+  } catch (error) {
+    // Fallback if functions don't exist
+    return [];
+  }
+}
+
+/**
+ * Get user engagement score using function
+ */
+async function getUserEngagementScore(userId) {
+  try {
+    const [result] = await pool.query(
+      'SELECT fn_user_engagement_score(?) AS engagement_score',
+      [userId]
+    );
+    return result[0]?.engagement_score || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Get top engaged users (leaderboard)
+ */
+async function getTopEngagedUsers(limit = 10) {
+  try {
+    const [users] = await pool.query(
+      `SELECT u.user_id, u.name, u.profile_picture,
+              fn_user_engagement_score(u.user_id) AS engagement_score
+       FROM Users u
+       WHERE u.is_active = TRUE
+       ORDER BY engagement_score DESC
+       LIMIT ?`,
+      [limit]
+    );
+    return users;
+  } catch (error) {
+    return [];
+  }
+}
+
+module.exports = { 
+  getDashboardSummary,
+  getFriendRecommendations,
+  getUserEngagementScore,
+  getTopEngagedUsers
+};

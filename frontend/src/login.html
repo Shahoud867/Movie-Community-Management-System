@@ -97,6 +97,13 @@
         if (!response.ok) {
           throw new Error(data.message || 'Login failed');
         }
+        // Save user data to localStorage
+        if (data.token) {
+          localStorage.setItem('userToken', data.token);
+        }
+        if (data.user) {
+          localStorage.setItem('userData', JSON.stringify(data.user));
+        }
         // Successful login – redirect to user dashboard
         window.location.href = '/dashboard.html';
       } catch (err) {

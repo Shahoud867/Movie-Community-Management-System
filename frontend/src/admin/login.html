@@ -97,6 +97,13 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'Login failed');
                 }
+                // Store token and admin data
+                if (data.token) {
+                    localStorage.setItem('adminToken', data.token);
+                }
+                if (data.admin) {
+                    localStorage.setItem('admin', JSON.stringify(data.admin));
+                }
                 // Successful login – redirect to admin dashboard
                 window.location.href = '/admin/dashboard.html';
             } catch (err) {

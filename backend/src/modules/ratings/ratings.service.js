@@ -95,21 +95,32 @@ async function deleteRating(userId, movieId) {
 }
 
 /**
- * Update movie's average rating
+ * Update movie's average rating using stored procedure
  */
 async function updateMovieAverageRating(movieId) {
-  const [result] = await pool.query(
-    `UPDATE Movie m
-     SET average_rating = (
-       SELECT COALESCE(AVG(score), 0)
-       FROM Rating
-       WHERE movie_id = ?
-     )
-     WHERE m.movie_id = ?`,
-    [movieId, movieId]
-  );
-  
-  return result;
+  // Use stored procedure instead of manual calculation
+  // The trigger trg_rating_insert/update/delete handles this automatically
+  // But we can also call the procedure explicitly for manual updates
+  try {
+    const [result] = await pool.query('CALL sp_update_movie_rating(?)', [movieId]);
+    return result[0]?.[0] || { updated_rating: 0, movie_id: movieId };
+  } catch (error) {
+    // Fallback to manual update if procedure doesn't exist
+    const [result] = await pool.query(
+      `UPDATE Movie m
+       SET average_rating = (
+         SELECT COALESCE(AVG(score), 0)
+         FROM Rating
+         WHERE movie_id = ?
+       ),
+       total_reviews = (
+         SELECT COUNT(*) FROM Rating WHERE movie_id = ?
+       )
+       WHERE m.movie_id = ?`,
+      [movieId, movieId, movieId]
+    );
+    return result;
+  }
 }
 
 module.exports = {

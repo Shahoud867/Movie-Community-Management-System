@@ -143,6 +143,9 @@ async function likePostController(req, res, next) {
     if (err.message === 'Post not found') {
       return res.status(404).json({ error: err.message });
     }
+    if (err.message === 'You cannot like your own post') {
+      return res.status(400).json({ error: err.message });
+    }
     next(err);
   }
 }

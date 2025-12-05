@@ -483,19 +483,69 @@ INSERT INTO Like_Post (post_id, user_id) VALUES
 
 -- 14. Messages (between friends)
 INSERT INTO Message (sender_id, receiver_id, content, read_status) VALUES
+-- Conversation between Ahmed (1) and Laura (2)
 (1, 2, 'Hey Laura! Have you seen Inception?', TRUE),
 (2, 1, 'Yes! It was amazing, Nolan is a genius!', TRUE),
-(1, 2, 'Right? The ending still blows my mind.', FALSE),
+(1, 2, 'Right? The ending still blows my mind.', TRUE),
+(2, 1, 'Do you think the totem fell at the end?', TRUE),
+(1, 2, 'I believe it did! He finally found peace.', TRUE),
+(2, 1, 'We should watch it together at the movie night!', FALSE),
+
+-- Conversation between Ahmed (1) and Javier (3)
 (1, 3, 'Javier, any Spanish movie recommendations?', TRUE),
 (3, 1, 'Try El Secreto de Sus Ojos, it is a masterpiece!', TRUE),
+(1, 3, 'Just watched it. The twist at the end was incredible!', TRUE),
+(3, 1, 'Told you! Ricardo Darín is phenomenal in it.', TRUE),
+(1, 3, 'Any more recommendations like this?', FALSE),
+
+-- Conversation between Javier (3) and Zahra (4)
 (3, 4, 'Zahra, have you watched A Separation?', TRUE),
 (4, 3, 'Of course! Farhadi is my favorite director.', TRUE),
+(3, 4, 'The way he builds tension is incredible.', TRUE),
+(4, 3, 'You should watch About Elly too!', TRUE),
+(3, 4, 'Adding it to my watchlist right now!', TRUE),
+(4, 3, 'Let me know what you think after watching!', FALSE),
+
+-- Conversation between Chen (5) and Bilal (6)
 (5, 6, 'Bilal, recommend me a good horror movie!', TRUE),
-(6, 5, 'You should watch The Conjuring series.', FALSE),
+(6, 5, 'You should watch The Conjuring series.', TRUE),
+(5, 6, 'Is it really that scary?', TRUE),
+(6, 5, 'Trust me, don''t watch it alone at night!', TRUE),
+(5, 6, 'Now I''m both scared and excited haha', FALSE),
+
+-- Conversation between Fatima (7) and Hassan (9)
 (7, 9, 'Hassan, what do you think about Waar?', TRUE),
 (9, 7, 'Best Pakistani action film ever made!', TRUE),
+(7, 9, 'The action sequences were top-notch!', TRUE),
+(9, 7, 'Shaan Shahid was incredible in it.', TRUE),
+(7, 9, 'Should we organize a Pakistani film marathon?', TRUE),
+(9, 7, 'Great idea! Let''s include Khuda Ke Liye too.', FALSE),
+
+-- Conversation between Maria (8) and Natalie (10)
 (8, 10, 'Natalie, Pan''s Labyrinth made me cry.', TRUE),
-(10, 8, 'Same here! Such an emotional film.', FALSE);
+(10, 8, 'Same here! Such an emotional film.', TRUE),
+(8, 10, 'The faun was both creepy and fascinating.', TRUE),
+(10, 8, 'Del Toro is a master of dark fantasy!', TRUE),
+(8, 10, 'Have you seen Shape of Water?', TRUE),
+(10, 8, 'Yes! Another del Toro masterpiece.', FALSE),
+
+-- Conversation between Ahmed (1) and Zahra (4)
+(1, 4, 'Zahra, heard you''re an Iranian cinema expert!', TRUE),
+(4, 1, 'Haha, I try! What would you like to know?', TRUE),
+(1, 4, 'Best Iranian film to start with?', TRUE),
+(4, 1, 'Definitely A Separation. It won the Oscar!', TRUE),
+
+-- Conversation between Laura (2) and Maria (8)
+(2, 8, 'Maria! Did you enjoy La La Land?', TRUE),
+(8, 2, 'OMG yes! I cried at the ending.', TRUE),
+(2, 8, 'The Planetarium scene was magical!', TRUE),
+(8, 2, 'We should do a musical movie marathon!', FALSE),
+
+-- Conversation between Bilal (6) and Fatima (7)
+(6, 7, 'Are you joining the Pakistani Film Festival event?', TRUE),
+(7, 6, 'Definitely! I''m so excited for Waar screening.', TRUE),
+(6, 7, 'Let''s sit together and discuss after!', TRUE),
+(7, 6, 'Sounds like a plan!', FALSE);
 
 -- 15. Events (Watch Parties)
 INSERT INTO Event (title, description, host_id, movie_id, event_datetime, capacity, current_participants, status) VALUES
@@ -551,7 +601,608 @@ INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value
 (3,'INSERT','Genre',9,'NULL','Mystery genre added','192.168.1.18');
 
 -- ========================================
--- DATA INSERTION COMPLETE âœ…
+-- DATA INSERTION COMPLETE ✅
+-- ========================================
+
+
+-- =====================================================
+-- PART 7: USEFUL QUERIES WITH JOINS, AGGREGATES, GROUPING
+-- =====================================================
+
+-- Query 1: Get all movies with their genres (JOIN)
+SELECT m.movie_id, m.title, m.release_year, m.average_rating,
+       GROUP_CONCAT(g.genre_name SEPARATOR ', ') AS genres
+FROM Movie m
+LEFT JOIN Movie_Genre mg ON m.movie_id = mg.movie_id
+LEFT JOIN Genre g ON mg.genre_id = g.genre_id
+GROUP BY m.movie_id, m.title, m.release_year, m.average_rating
+ORDER BY m.average_rating DESC;
+
+-- Query 2: Get top rated movies with rating stats (AGGREGATE + GROUP BY)
+SELECT m.movie_id, m.title, m.release_year,
+       COUNT(r.rating_id) AS rating_count,
+       AVG(r.score) AS avg_rating,
+       MAX(r.score) AS max_rating,
+       MIN(r.score) AS min_rating
+FROM Movie m
+LEFT JOIN Rating r ON m.movie_id = r.movie_id
+GROUP BY m.movie_id, m.title, m.release_year
+HAVING COUNT(r.rating_id) > 0
+ORDER BY avg_rating DESC, rating_count DESC;
+
+-- Query 3: Get user activity summary (Multiple JOINs + Aggregates)
+SELECT u.user_id, u.name, u.email,
+       COUNT(DISTINCT w.watchlist_id) AS watchlist_count,
+       COUNT(DISTINCT r.review_id) AS review_count,
+       COUNT(DISTINCT p.post_id) AS post_count,
+       COUNT(DISTINCT e.event_id) AS events_hosted
+FROM Users u
+LEFT JOIN Watchlist w ON u.user_id = w.user_id
+LEFT JOIN Review r ON u.user_id = r.user_id
+LEFT JOIN Post p ON u.user_id = p.user_id
+LEFT JOIN Event e ON u.user_id = e.host_id
+GROUP BY u.user_id, u.name, u.email
+ORDER BY review_count DESC;
+
+-- Query 4: Get movies watched by friends (Complex JOIN)
+SELECT DISTINCT m.movie_id, m.title, m.poster, m.average_rating,
+       COUNT(DISTINCT w.user_id) AS friends_watching
+FROM Movie m
+JOIN Watchlist w ON m.movie_id = w.movie_id
+JOIN Friendship f ON (w.user_id = f.sender_id OR w.user_id = f.receiver_id)
+WHERE f.status = 'accepted'
+  AND (f.sender_id = 1 OR f.receiver_id = 1)
+  AND w.user_id != 1
+GROUP BY m.movie_id, m.title, m.poster, m.average_rating
+ORDER BY friends_watching DESC;
+
+-- Query 5: Get monthly user signups (DATE functions + GROUP BY)
+SELECT YEAR(joined_date) AS year,
+       MONTH(joined_date) AS month,
+       COUNT(*) AS signups
+FROM Users
+GROUP BY YEAR(joined_date), MONTH(joined_date)
+ORDER BY year DESC, month DESC;
+
+-- Query 6: Get event participation stats (JOIN + Subquery)
+SELECT e.event_id, e.title, e.event_datetime,
+       u.name AS host_name,
+       m.title AS movie_title,
+       e.capacity,
+       (SELECT COUNT(*) FROM Participation p WHERE p.event_id = e.event_id) AS participants
+FROM Event e
+JOIN Users u ON e.host_id = u.user_id
+JOIN Movie m ON e.movie_id = m.movie_id
+ORDER BY e.event_datetime DESC;
+
+-- Query 7: Get genre popularity (Aggregate + JOIN)
+SELECT g.genre_id, g.genre_name,
+       COUNT(DISTINCT mg.movie_id) AS movie_count,
+       AVG(m.average_rating) AS avg_genre_rating,
+       SUM(m.view_count) AS total_views
+FROM Genre g
+LEFT JOIN Movie_Genre mg ON g.genre_id = mg.genre_id
+LEFT JOIN Movie m ON mg.movie_id = m.movie_id
+GROUP BY g.genre_id, g.genre_name
+ORDER BY movie_count DESC;
+
+-- Query 8: Get users with most friends (Subquery + Aggregate)
+SELECT u.user_id, u.name,
+       (SELECT COUNT(*) FROM Friendship f 
+        WHERE (f.sender_id = u.user_id OR f.receiver_id = u.user_id) 
+        AND f.status = 'accepted') AS friend_count
+FROM Users u
+ORDER BY friend_count DESC
+LIMIT 10;
+
+
+-- =====================================================
+-- PART 8: VIEWS FOR REPORT GENERATION
+-- =====================================================
+
+-- View 1: Movie Statistics Report
+DROP VIEW IF EXISTS vw_movie_statistics;
+CREATE VIEW vw_movie_statistics AS
+SELECT 
+    m.movie_id,
+    m.title,
+    m.release_year,
+    m.average_rating,
+    m.view_count,
+    COUNT(DISTINCT r.review_id) AS total_reviews,
+    COUNT(DISTINCT rt.rating_id) AS total_ratings,
+    COUNT(DISTINCT w.watchlist_id) AS watchlist_adds,
+    GROUP_CONCAT(DISTINCT g.genre_name SEPARATOR ', ') AS genres
+FROM Movie m
+LEFT JOIN Review r ON m.movie_id = r.movie_id
+LEFT JOIN Rating rt ON m.movie_id = rt.movie_id
+LEFT JOIN Watchlist w ON m.movie_id = w.movie_id
+LEFT JOIN Movie_Genre mg ON m.movie_id = mg.movie_id
+LEFT JOIN Genre g ON mg.genre_id = g.genre_id
+GROUP BY m.movie_id, m.title, m.release_year, m.average_rating, m.view_count;
+
+-- View 2: User Activity Report
+DROP VIEW IF EXISTS vw_user_activity_report;
+CREATE VIEW vw_user_activity_report AS
+SELECT 
+    u.user_id,
+    u.name,
+    u.email,
+    u.joined_date,
+    u.last_login,
+    u.is_active,
+    COUNT(DISTINCT r.review_id) AS reviews_written,
+    COUNT(DISTINCT p.post_id) AS posts_created,
+    COUNT(DISTINCT c.comment_id) AS comments_made,
+    COUNT(DISTINCT w.watchlist_id) AS movies_in_watchlist,
+    COUNT(DISTINCT e.event_id) AS events_hosted,
+    (SELECT COUNT(*) FROM Friendship f 
+     WHERE (f.sender_id = u.user_id OR f.receiver_id = u.user_id) 
+     AND f.status = 'accepted') AS friends_count
+FROM Users u
+LEFT JOIN Review r ON u.user_id = r.user_id
+LEFT JOIN Post p ON u.user_id = p.user_id
+LEFT JOIN Comment c ON u.user_id = c.user_id
+LEFT JOIN Watchlist w ON u.user_id = w.user_id
+LEFT JOIN Event e ON u.user_id = e.host_id
+GROUP BY u.user_id, u.name, u.email, u.joined_date, u.last_login, u.is_active;
+
+-- View 3: Admin Dashboard Stats
+DROP VIEW IF EXISTS vw_admin_dashboard;
+CREATE VIEW vw_admin_dashboard AS
+SELECT 
+    (SELECT COUNT(*) FROM Users WHERE is_active = TRUE) AS active_users,
+    (SELECT COUNT(*) FROM Users) AS total_users,
+    (SELECT COUNT(*) FROM Movie) AS total_movies,
+    (SELECT COUNT(*) FROM Review) AS total_reviews,
+    (SELECT COUNT(*) FROM Post) AS total_posts,
+    (SELECT COUNT(*) FROM Event WHERE status = 'scheduled') AS upcoming_events,
+    (SELECT COUNT(*) FROM Moderation WHERE action = 'flagged') AS flagged_content,
+    (SELECT COUNT(*) FROM Report) AS total_reports,
+    (SELECT COUNT(*) FROM Users WHERE joined_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)) AS new_users_week;
+
+-- View 4: Event Participation Report
+DROP VIEW IF EXISTS vw_event_report;
+CREATE VIEW vw_event_report AS
+SELECT 
+    e.event_id,
+    e.title AS event_title,
+    e.event_datetime,
+    e.status,
+    e.capacity,
+    u.name AS host_name,
+    m.title AS movie_title,
+    COUNT(p.user_id) AS current_participants,
+    (e.capacity - COUNT(p.user_id)) AS spots_available
+FROM Event e
+JOIN Users u ON e.host_id = u.user_id
+JOIN Movie m ON e.movie_id = m.movie_id
+LEFT JOIN Participation p ON e.event_id = p.event_id
+GROUP BY e.event_id, e.title, e.event_datetime, e.status, e.capacity, u.name, m.title;
+
+-- View 5: Content Moderation Report
+DROP VIEW IF EXISTS vw_moderation_report;
+CREATE VIEW vw_moderation_report AS
+SELECT 
+    md.moderation_id,
+    md.content_type,
+    md.content_id,
+    md.action,
+    md.reason,
+    md.action_date,
+    a.name AS admin_name,
+    CASE 
+        WHEN md.content_type = 'review' THEN (SELECT review_text FROM Review WHERE review_id = md.content_id)
+        WHEN md.content_type = 'post' THEN (SELECT content FROM Post WHERE post_id = md.content_id)
+        WHEN md.content_type = 'comment' THEN (SELECT content FROM Comment WHERE comment_id = md.content_id)
+    END AS content_preview
+FROM Moderation md
+JOIN Admin a ON md.admin_id = a.admin_id
+ORDER BY md.action_date DESC;
+
+
+-- =====================================================
+-- PART 9: STORED PROCEDURES
+-- =====================================================
+
+-- Procedure 1: Update Movie Average Rating from Rating table
+DROP PROCEDURE IF EXISTS sp_update_movie_rating;
+DELIMITER //
+CREATE PROCEDURE sp_update_movie_rating(IN p_movie_id INT)
+BEGIN
+    DECLARE new_avg DECIMAL(3,1);
+    DECLARE rating_count INT;
+    
+    -- Calculate average from Rating table
+    SELECT AVG(score), COUNT(*) INTO new_avg, rating_count
+    FROM Rating
+    WHERE movie_id = p_movie_id;
+    
+    -- Update movie average rating
+    UPDATE Movie
+    SET average_rating = COALESCE(new_avg, 0),
+        total_reviews = rating_count
+    WHERE movie_id = p_movie_id;
+    
+    SELECT new_avg AS updated_rating, p_movie_id AS movie_id;
+END //
+DELIMITER ;
+
+-- Procedure 2: Add Review with Rating (Transaction)
+DROP PROCEDURE IF EXISTS sp_add_review_with_rating;
+DELIMITER //
+CREATE PROCEDURE sp_add_review_with_rating(
+    IN p_user_id INT,
+    IN p_movie_id INT,
+    IN p_review_text TEXT,
+    IN p_score DECIMAL(3,1)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error adding review';
+    END;
+    
+    START TRANSACTION;
+    
+    -- Insert review (without rating - separate table)
+    INSERT INTO Review (user_id, movie_id, review_text, created_date)
+    VALUES (p_user_id, p_movie_id, p_review_text, NOW());
+    
+    -- Insert rating in Rating table
+    INSERT INTO Rating (user_id, movie_id, score, rated_date)
+    VALUES (p_user_id, p_movie_id, p_score, NOW())
+    ON DUPLICATE KEY UPDATE score = p_score, rated_date = NOW();
+    
+    -- Update movie average rating
+    CALL sp_update_movie_rating(p_movie_id);
+    
+    COMMIT;
+    
+    SELECT 'Review and rating added successfully' AS message;
+END //
+DELIMITER ;
+
+-- Procedure 3: Get User Dashboard Data
+DROP PROCEDURE IF EXISTS sp_get_user_dashboard;
+DELIMITER //
+CREATE PROCEDURE sp_get_user_dashboard(IN p_user_id INT)
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM Watchlist WHERE user_id = p_user_id AND status != 'completed') AS watchlist_count,
+        (SELECT COUNT(*) FROM Watchlist WHERE user_id = p_user_id AND status = 'completed') AS watched_count,
+        (SELECT COUNT(*) FROM Friendship WHERE (sender_id = p_user_id OR receiver_id = p_user_id) AND status = 'accepted') AS friends_count,
+        (SELECT COUNT(*) FROM Review WHERE user_id = p_user_id) AS reviews_count;
+    
+    SELECT m.movie_id, m.title, m.poster, m.average_rating
+    FROM Movie m
+    JOIN Movie_Genre mg ON m.movie_id = mg.movie_id
+    JOIN Genre g ON mg.genre_id = g.genre_id
+    WHERE g.genre_name = (SELECT fav_genre FROM Users WHERE user_id = p_user_id)
+    AND m.movie_id NOT IN (SELECT movie_id FROM Watchlist WHERE user_id = p_user_id)
+    ORDER BY m.average_rating DESC
+    LIMIT 10;
+    
+    SELECT e.event_id, e.title, e.event_datetime, e.capacity, e.current_participants, m.title AS movie_title
+    FROM Event e
+    JOIN Movie m ON e.movie_id = m.movie_id
+    WHERE e.event_datetime > NOW() AND e.status = 'scheduled'
+    ORDER BY e.event_datetime
+    LIMIT 5;
+END //
+DELIMITER ;
+
+-- Procedure 4: Process Friend Request
+DROP PROCEDURE IF EXISTS sp_process_friend_request;
+DELIMITER //
+CREATE PROCEDURE sp_process_friend_request(
+    IN p_friendship_id INT,
+    IN p_action VARCHAR(10)
+)
+BEGIN
+    DECLARE v_sender_id INT;
+    DECLARE v_receiver_id INT;
+    
+    SELECT sender_id, receiver_id INTO v_sender_id, v_receiver_id
+    FROM Friendship WHERE friendship_id = p_friendship_id;
+    
+    IF p_action = 'accept' THEN
+        UPDATE Friendship SET status = 'accepted', response_date = NOW() 
+        WHERE friendship_id = p_friendship_id;
+        
+        -- Create notification using correct column names
+        INSERT INTO Notification (recipient_id, sender_id, notification_type, reference_id, message)
+        VALUES (v_sender_id, v_receiver_id, 'friend_accept', v_receiver_id, 'Your friend request was accepted!');
+    ELSE
+        UPDATE Friendship SET status = 'declined', response_date = NOW() 
+        WHERE friendship_id = p_friendship_id;
+    END IF;
+    
+    SELECT p_action AS result;
+END //
+DELIMITER ;
+
+-- Procedure 5: Clean up old notifications
+DROP PROCEDURE IF EXISTS sp_cleanup_old_notifications;
+DELIMITER //
+CREATE PROCEDURE sp_cleanup_old_notifications(IN days_old INT)
+BEGIN
+    DELETE FROM Notification 
+    WHERE is_seen = TRUE 
+    AND created_date < DATE_SUB(NOW(), INTERVAL days_old DAY);
+    
+    SELECT ROW_COUNT() AS deleted_count;
+END //
+DELIMITER ;
+
+
+-- =====================================================
+-- PART 10: FUNCTIONS FOR RECOMMENDATIONS
+-- =====================================================
+
+-- Function 1: Get Friend-Based Movie Recommendations
+DROP FUNCTION IF EXISTS fn_get_friend_recommendation_score;
+DELIMITER //
+CREATE FUNCTION fn_get_friend_recommendation_score(p_user_id INT, p_movie_id INT)
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE score INT DEFAULT 0;
+    
+    SELECT COUNT(*) INTO score
+    FROM Watchlist w
+    WHERE w.movie_id = p_movie_id
+    AND w.user_id IN (
+        SELECT CASE 
+            WHEN f.sender_id = p_user_id THEN f.receiver_id 
+            ELSE f.sender_id 
+        END
+        FROM Friendship f
+        WHERE (f.sender_id = p_user_id OR f.receiver_id = p_user_id)
+        AND f.status = 'accepted'
+    );
+    
+    RETURN score;
+END //
+DELIMITER ;
+
+-- Function 2: Calculate User Engagement Score
+DROP FUNCTION IF EXISTS fn_user_engagement_score;
+DELIMITER //
+CREATE FUNCTION fn_user_engagement_score(p_user_id INT)
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE score INT DEFAULT 0;
+    DECLARE review_count INT;
+    DECLARE post_count INT;
+    DECLARE friend_count INT;
+    DECLARE event_count INT;
+    
+    SELECT COUNT(*) INTO review_count FROM Review WHERE user_id = p_user_id;
+    SELECT COUNT(*) INTO post_count FROM Post WHERE user_id = p_user_id;
+    SELECT COUNT(*) INTO friend_count FROM Friendship 
+        WHERE (sender_id = p_user_id OR receiver_id = p_user_id) AND status = 'accepted';
+    SELECT COUNT(*) INTO event_count FROM Event WHERE host_id = p_user_id;
+    
+    SET score = (review_count * 5) + (post_count * 3) + (friend_count * 2) + (event_count * 10);
+    
+    RETURN score;
+END //
+DELIMITER ;
+
+-- Function 3: Check if movies match user preference
+DROP FUNCTION IF EXISTS fn_matches_user_preference;
+DELIMITER //
+CREATE FUNCTION fn_matches_user_preference(p_user_id INT, p_movie_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE user_fav_genre VARCHAR(100);
+    DECLARE match_found BOOLEAN DEFAULT FALSE;
+    
+    SELECT fav_genre INTO user_fav_genre FROM Users WHERE user_id = p_user_id;
+    
+    SELECT EXISTS(
+        SELECT 1 FROM Movie_Genre mg
+        JOIN Genre g ON mg.genre_id = g.genre_id
+        WHERE mg.movie_id = p_movie_id AND g.genre_name = user_fav_genre
+    ) INTO match_found;
+    
+    RETURN match_found;
+END //
+DELIMITER ;
+
+
+-- =====================================================
+-- PART 11: TRIGGERS FOR AUDIT TRAIL
+-- =====================================================
+
+-- Trigger 1: Log admin actions on users
+DROP TRIGGER IF EXISTS trg_user_status_change;
+DELIMITER //
+CREATE TRIGGER trg_user_status_change
+AFTER UPDATE ON Users
+FOR EACH ROW
+BEGIN
+    IF OLD.is_active != NEW.is_active THEN
+        INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value, new_value)
+        VALUES (
+            1,
+            CASE WHEN NEW.is_active = TRUE THEN 'ACTIVATE_USER' ELSE 'DEACTIVATE_USER' END,
+            'Users',
+            NEW.user_id,
+            CONCAT('is_active=', OLD.is_active),
+            CONCAT('is_active=', NEW.is_active)
+        );
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger 2: Log new movie additions
+DROP TRIGGER IF EXISTS trg_movie_added;
+DELIMITER //
+CREATE TRIGGER trg_movie_added
+AFTER INSERT ON Movie
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value, new_value)
+    VALUES (
+        COALESCE(NEW.added_by_admin, 1),
+        'INSERT',
+        'Movie',
+        NEW.movie_id,
+        NULL,
+        CONCAT('title=', NEW.title, ', year=', NEW.release_year)
+    );
+END //
+DELIMITER ;
+
+-- Trigger 3: Log movie deletions
+DROP TRIGGER IF EXISTS trg_movie_deleted;
+DELIMITER //
+CREATE TRIGGER trg_movie_deleted
+BEFORE DELETE ON Movie
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value, new_value)
+    VALUES (
+        COALESCE(OLD.added_by_admin, 1),
+        'DELETE',
+        'Movie',
+        OLD.movie_id,
+        CONCAT('title=', OLD.title, ', year=', OLD.release_year),
+        NULL
+    );
+END //
+DELIMITER ;
+
+-- Trigger 4: Auto-update movie rating after rating insert
+DROP TRIGGER IF EXISTS trg_rating_insert;
+DELIMITER //
+CREATE TRIGGER trg_rating_insert
+AFTER INSERT ON Rating
+FOR EACH ROW
+BEGIN
+    UPDATE Movie
+    SET average_rating = (
+        SELECT AVG(score) FROM Rating WHERE movie_id = NEW.movie_id
+    ),
+    total_reviews = (
+        SELECT COUNT(*) FROM Rating WHERE movie_id = NEW.movie_id
+    )
+    WHERE movie_id = NEW.movie_id;
+END //
+DELIMITER ;
+
+-- Trigger 5: Auto-update movie rating after rating update
+DROP TRIGGER IF EXISTS trg_rating_update;
+DELIMITER //
+CREATE TRIGGER trg_rating_update
+AFTER UPDATE ON Rating
+FOR EACH ROW
+BEGIN
+    UPDATE Movie
+    SET average_rating = (
+        SELECT AVG(score) FROM Rating WHERE movie_id = NEW.movie_id
+    )
+    WHERE movie_id = NEW.movie_id;
+END //
+DELIMITER ;
+
+-- Trigger 6: Auto-update movie rating after rating delete
+DROP TRIGGER IF EXISTS trg_rating_delete;
+DELIMITER //
+CREATE TRIGGER trg_rating_delete
+AFTER DELETE ON Rating
+FOR EACH ROW
+BEGIN
+    UPDATE Movie
+    SET average_rating = COALESCE((
+        SELECT AVG(score) FROM Rating WHERE movie_id = OLD.movie_id
+    ), 0),
+    total_reviews = (
+        SELECT COUNT(*) FROM Rating WHERE movie_id = OLD.movie_id
+    )
+    WHERE movie_id = OLD.movie_id;
+END //
+DELIMITER ;
+
+-- Trigger 7: Log moderation actions
+DROP TRIGGER IF EXISTS trg_moderation_log;
+DELIMITER //
+CREATE TRIGGER trg_moderation_log
+AFTER INSERT ON Moderation
+FOR EACH ROW
+BEGIN
+    INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value, new_value)
+    VALUES (
+        NEW.admin_id,
+        CONCAT('MODERATE_', UPPER(NEW.action)),
+        NEW.content_type,
+        NEW.content_id,
+        NULL,
+        CONCAT('action=', NEW.action, ', reason=', COALESCE(NEW.reason, 'No reason'))
+    );
+END //
+DELIMITER ;
+
+-- Trigger 8: Create notification on friend request
+DROP TRIGGER IF EXISTS trg_friend_request_notification;
+DELIMITER //
+CREATE TRIGGER trg_friend_request_notification
+AFTER INSERT ON Friendship
+FOR EACH ROW
+BEGIN
+    DECLARE sender_name VARCHAR(100);
+    SELECT name INTO sender_name FROM Users WHERE user_id = NEW.sender_id;
+    
+    INSERT INTO Notification (recipient_id, sender_id, notification_type, reference_id, message, is_seen, created_date)
+    VALUES (
+        NEW.receiver_id,
+        NEW.sender_id,
+        'friend_request',
+        NEW.friendship_id,
+        CONCAT(sender_name, ' sent you a friend request'),
+        FALSE,
+        NOW()
+    );
+END //
+DELIMITER ;
+
+
+-- =====================================================
+-- PART 12: SAMPLE QUERY USAGE EXAMPLES
+-- =====================================================
+
+-- Get friend-based recommendations for a user
+-- SELECT m.movie_id, m.title, m.poster, m.average_rating,
+--        fn_get_friend_recommendation_score(1, m.movie_id) AS friend_score,
+--        fn_matches_user_preference(1, m.movie_id) AS matches_preference
+-- FROM Movie m
+-- WHERE m.movie_id NOT IN (SELECT movie_id FROM Watchlist WHERE user_id = 1)
+-- ORDER BY friend_score DESC, m.average_rating DESC
+-- LIMIT 10;
+
+-- Get top engaged users
+-- SELECT u.user_id, u.name, fn_user_engagement_score(u.user_id) AS engagement_score
+-- FROM Users u
+-- WHERE u.is_active = TRUE
+-- ORDER BY engagement_score DESC
+-- LIMIT 10;
+
+-- Use the views
+-- SELECT * FROM vw_movie_statistics ORDER BY total_reviews DESC LIMIT 10;
+-- SELECT * FROM vw_user_activity_report ORDER BY reviews_written DESC;
+-- SELECT * FROM vw_admin_dashboard;
+-- SELECT * FROM vw_event_report WHERE status = 'scheduled';
+
+-- ========================================
+-- DATABASE SETUP COMPLETE ✅
 -- ========================================
 
 

@@ -194,9 +194,103 @@ async function getAllGenres() {
   return genres;
 }
 
+/**
+ * Get Top 10 Highest Rated Movies
+ */
+async function getTopRatedMovies(limit = 10) {
+  const [movies] = await pool.query(
+    `SELECT 
+      m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
+      m.duration_minutes, m.language, m.director, m.average_rating,
+      m.total_reviews, m.view_count
+    FROM Movie m
+    WHERE m.total_reviews >= 1
+    ORDER BY m.average_rating DESC, m.total_reviews DESC
+    LIMIT ?`,
+    [limit]
+  );
+
+  // Fetch genres for each movie
+  if (movies.length > 0) {
+    const movieIds = movies.map((m) => m.movie_id);
+    const genresQuery = `
+      SELECT mg.movie_id, g.genre_id, g.genre_name
+      FROM Movie_Genre mg
+      INNER JOIN Genre g ON mg.genre_id = g.genre_id
+      WHERE mg.movie_id IN (${movieIds.map(() => '?').join(',')})
+    `;
+    const [genresData] = await pool.query(genresQuery, movieIds);
+
+    const genresByMovie = {};
+    genresData.forEach((row) => {
+      if (!genresByMovie[row.movie_id]) {
+        genresByMovie[row.movie_id] = [];
+      }
+      genresByMovie[row.movie_id].push({
+        genre_id: row.genre_id,
+        genre_name: row.genre_name,
+      });
+    });
+
+    movies.forEach((movie) => {
+      movie.genres = genresByMovie[movie.movie_id] || [];
+    });
+  }
+
+  return movies;
+}
+
+/**
+ * Get Top 10 Trending/Most Watched Movies
+ */
+async function getTrendingMovies(limit = 10) {
+  const [movies] = await pool.query(
+    `SELECT 
+      m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
+      m.duration_minutes, m.language, m.director, m.average_rating,
+      m.total_reviews, m.view_count,
+      (SELECT COUNT(*) FROM Watchlist w WHERE w.movie_id = m.movie_id) as watchlist_count
+    FROM Movie m
+    ORDER BY m.view_count DESC, watchlist_count DESC, m.average_rating DESC
+    LIMIT ?`,
+    [limit]
+  );
+
+  // Fetch genres for each movie
+  if (movies.length > 0) {
+    const movieIds = movies.map((m) => m.movie_id);
+    const genresQuery = `
+      SELECT mg.movie_id, g.genre_id, g.genre_name
+      FROM Movie_Genre mg
+      INNER JOIN Genre g ON mg.genre_id = g.genre_id
+      WHERE mg.movie_id IN (${movieIds.map(() => '?').join(',')})
+    `;
+    const [genresData] = await pool.query(genresQuery, movieIds);
+
+    const genresByMovie = {};
+    genresData.forEach((row) => {
+      if (!genresByMovie[row.movie_id]) {
+        genresByMovie[row.movie_id] = [];
+      }
+      genresByMovie[row.movie_id].push({
+        genre_id: row.genre_id,
+        genre_name: row.genre_name,
+      });
+    });
+
+    movies.forEach((movie) => {
+      movie.genres = genresByMovie[movie.movie_id] || [];
+    });
+  }
+
+  return movies;
+}
+
 module.exports = {
   getMovies,
   getMovieById,
   getMovieGenres,
   getAllGenres,
+  getTopRatedMovies,
+  getTrendingMovies,
 };

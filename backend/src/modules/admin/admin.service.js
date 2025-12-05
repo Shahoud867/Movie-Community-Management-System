@@ -50,9 +50,29 @@ async function adminLogin(email, password) {
 // ========================================
 
 /**
- * Get dashboard statistics
+ * Get dashboard statistics using VIEW (vw_admin_dashboard)
  */
 async function getDashboardStats() {
+    try {
+        // Try to use the view first
+        const [stats] = await pool.query('SELECT * FROM vw_admin_dashboard');
+        if (stats.length > 0) {
+            return {
+                total_users: stats[0].total_users,
+                total_movies: stats[0].total_movies,
+                flagged_content: stats[0].flagged_content,
+                scheduled_events: stats[0].upcoming_events,
+                total_posts: stats[0].total_posts,
+                total_reviews: stats[0].total_reviews,
+                active_users: stats[0].active_users,
+                new_users_week: stats[0].new_users_week,
+            };
+        }
+    } catch (error) {
+        // View doesn't exist, use manual queries
+    }
+    
+    // Fallback to manual queries
     const [userCount] = await pool.query('SELECT COUNT(*) as count FROM Users WHERE is_active = TRUE');
     const [movieCount] = await pool.query('SELECT COUNT(*) as count FROM Movie');
     const [flaggedCount] = await pool.query(
@@ -72,6 +92,74 @@ async function getDashboardStats() {
         total_posts: postCount[0].count,
         total_reviews: reviewCount[0].count,
     };
+}
+
+/**
+ * Get movie statistics using VIEW (vw_movie_statistics)
+ */
+async function getMovieStatistics() {
+    try {
+        const [movies] = await pool.query(
+            'SELECT * FROM vw_movie_statistics ORDER BY total_reviews DESC LIMIT 20'
+        );
+        return movies;
+    } catch (error) {
+        // Fallback if view doesn't exist
+        const [movies] = await pool.query(`
+            SELECT m.movie_id, m.title, m.release_year, m.average_rating, m.view_count,
+                   COUNT(DISTINCT r.review_id) AS total_reviews
+            FROM Movie m
+            LEFT JOIN Review r ON m.movie_id = r.movie_id
+            GROUP BY m.movie_id
+            ORDER BY total_reviews DESC LIMIT 20
+        `);
+        return movies;
+    }
+}
+
+/**
+ * Get user activity report using VIEW (vw_user_activity_report)
+ */
+async function getUserActivityReport() {
+    try {
+        const [users] = await pool.query(
+            'SELECT * FROM vw_user_activity_report ORDER BY reviews_written DESC LIMIT 50'
+        );
+        return users;
+    } catch (error) {
+        // Fallback
+        return [];
+    }
+}
+
+/**
+ * Get event participation report using VIEW (vw_event_report)
+ */
+async function getEventReport() {
+    try {
+        const [events] = await pool.query(
+            "SELECT * FROM vw_event_report WHERE status = 'scheduled' ORDER BY event_datetime ASC"
+        );
+        return events;
+    } catch (error) {
+        // Fallback
+        return [];
+    }
+}
+
+/**
+ * Get moderation report using VIEW (vw_moderation_report)
+ */
+async function getModerationReport() {
+    try {
+        const [moderation] = await pool.query(
+            'SELECT * FROM vw_moderation_report ORDER BY action_date DESC LIMIT 50'
+        );
+        return moderation;
+    } catch (error) {
+        // Fallback
+        return [];
+    }
 }
 
 /**
@@ -695,6 +783,48 @@ async function generateMostActiveUsersReport(adminId, startDate, endDate) {
 }
 
 /**
+ * Generate Popular Forums/Discussions Report
+ * Shows movies with most discussion activity (posts + comments)
+ */
+async function generatePopularForumsReport(adminId, startDate, endDate) {
+    // Get movies with most discussion activity
+    const [forums] = await pool.query(`
+        SELECT 
+            m.movie_id,
+            m.title as movie_title,
+            m.poster,
+            m.average_rating,
+            COUNT(DISTINCT p.post_id) as total_posts,
+            COALESCE(SUM(p.like_count), 0) as total_likes,
+            COALESCE(SUM(p.comment_count), 0) as total_comments,
+            COUNT(DISTINCT p.user_id) as unique_contributors,
+            (COUNT(DISTINCT p.post_id) + COALESCE(SUM(p.comment_count), 0)) as engagement_score
+        FROM Movie m
+        LEFT JOIN Post p ON m.movie_id = p.movie_id 
+            AND p.created_date BETWEEN ? AND ?
+        GROUP BY m.movie_id, m.title, m.poster, m.average_rating
+        HAVING total_posts > 0
+        ORDER BY engagement_score DESC, total_posts DESC
+        LIMIT 15
+    `, [startDate, endDate]);
+
+    const reportData = JSON.stringify(forums);
+
+    const [result] = await pool.query(
+        `INSERT INTO Report (report_type, generated_by_admin, report_data, date_range_start, date_range_end)
+         VALUES ('popular_forums', ?, ?, ?, ?)`,
+        [adminId, reportData, startDate, endDate]
+    );
+
+    return {
+        report_id: result.insertId,
+        report_type: 'popular_forums',
+        data: forums,
+        message: 'Popular forums report generated successfully',
+    };
+}
+
+/**
  * Get all reports
  */
 async function getAllReports() {
@@ -878,11 +1008,16 @@ module.exports = {
     updateRestrictedWord,
     deleteRestrictedWord,
 
-    // Reports
+    // Reports (using Views)
     generateMostWatchedReport,
     generateHighestRatedReport,
     generateMostActiveUsersReport,
+    generatePopularForumsReport,
     getAllReports,
+    getMovieStatistics,      // Uses vw_movie_statistics view
+    getUserActivityReport,   // Uses vw_user_activity_report view
+    getEventReport,          // Uses vw_event_report view
+    getModerationReport,     // Uses vw_moderation_report view
 
     // Audit Trail
     getAuditTrail,

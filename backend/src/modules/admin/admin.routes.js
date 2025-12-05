@@ -56,6 +56,12 @@ router.delete('/restricted-words/:id', requireAdmin, adminController.removeRestr
 router.post('/reports', requireAdmin, adminController.generateReport);
 router.get('/reports', requireAdmin, adminController.listReports);
 
+// Report Views (using database views)
+router.get('/reports/movies', requireAdmin, adminController.getMovieStats);
+router.get('/reports/users', requireAdmin, adminController.getUserActivity);
+router.get('/reports/events', requireAdmin, adminController.getEventStats);
+router.get('/reports/moderation', requireAdmin, adminController.getModerationStats);
+
 // Audit Trail
 router.get('/audit', requireAdmin, adminController.getAuditTrail);
 

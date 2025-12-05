@@ -293,16 +293,24 @@
     async function removeFriend(friendId, friendName) {
       if (!confirm(`Remove ${friendName} from your friends?`)) return;
       try {
+        const token = localStorage.getItem('userToken');
         const res = await fetch('/api/friendship/remove', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ friend_id: friendId })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          credentials: 'include',
+          body: JSON.stringify({ friend_id: parseInt(friendId) })
         });
-        if (!res.ok) throw new Error('Failed to remove friend');
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to remove friend');
+        }
         await loadFriends();
       } catch (e) {
         console.error('Remove friend error', e);
-        alert('Failed to remove friend. Please try again.');
+        alert(e.message || 'Failed to remove friend. Please try again.');
       }
     }
 
@@ -427,6 +435,17 @@
       await Promise.all([loadFriends(), loadRequests()]);
       document.getElementById('refreshFriends').addEventListener('click', loadFriends);
       document.getElementById('refreshRequests').addEventListener('click', loadRequests);
+      
+      // Event delegation for remove friend buttons
+      document.getElementById('friendsList').addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-friend-btn');
+        if (btn) {
+          const friendId = btn.dataset.friendId;
+          const friendName = btn.dataset.friendName;
+          removeFriend(friendId, friendName);
+        }
+      });
+      
       // Notification button
       const notifBtn = document.getElementById('notifBtn');
       const notifDropdown = document.getElementById('notifDropdown');

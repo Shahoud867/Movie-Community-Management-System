@@ -245,7 +245,9 @@ async function joinEvent(eventId, userId) {
   
   // Check for conflicting events at the same datetime
   const [conflicts] = await pool.query(
-    'SELECT participation_id FROM Participation WHERE user_id = ? AND event_datetime = ?',
+    `SELECT p.participation_id FROM Participation p
+     JOIN Event e ON p.event_id = e.event_id
+     WHERE p.user_id = ? AND e.event_datetime = ?`,
     [userId, event.event_datetime]
   );
   
@@ -255,8 +257,8 @@ async function joinEvent(eventId, userId) {
   
   // Add participation
   await pool.query(
-    'INSERT INTO Participation (event_id, user_id, event_datetime) VALUES (?, ?, ?)',
-    [eventId, userId, event.event_datetime]
+    'INSERT INTO Participation (event_id, user_id) VALUES (?, ?)',
+    [eventId, userId]
   );
   
   // Increment participant count

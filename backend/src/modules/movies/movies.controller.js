@@ -1,4 +1,4 @@
-const { getMovies, getMovieById, getMovieGenres, getAllGenres } = require('./movies.service');
+const { getMovies, getMovieById, getMovieGenres, getAllGenres, getTopRatedMovies, getTrendingMovies } = require('./movies.service');
 
 async function listMovies(req, res, next) {
   try {
@@ -92,10 +92,38 @@ async function searchMovies(req, res, next) {
   }
 }
 
+/**
+ * Get Top 10 Highest Rated Movies
+ */
+async function getTopRated(req, res, next) {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+    const movies = await getTopRatedMovies(Math.min(limit, 20));
+    res.json(movies);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Get Top 10 Trending Movies
+ */
+async function getTrending(req, res, next) {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+    const movies = await getTrendingMovies(Math.min(limit, 20));
+    res.json(movies);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listMovies,
   getMovie,
   listGenres,
   getMovieGenresController,
   searchMovies,
+  getTopRated,
+  getTrending,
 };

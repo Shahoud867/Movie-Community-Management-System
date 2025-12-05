@@ -612,6 +612,9 @@ async function generateReport(req, res, next) {
             case 'most_active_users':
                 result = await adminService.generateMostActiveUsersReport(req.admin.admin_id, start_date, end_date);
                 break;
+            case 'popular_forums':
+                result = await adminService.generatePopularForumsReport(req.admin.admin_id, start_date, end_date);
+                break;
             default:
                 return res.status(400).json({ error: 'Invalid report type' });
         }
@@ -762,6 +765,58 @@ async function removeAdmin(req, res, next) {
     }
 }
 
+// ========================================
+// REPORT VIEWS (Using Database Views)
+// ========================================
+
+/**
+ * Get movie statistics using vw_movie_statistics view
+ */
+async function getMovieStats(req, res, next) {
+    try {
+        const stats = await adminService.getMovieStatistics();
+        res.json({ movies: stats });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Get user activity report using vw_user_activity_report view
+ */
+async function getUserActivity(req, res, next) {
+    try {
+        const users = await adminService.getUserActivityReport();
+        res.json({ users });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Get event statistics using vw_event_report view
+ */
+async function getEventStats(req, res, next) {
+    try {
+        const events = await adminService.getEventReport();
+        res.json({ events });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * Get moderation report using vw_moderation_report view
+ */
+async function getModerationStats(req, res, next) {
+    try {
+        const moderation = await adminService.getModerationReport();
+        res.json({ moderation });
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     // Auth
     login,
@@ -805,6 +860,12 @@ module.exports = {
     // Reports
     generateReport,
     listReports,
+
+    // Report Views (using database views)
+    getMovieStats,
+    getUserActivity,
+    getEventStats,
+    getModerationStats,
 
     // Audit Trail
     getAuditTrail,

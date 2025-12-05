@@ -111,8 +111,13 @@
     const qsp = new URLSearchParams(location.search);
     const ACTIVE_ID = parseInt(qsp.get('user_id')) || null;
 
-    async function apiFetch(url, opts){
-      const res = await fetch(url, opts);
+    async function apiFetch(url, opts = {}){
+      const token = localStorage.getItem('userToken');
+      const headers = {
+        ...(opts.headers || {}),
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+      const res = await fetch(url, { ...opts, headers, credentials: 'include' });
       if(!res.ok){
         let err = 'Request failed';
         try { const j = await res.json(); err = j.error || err; } catch{}
@@ -127,23 +132,33 @@
 
     function renderConvItem(conv){
       const wrapper = document.createElement('a');
-      wrapper.className = 'flex items-center gap-3 px-4 py-3 border-b border-slate-700/60 hover:bg-slate-900/40';
-        if(!conv.user) return document.createElement('div');
-        wrapper.href = `./messages.html?user_id=${conv.user.user_id}`;
+      wrapper.className = 'flex items-center gap-3 px-4 py-3 border-b border-slate-700/60 hover:bg-slate-900/40 cursor-pointer';
+      // API returns user_id and name directly on conv, not nested
+      const userId = conv.user_id;
+      const userName = conv.name || 'User';
+      if(!userId) return document.createElement('div');
+      wrapper.href = `./messages.html?user_id=${userId}`;
       const av = document.createElement('div');
       av.className = 'h-9 w-9 rounded-full avatar flex items-center justify-center text-sm font-semibold';
-      av.textContent = initials(conv.user.name);
+      av.textContent = initials(userName);
       const box = document.createElement('div');
-      box.className = 'min-w-0';
+      box.className = 'min-w-0 flex-1';
       const name = document.createElement('p');
       name.className = 'text-sm font-medium';
-      name.textContent = conv.user.name || 'User';
+      name.textContent = userName;
       const last = document.createElement('p');
       last.className = 'text-xs text-slate-400 truncate max-w-[220px]';
-      last.textContent = conv.last_message?.content || '';
+      last.textContent = conv.last_message || '';
       box.appendChild(name); box.appendChild(last);
       wrapper.appendChild(av); wrapper.appendChild(box);
-      if(ACTIVE_ID === conv.user.user_id){ wrapper.classList.add('bg-slate-900/50'); }
+      // Show unread badge
+      if(conv.unread_count > 0){
+        const badge = document.createElement('span');
+        badge.className = 'ml-auto bg-brand-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center';
+        badge.textContent = conv.unread_count;
+        wrapper.appendChild(badge);
+      }
+      if(ACTIVE_ID === userId){ wrapper.classList.add('bg-slate-900/50'); }
       return wrapper;
     }
 
@@ -180,7 +195,9 @@
         return;
       }
       try {
-        const user = await apiFetch(`/api/users/${otherId}`);
+        const response = await apiFetch(`/api/users/${otherId}`);
+        // API returns { user: {...} }, so extract the user object
+        const user = response.user || response;
         activeUser = user;
         qs('#chatAvatar').textContent = initials(user.name);
         qs('#chatName').textContent = user.name || 'User';
@@ -198,17 +215,25 @@
 
     async function sendMessage(e){
       e.preventDefault();
-      if(!activeUser) return;
+      if(!activeUser || !activeUser.user_id) {
+        alert('Please select a conversation first');
+        return;
+      }
       const input = qs('#chatInput');
       const content = input.value.trim();
-        if(!content) return; 
-        if(!activeUser || !activeUser.user_id) throw new Error('No user selected');
+      if(!content) return;
       try {
-        await apiFetch('/api/messages', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ receiver_id: activeUser.user_id, content }) });
+        await apiFetch('/api/messages', { 
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json'}, 
+          body: JSON.stringify({ receiver_id: activeUser.user_id, content }) 
+        });
         input.value = '';
         await loadChat(activeUser.user_id);
         await loadConversations();
-      } catch(e){ alert(e.message || 'Failed to send'); }
+      } catch(e){ 
+        alert(e.message || 'Failed to send message'); 
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

@@ -1,428 +1,769 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Movie Community Management System</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <meta name="description" content="Community platform for movies: watchlists, events, reviews, discussions." />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f5f9ff',
-              100: '#e6f0ff',
-              500: '#2563eb',
-              600: '#1d4ed8',
-              700: '#1e40af'
-            },
-            surface: '#0f172a'
-          }
-        }
-      }
-    };
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard • Movie Community</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f9ff',
+                            100: '#e6f0ff',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .movie-card:hover { transform: translateY(-5px); }
+        .movie-card { transition: all 0.3s ease; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex flex-col">
-  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>
-  
-  <!-- Enhanced Main Navbar -->
-  <header class="w-full border-b border-slate-800/60 bg-slate-900">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
-        <div class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">MC</div>
-        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
-      </a>
-      <div class="flex-1 max-w-md relative">
-        <input id="globalSearch" type="search" placeholder="Search movies..." class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600" autocomplete="off" />
-        <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
-      </div>
-      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
-        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
-        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
-        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
-        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
-        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
-      </nav>
-      <div class="relative">
-        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
-          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-          <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
-        </button>
-        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
-          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between"><span class="text-sm font-semibold">Notifications</span><a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a></div>
-          <div id="notifList" class="divide-y divide-slate-700/60"><div class="px-4 py-3 text-sm text-slate-400">Loading...</div></div>
-        </div>
-      </div>
-      <div class="relative">
-        <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
-          <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
-          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        </button>
-        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
-          <div class="px-4 py-2 border-b border-slate-700/60"><p id="profileName" class="text-sm font-medium">User</p><p id="profileEmail" class="text-xs text-slate-400">user@example.com</p></div>
-          <div class="py-1"><a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a><a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a><button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button></div>
-        </div>
-      </div>
-    </div>
-  </header>
-  <main id="main" class="flex-1">
-    <div class="max-w-7xl mx-auto px-4 py-8 space-y-12">
-      <!-- Welcome -->
-      <section aria-labelledby="welcomeHeading" class="space-y-2">
-        <h1 id="welcomeHeading" class="text-3xl md:text-4xl font-bold tracking-tight">Welcome, <span id="username" class="text-brand-500">Guest</span>!</h1>
-        <p class="text-slate-300 text-sm">Dive back into what you're watching, see what friends are up to, and discover new films tailored for you.</p>
-      </section>
-
-      <!-- Continue Watching -->
-      <section aria-labelledby="continueHeading" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 id="continueHeading" class="text-xl font-semibold">Continue Watching</h2>
-          <button id="refreshContinue" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">Refresh</button>
-        </div>
-        <div id="continueWatching" class="flex gap-4 overflow-x-auto pb-2 scroll-smooth"
-          aria-label="Continue watching list">
-          <!-- Cards injected dynamically -->
-          <div class="shrink-0 w-48 h-64 animate-pulse rounded-lg bg-slate-800/70"></div>
-          <div class="shrink-0 w-48 h-64 animate-pulse rounded-lg bg-slate-800/70"></div>
-          <div class="shrink-0 w-48 h-64 animate-pulse rounded-lg bg-slate-800/70"></div>
-        </div>
-      </section>
-
-      <!-- Friend Activity Feed -->
-      <section aria-labelledby="activityHeading" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 id="activityHeading" class="text-xl font-semibold">Friend Activity</h2>
-          <button id="refreshActivity" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">Refresh</button>
-        </div>
-        <ul id="activityFeed" class="space-y-3" aria-label="Friend activity feed">
-          <li class="text-sm text-slate-400 animate-pulse">Loading activity...</li>
-        </ul>
-      </section>
-
-      <!-- Recommended For You -->
-      <section aria-labelledby="recommendedHeading" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 id="recommendedHeading" class="text-xl font-semibold">Recommended For You</h2>
-          <button id="refreshRecommended" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">Refresh</button>
-        </div>
-        <div id="recommendedGrid" class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" aria-label="Recommended movies">
-          <div class="aspect-[2/3] rounded-lg bg-slate-800/70 animate-pulse"></div>
-          <div class="aspect-[2/3] rounded-lg bg-slate-800/70 animate-pulse"></div>
-          <div class="aspect-[2/3] rounded-lg bg-slate-800/70 animate-pulse"></div>
-          <div class="aspect-[2/3] rounded-lg bg-slate-800/70 animate-pulse"></div>
-        </div>
-      </section>
-
-      <!-- Upcoming Watch Parties -->
-      <section aria-labelledby="eventsHeading" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 id="eventsHeading" class="text-xl font-semibold">Upcoming Watch Parties</h2>
-          <button id="refreshEvents" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">Refresh</button>
-        </div>
-        <ul id="eventsList" class="space-y-3" aria-label="Upcoming events">
-          <li class="text-sm text-slate-400 animate-pulse">Loading events...</li>
-        </ul>
-      </section>
-    </div>
-  </main>
-  <footer class="mt-auto border-t border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 py-6 text-xs text-slate-400 flex flex-wrap gap-4">
-      <span>&copy; 2025 Movie Community</span>
-      <span class="opacity-70">All rights reserved.</span>
-      <span class="opacity-70">Dashboard 1.1 Implementation</span>
-    </div>
-  </footer>
-  <script>
-  async function loadDashboard() {
-    try {
-      // Load user info
-      const userRes = await fetch('/api/auth/me', { credentials: 'include' });
-      if (userRes.ok) {
-        const user = await userRes.json();
-        document.getElementById('username').textContent = user.name || 'User';
-        document.getElementById('profileName').textContent = user.name || 'User';
-        document.getElementById('profileEmail').textContent = user.email || '';
-        const avatar = document.getElementById('profileAvatar');
-        const initials = (user.name || 'U').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        avatar.textContent = initials;
-      }
-
-      // Load dashboard data
-      const dashRes = await fetch('/api/dashboard', { credentials: 'include' });
-      if (dashRes.ok) {
-        const data = await dashRes.json();
-        
-        // Continue Watching (from watchlist with status 'watching')
-        await loadContinueWatching();
-        
-        // Recommended Movies
-        if (data.recommendedMovies && data.recommendedMovies.length > 0) {
-          const grid = document.getElementById('recommendedGrid');
-          grid.innerHTML = data.recommendedMovies.map(m => `
-            <a href="./movie.html?id=${m.movie_id}" class="block group">
-              <div class="aspect-[2/3] rounded-lg overflow-hidden bg-slate-800 relative">
-                ${m.poster ? `<img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />` : `<div class="w-full h-full flex items-center justify-center text-xs text-slate-400">${m.title}</div>`}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                  <div class="text-xs font-medium line-clamp-2">${m.title}</div>
-                </div>
-              </div>
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased">
+    <!-- Navigation -->
+    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800/60">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+            <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
+                <div class="h-10 w-10 bg-brand-600 rounded-lg flex items-center justify-center font-bold text-white group-hover:bg-brand-500 transition">MC</div>
+                <span class="hidden sm:inline font-semibold">Movie Community</span>
             </a>
-          `).join('');
-        } else {
-          document.getElementById('recommendedGrid').innerHTML = '<p class="text-sm text-slate-400 col-span-full">No recommendations available.</p>';
-        }
-
-        // Upcoming Events
-        if (data.upcomingEvents && data.upcomingEvents.length > 0) {
-          const list = document.getElementById('eventsList');
-          list.innerHTML = data.upcomingEvents.map(e => `
-            <li class="flex gap-3 items-start p-3 rounded-lg bg-slate-800/40 border border-slate-700/50 hover:border-brand-600/40 transition-colors">
-              <div class="w-12 h-16 shrink-0 rounded overflow-hidden bg-slate-700">
-                ${e.movie_poster ? `<img src="${e.movie_poster}" alt="${e.movie_title}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />` : ''}
-              </div>
-              <div class="flex-1 min-w-0">
-                <a href="./event.html?id=${e.event_id}" class="font-medium text-sm hover:text-brand-400 line-clamp-1">${e.title}</a>
-                <p class="text-xs text-slate-400 mt-1">${e.movie_title}</p>
-                <p class="text-xs text-slate-500 mt-1">
-                  ${new Date(e.event_datetime).toLocaleString()} • ${e.current_participants}/${e.capacity} joined
-                </p>
-              </div>
-            </li>
-          `).join('');
-        } else {
-          document.getElementById('eventsList').innerHTML = '<li class="text-sm text-slate-400">No upcoming events.</li>';
-        }
-
-        // Friend Activity (placeholder for now)
-        await loadFriendActivity();
-      }
-    } catch (error) {
-      console.error('Failed to load dashboard:', error);
-    }
-  }
-
-  async function loadFriendActivity() {
-    try {
-      // Get list of friends
-      const friendsRes = await fetch('/api/friends', { credentials: 'include' });
-      if (!friendsRes.ok) {
-        document.getElementById('activityFeed').innerHTML = '<li class="text-sm text-slate-400">Unable to load friend activity.</li>';
-        return;
-      }
-      
-      const friendsData = await friendsRes.json();
-      const friends = Array.isArray(friendsData) ? friendsData : (friendsData.friends || []);
-      
-      console.log('Friends data:', friends); // Debug log
-      
-      if (!friends || friends.length === 0) {
-        document.getElementById('activityFeed').innerHTML = '<li class="text-sm text-slate-400">You don\'t have any friends yet. <a href="./friends.html" class="text-brand-400 hover:text-brand-300">Find friends</a></li>';
-        return;
-      }
-
-      // Get recent reviews from friends - filter out any invalid friend objects first
-      const validFriends = friends.filter(f => f && (f.user_id || f.id || f.friend_id));
-      console.log('Valid friends:', validFriends); // Debug log
-      
-      const activities = [];
-      for (const friend of validFriends.slice(0, 5)) {
-        // Try different possible ID field names
-        const friendUserId = friend.user_id || friend.id || friend.friend_id;
-        
-        if (!friendUserId) {
-          console.warn('Friend missing ID:', friend);
-          continue;
-        }
-        
-        try {
-          const reviewRes = await fetch(`/api/reviews/user/${friendUserId}`, { credentials: 'include' });
-          if (reviewRes.ok) {
-            const reviews = await reviewRes.json();
-            if (reviews && reviews.length > 0) {
-              const recent = reviews[0];
-              activities.push({
-                type: 'review',
-                user_name: friend.name || friend.friend_name || 'Unknown',
-                movie_title: recent.movie_title || 'Unknown Movie',
-                movie_id: recent.movie_id,
-                content: recent.review_text || '',
-                created_date: recent.created_date
-              });
-            }
-          }
-        } catch (err) {
-          console.warn('Failed to load reviews for friend:', friendUserId, err);
-        }
-      }
-
-      if (activities.length > 0) {
-        const list = document.getElementById('activityFeed');
-        list.innerHTML = activities.slice(0, 5).map(a => `
-          <li class="flex gap-3 items-start p-3 rounded-lg bg-slate-800/40 border border-slate-700/50">
-            <div class="flex-1 min-w-0">
-              <p class="text-sm">
-                <span class="font-medium">${a.user_name}</span> 
-                <span class="text-slate-400">reviewed</span> 
-                <a href="./movie.html?id=${a.movie_id}" class="text-brand-400 hover:text-brand-300">${a.movie_title}</a>
-              </p>
-              <p class="text-xs text-slate-400 mt-1 line-clamp-2">${a.content.substring(0, 100)}${a.content.length > 100 ? '...' : ''}</p>
-              <p class="text-xs text-slate-500 mt-1">${new Date(a.created_date).toLocaleString()}</p>
+            
+            <!-- Search -->
+            <div class="flex-1 max-w-md relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input id="globalSearch" type="search" placeholder="Search movies, events, friends..." 
+                    class="w-full rounded-lg bg-slate-800/60 border border-slate-700 pl-10 pr-4 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+                <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden max-h-80 overflow-y-auto"></div>
             </div>
-          </li>
-        `).join('');
-      } else {
-        document.getElementById('activityFeed').innerHTML = '<li class="text-sm text-slate-400">No recent activity from friends.</li>';
-      }
-    } catch (error) {
-      console.error('Failed to load friend activity:', error);
-      document.getElementById('activityFeed').innerHTML = '<li class="text-sm text-slate-400">Unable to load friend activity.</li>';
-    }
-  }
-
-  async function loadContinueWatching() {
-    try {
-      const res = await fetch('/api/watchlist', { credentials: 'include' });
-      if (res.ok) {
-        const items = await res.json();
-        // Prioritize 'watching', then 'to-watch', then 'completed'
-        const watching = items.filter(item => item.status === 'watching').slice(0, 6);
-        const toWatch = items.filter(item => item.status === 'to-watch').slice(0, 6 - watching.length);
-        const displayItems = [...watching, ...toWatch].slice(0, 6);
-        
-        if (displayItems.length > 0) {
-          const container = document.getElementById('continueWatching');
-          container.innerHTML = displayItems.map(item => `
-            <a href="./movie.html?id=${item.movie_id}" class="shrink-0 w-48 group">
-              <div class="aspect-[2/3] rounded-lg overflow-hidden bg-slate-800 relative">
-                ${item.poster ? `<img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='/images/posters/placeholder.jpg';" />` : `<div class="w-full h-full flex items-center justify-center text-xs text-slate-400 p-2 text-center">${item.title}</div>`}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end p-3">
-                  <div>
-                    <div class="text-sm font-medium line-clamp-2">${item.title}</div>
-                    <div class="text-xs text-slate-400 mt-1">${item.release_year || ''}</div>
-                    <div class="text-[10px] mt-1 px-2 py-0.5 rounded-full inline-block ${item.status === 'watching' ? 'bg-brand-600/40 text-brand-200' : item.status === 'to-watch' ? 'bg-yellow-600/40 text-yellow-200' : 'bg-green-600/40 text-green-200'}">${item.status === 'to-watch' ? 'Want to Watch' : item.status === 'watching' ? 'Watching' : 'Completed'}</div>
-                  </div>
+            
+            <!-- Nav Links -->
+            <nav class="hidden lg:flex items-center gap-1 text-sm">
+                <a href="./movies.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-film mr-2 text-purple-400"></i>Movies
+                </a>
+                <a href="./watchlist.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-bookmark mr-2 text-blue-400"></i>Watchlist
+                </a>
+                <a href="./events.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-calendar mr-2 text-green-400"></i>Events
+                </a>
+                <a href="./messages.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-envelope mr-2 text-pink-400"></i>Messages
+                </a>
+                <a href="./friends.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-users mr-2 text-yellow-400"></i>Friends
+                </a>
+            </nav>
+            
+            <!-- Notifications -->
+            <div class="relative">
+                <button id="notifBtn" class="relative p-2 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fas fa-bell text-slate-300"></i>
+                    <span id="notifBadge" class="hidden absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">0</span>
+                </button>
+                <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-slate-800/80">
+                        <span class="font-semibold">Notifications</span>
+                        <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+                    </div>
+                    <div id="notifList" class="max-h-80 overflow-y-auto">
+                        <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
+                    </div>
                 </div>
-              </div>
-            </a>
-          `).join('');
-        } else {
-          document.getElementById('continueWatching').innerHTML = '<p class="text-sm text-slate-400">Your watchlist is empty. <a href="./movies.html" class="text-brand-400 hover:text-brand-300">Browse movies</a> to add some!</p>';
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load watchlist:', error);
-      document.getElementById('continueWatching').innerHTML = '<p class="text-sm text-slate-400">Failed to load watchlist.</p>';
-    }
-  }
+            </div>
+            
+            <!-- Profile -->
+            <div class="relative">
+                <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    <div id="profileAvatar" class="h-9 w-9 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-sm font-bold">U</div>
+                    <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                </button>
+                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-700 bg-slate-800/80">
+                        <p id="profileName" class="font-medium">User</p>
+                        <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
+                    </div>
+                    <div class="py-1">
+                        <a href="./profile.html?id=me" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
+                            <i class="fas fa-user text-slate-400 w-5"></i>
+                            <span class="text-sm">My Profile</span>
+                        </a>
+                        <a href="./settings.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
+                            <i class="fas fa-cog text-slate-400 w-5"></i>
+                            <span class="text-sm">Settings</span>
+                        </a>
+                        <hr class="border-slate-700 my-1">
+                        <button id="logoutBtn" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition w-full text-left text-red-400">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span class="text-sm">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    loadDashboard();
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
+        <!-- Welcome Section -->
+        <section class="bg-gradient-to-r from-brand-600/20 to-purple-600/20 border border-slate-700/50 rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">Welcome back, <span id="username" class="text-brand-400">Guest</span>!</h1>
+                    <p class="text-slate-400 mt-1">Discover new movies, connect with friends, and join watch parties.</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="./movies.html" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        <i class="fas fa-compass"></i> Explore Movies
+                    </a>
+                    <a href="./events-new.html" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Create Event
+                    </a>
+                </div>
+            </div>
+        </section>
 
-    // Refresh buttons
-    document.getElementById('refreshContinue')?.addEventListener('click', loadContinueWatching);
-    document.getElementById('refreshActivity')?.addEventListener('click', () => {
-      document.getElementById('activityFeed').innerHTML = '<li class="text-sm text-slate-400 animate-pulse">Loading...</li>';
-      loadFriendActivity();
-    });
-    document.getElementById('refreshRecommended')?.addEventListener('click', loadDashboard);
-    document.getElementById('refreshEvents')?.addEventListener('click', loadDashboard);
-    
-    // Navbar interactions
-    const notifBtn = document.getElementById('notifBtn');
-    const notifDropdown = document.getElementById('notifDropdown');
-    const profileBtn = document.getElementById('profileBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    const searchInput = document.getElementById('globalSearch');
-    const searchResults = document.getElementById('searchResults');
-    
-    let searchTimer = null;
-    if (notifBtn) {
-      notifBtn.addEventListener('click', async () => {
-        notifDropdown.classList.toggle('hidden');
-        if (!notifDropdown.classList.contains('hidden')) {
-          try {
-            const res = await fetch('/api/notifications?unread=true', { credentials: 'include' });
-            const notifs = await res.json();
-            const list = document.getElementById('notifList');
-            list.innerHTML = '';
-            if (!notifs.length) {
-              list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
-              document.getElementById('notifBadge').classList.add('hidden');
-            } else {
-              const badge = document.getElementById('notifBadge');
-              badge.textContent = Math.min(notifs.length, 9);
-              badge.classList.remove('hidden');
-              notifs.slice(0, 5).forEach(n => {
-                const div = document.createElement('div');
-                div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
-                div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date).toLocaleString()}</p>`;
-                list.appendChild(div);
-              });
+        <!-- Stats Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <i class="fas fa-bookmark text-blue-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold" id="stat-watchlist">--</p>
+                        <p class="text-slate-400 text-xs">In Watchlist</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold" id="stat-watched">--</p>
+                        <p class="text-slate-400 text-xs">Watched</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <i class="fas fa-users text-purple-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold" id="stat-friends">--</p>
+                        <p class="text-slate-400 text-xs">Friends</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold" id="stat-reviews">--</p>
+                        <p class="text-slate-400 text-xs">Reviews</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Continue Watching -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
+                    <i class="fas fa-play-circle text-brand-400"></i> Continue Watching
+                </h2>
+                <a href="./watchlist.html" class="text-sm text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                    View All <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+            </div>
+            <div id="continueWatching" class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+                <div class="shrink-0 w-44 h-64 animate-pulse rounded-xl bg-slate-800/70"></div>
+                <div class="shrink-0 w-44 h-64 animate-pulse rounded-xl bg-slate-800/70"></div>
+                <div class="shrink-0 w-44 h-64 animate-pulse rounded-xl bg-slate-800/70"></div>
+                <div class="shrink-0 w-44 h-64 animate-pulse rounded-xl bg-slate-800/70"></div>
+            </div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column - Recommended -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Recommended Movies -->
+                <section class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-magic text-purple-400"></i> Recommended For You
+                        </h2>
+                        <button id="refreshRecommended" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 transition">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="recommendedGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                        <div class="aspect-[2/3] rounded-lg bg-slate-700/50 animate-pulse"></div>
+                        <div class="aspect-[2/3] rounded-lg bg-slate-700/50 animate-pulse"></div>
+                        <div class="aspect-[2/3] rounded-lg bg-slate-700/50 animate-pulse"></div>
+                        <div class="aspect-[2/3] rounded-lg bg-slate-700/50 animate-pulse"></div>
+                        <div class="aspect-[2/3] rounded-lg bg-slate-700/50 animate-pulse hidden sm:block"></div>
+                    </div>
+                </section>
+
+                <!-- Friend Activity -->
+                <section class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-rss text-green-400"></i> Friend Activity
+                        </h2>
+                        <button id="refreshActivity" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 transition">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    <ul id="activityFeed" class="space-y-3">
+                        <li class="h-16 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                        <li class="h-16 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                        <li class="h-16 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                    </ul>
+                </section>
+            </div>
+
+            <!-- Right Column - Events & Quick Actions -->
+            <div class="space-y-6">
+                <!-- Upcoming Events -->
+                <section class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-pink-400"></i> Watch Parties
+                        </h2>
+                        <a href="./events.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
+                    </div>
+                    <ul id="eventsList" class="space-y-3">
+                        <li class="h-20 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                        <li class="h-20 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                        <li class="h-20 rounded-lg bg-slate-700/50 animate-pulse"></li>
+                    </ul>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-bolt text-yellow-400"></i> Quick Actions
+                    </h2>
+                    <div class="space-y-2">
+                        <a href="./movies.html" class="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition">
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <i class="fas fa-search text-purple-400 text-sm"></i>
+                            </div>
+                            <span class="text-sm">Browse Movies</span>
+                        </a>
+                        <a href="./friends.html" class="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                <i class="fas fa-user-plus text-blue-400 text-sm"></i>
+                            </div>
+                            <span class="text-sm">Find Friends</span>
+                        </a>
+                        <a href="./events-new.html" class="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition">
+                            <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fas fa-plus text-green-400 text-sm"></i>
+                            </div>
+                            <span class="text-sm">Host Watch Party</span>
+                        </a>
+                        <a href="./profile.html?id=me" class="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition">
+                            <div class="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                                <i class="fas fa-user text-pink-400 text-sm"></i>
+                            </div>
+                            <span class="text-sm">Edit Profile</span>
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-800 bg-slate-900">
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+            <div class="flex items-center gap-4">
+                <span>&copy; 2025 Movie Community</span>
+                <span class="hidden sm:inline">•</span>
+                <span class="hidden sm:inline">All rights reserved</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="#" class="hover:text-white transition">Privacy</a>
+                <a href="#" class="hover:text-white transition">Terms</a>
+                <a href="#" class="hover:text-white transition">Help</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Load user info - try localStorage first, then API
+                let user = null;
+                const storedUser = localStorage.getItem('userData');
+                if (storedUser) {
+                    user = JSON.parse(storedUser);
+                }
+                
+                // Also try fetching from API to get latest data
+                const userRes = await fetch('/api/auth/me', { credentials: 'include' });
+                if (userRes.ok) {
+                    user = await userRes.json();
+                    localStorage.setItem('userData', JSON.stringify(user));
+                }
+                
+                if (user) {
+                    document.getElementById('username').textContent = user.name || 'User';
+                    document.getElementById('profileName').textContent = user.name || 'User';
+                    document.getElementById('profileEmail').textContent = user.email || '';
+                    const avatar = document.getElementById('profileAvatar');
+                    const initials = (user.name || 'U').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                    avatar.textContent = initials;
+                }
+
+                // Load dashboard data
+                const dashRes = await fetch('/api/dashboard', { credentials: 'include' });
+                if (dashRes.ok) {
+                    const data = await dashRes.json();
+                    
+                    // Update stats
+                    if (data.stats) {
+                        animateNumber('stat-watchlist', data.stats.watchlist || 0);
+                        animateNumber('stat-watched', data.stats.watched || 0);
+                        animateNumber('stat-friends', data.stats.friends || 0);
+                        animateNumber('stat-reviews', data.stats.reviews || 0);
+                    }
+                    
+                    // Recommended Movies
+                    if (data.recommendedMovies && data.recommendedMovies.length > 0) {
+                        renderRecommendedMovies(data.recommendedMovies);
+                    } else {
+                        renderDemoRecommendedMovies();
+                    }
+
+                    // Upcoming Events
+                    if (data.upcomingEvents && data.upcomingEvents.length > 0) {
+                        renderEvents(data.upcomingEvents);
+                    } else {
+                        renderDemoEvents();
+                    }
+                } else {
+                    // Use demo data
+                    useDemoData();
+                }
+                
+                // Load continue watching & friend activity
+                await loadContinueWatching();
+                await loadFriendActivity();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                useDemoData();
             }
-          } catch {}
         }
-      });
-    }
-    
-    if (profileBtn) {
-      profileBtn.addEventListener('click', () => {
-        profileDropdown.classList.toggle('hidden');
-      });
-    }
-    
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.trim();
-        if (searchTimer) clearTimeout(searchTimer);
-        if (!term) {
-          searchResults.classList.add('hidden');
-          return;
+
+        function animateNumber(elementId, targetNumber) {
+            const element = document.getElementById(elementId);
+            const duration = 800;
+            const steps = 20;
+            const increment = targetNumber / steps;
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= targetNumber) {
+                    element.textContent = targetNumber.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, duration / steps);
         }
-        searchTimer = setTimeout(async () => {
-          try {
-            const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
-            const movies = await res.json();
-            searchResults.innerHTML = '';
-            if (!movies.length) {
-              searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
-            } else {
-              movies.forEach(m => {
-                const a = document.createElement('a');
-                a.href = `./movie.html?id=${m.id}`;
-                a.className = 'block px-4 py-2 hover:bg-slate-800/60 text-sm';
-                a.innerHTML = `<span class="font-medium">${m.title}</span> <span class="text-xs text-slate-400">(${m.release_year || ''})</span>`;
-                searchResults.appendChild(a);
-              });
+
+        async function loadStats() {
+            try {
+                // Watchlist count
+                const watchlistRes = await fetch('/api/watchlist', { credentials: 'include' });
+                if (watchlistRes.ok) {
+                    const items = await watchlistRes.json();
+                    const watching = items.filter(i => i.status !== 'completed').length;
+                    const watched = items.filter(i => i.status === 'completed').length;
+                    animateNumber('stat-watchlist', watching);
+                    animateNumber('stat-watched', watched);
+                }
+                
+                // Friends count
+                const friendsRes = await fetch('/api/friends', { credentials: 'include' });
+                if (friendsRes.ok) {
+                    const friends = await friendsRes.json();
+                    const count = Array.isArray(friends) ? friends.length : (friends.friends?.length || 0);
+                    animateNumber('stat-friends', count);
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
             }
-            searchResults.classList.remove('hidden');
-          } catch {}
-        }, 300);
-      });
-    }
-    
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        alert('Logout functionality - redirect to login page');
-      });
-    }
-    
-    // Close dropdowns on outside click
-    document.addEventListener('click', (e) => {
-      if (notifBtn && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
-        notifDropdown.classList.add('hidden');
-      }
-      if (profileBtn && !profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
-        profileDropdown.classList.add('hidden');
-      }
-      if (searchInput && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-        searchResults.classList.add('hidden');
-      }
-    });
-  });
-  </script>
+        }
+
+        function renderRecommendedMovies(movies) {
+            const grid = document.getElementById('recommendedGrid');
+            grid.innerHTML = movies.slice(0, 5).map(m => `
+                <a href="./movie.html?id=${m.movie_id}" class="movie-card block group">
+                    <div class="aspect-[2/3] rounded-lg overflow-hidden bg-slate-700 relative">
+                        <img src="${m.poster || '/images/posters/placeholder.jpg'}" alt="${m.title}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             onerror="this.src='/images/posters/placeholder.jpg'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                            <p class="text-xs font-medium line-clamp-2">${m.title}</p>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function renderDemoRecommendedMovies() {
+            const movies = [
+                { movie_id: 1, title: 'Inception', poster: '/images/posters/inception.jpg' },
+                { movie_id: 2, title: 'The Dark Knight', poster: '/images/posters/darkknight.jpg' },
+                { movie_id: 3, title: 'Parasite', poster: '/images/posters/parasite.jpg' },
+                { movie_id: 4, title: 'La La Land', poster: '/images/posters/lalaland.jpg' },
+                { movie_id: 5, title: 'Waar', poster: '/images/posters/waar.jpg' }
+            ];
+            renderRecommendedMovies(movies);
+        }
+
+        function renderEvents(events) {
+            const list = document.getElementById('eventsList');
+            if (!events.length) {
+                list.innerHTML = '<li class="text-sm text-slate-400 py-4 text-center">No upcoming events</li>';
+                return;
+            }
+            list.innerHTML = events.slice(0, 3).map(e => {
+                const participants = e.current_participants || 0;
+                const capacity = e.capacity || '∞';
+                return `
+                <li class="p-3 rounded-lg bg-slate-700/30 border border-slate-700/50 hover:border-brand-500/50 transition">
+                    <a href="./event.html?id=${e.event_id}" class="block">
+                        <p class="font-medium text-sm line-clamp-1">${e.title}</p>
+                        <p class="text-xs text-slate-400 mt-1">${e.movie_title || 'Movie TBA'}</p>
+                        <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                            <span><i class="fas fa-calendar mr-1"></i>${new Date(e.event_datetime).toLocaleDateString()}</span>
+                            <span><i class="fas fa-users mr-1"></i>${participants}/${capacity}</span>
+                        </div>
+                    </a>
+                </li>
+            `}).join('');
+        }
+
+        function renderDemoEvents() {
+            const events = [
+                { event_id: 1, title: 'Inception Watch Party', movie_title: 'Inception', event_datetime: new Date(Date.now() + 86400000), current_participants: 5, capacity: 10 },
+                { event_id: 2, title: 'Horror Movie Night', movie_title: 'The Conjuring', event_datetime: new Date(Date.now() + 172800000), current_participants: 3, capacity: 8 },
+                { event_id: 3, title: 'Classic Film Club', movie_title: 'Casablanca', event_datetime: new Date(Date.now() + 259200000), current_participants: 7, capacity: 15 }
+            ];
+            renderEvents(events);
+        }
+
+        async function loadContinueWatching() {
+            try {
+                const res = await fetch('/api/watchlist', { credentials: 'include' });
+                if (res.ok) {
+                    const items = await res.json();
+                    const watching = items.filter(item => item.status === 'watching').slice(0, 6);
+                    const toWatch = items.filter(item => item.status === 'to-watch').slice(0, 6 - watching.length);
+                    const displayItems = [...watching, ...toWatch].slice(0, 6);
+                    
+                    if (displayItems.length > 0) {
+                        const container = document.getElementById('continueWatching');
+                        container.innerHTML = displayItems.map(item => `
+                            <a href="./movie.html?id=${item.movie_id}" class="movie-card shrink-0 w-44 group">
+                                <div class="aspect-[2/3] rounded-xl overflow-hidden bg-slate-800 relative">
+                                    <img src="${item.poster_url || item.poster || '/images/posters/placeholder.jpg'}" alt="${item.title}" 
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                         onerror="this.src='/images/posters/placeholder.jpg'">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-3">
+                                        <div>
+                                            <p class="text-sm font-medium line-clamp-2">${item.title}</p>
+                                            <p class="text-xs text-slate-400 mt-1">${item.release_year || ''}</p>
+                                            <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${item.status === 'watching' ? 'bg-brand-600/40 text-brand-200' : 'bg-yellow-600/40 text-yellow-200'}">
+                                                ${item.status === 'watching' ? 'Watching' : 'Want to Watch'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('');
+                    } else {
+                        document.getElementById('continueWatching').innerHTML = `
+                            <div class="flex items-center justify-center w-full py-8 text-slate-400">
+                                <div class="text-center">
+                                    <i class="fas fa-film text-4xl mb-3 text-slate-600"></i>
+                                    <p class="text-sm">Your watchlist is empty</p>
+                                    <a href="./movies.html" class="text-brand-400 hover:text-brand-300 text-sm mt-2 inline-block">Browse movies →</a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load watchlist:', error);
+                renderDemoContinueWatching();
+            }
+        }
+
+        function renderDemoContinueWatching() {
+            const movies = [
+                { movie_id: 1, title: 'Inception', poster: '/images/posters/inception.jpg', release_year: 2010, status: 'watching' },
+                { movie_id: 2, title: 'The Dark Knight', poster: '/images/posters/darkknight.jpg', release_year: 2008, status: 'watching' },
+                { movie_id: 3, title: 'Parasite', poster: '/images/posters/parasite.jpg', release_year: 2019, status: 'to-watch' },
+                { movie_id: 4, title: 'La La Land', poster: '/images/posters/lalaland.jpg', release_year: 2016, status: 'to-watch' }
+            ];
+            const container = document.getElementById('continueWatching');
+            container.innerHTML = movies.map(item => `
+                <a href="./movie.html?id=${item.movie_id}" class="movie-card shrink-0 w-44 group">
+                    <div class="aspect-[2/3] rounded-xl overflow-hidden bg-slate-800 relative">
+                        <img src="${item.poster}" alt="${item.title}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             onerror="this.src='/images/posters/placeholder.jpg'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-3">
+                            <div>
+                                <p class="text-sm font-medium line-clamp-2">${item.title}</p>
+                                <p class="text-xs text-slate-400 mt-1">${item.release_year}</p>
+                                <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${item.status === 'watching' ? 'bg-brand-600/40 text-brand-200' : 'bg-yellow-600/40 text-yellow-200'}">
+                                    ${item.status === 'watching' ? 'Watching' : 'Want to Watch'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        async function loadFriendActivity() {
+            try {
+                const friendsRes = await fetch('/api/friends', { credentials: 'include' });
+                if (!friendsRes.ok) {
+                    renderDemoActivity();
+                    return;
+                }
+                
+                const friendsData = await friendsRes.json();
+                const friends = Array.isArray(friendsData) ? friendsData : (friendsData.friends || []);
+                
+                if (!friends.length) {
+                    document.getElementById('activityFeed').innerHTML = `
+                        <li class="text-center py-6 text-slate-400">
+                            <i class="fas fa-users text-3xl mb-2 text-slate-600"></i>
+                            <p class="text-sm">No friends yet</p>
+                            <a href="./friends.html" class="text-brand-400 hover:text-brand-300 text-sm">Find friends →</a>
+                        </li>
+                    `;
+                    return;
+                }
+
+                const activities = [];
+                for (const friend of friends.slice(0, 5)) {
+                    const friendUserId = friend.user_id || friend.id || friend.friend_id;
+                    if (!friendUserId) continue;
+                    
+                    try {
+                        const reviewRes = await fetch(`/api/reviews/user/${friendUserId}`, { credentials: 'include' });
+                        if (reviewRes.ok) {
+                            const reviews = await reviewRes.json();
+                            if (reviews?.length > 0) {
+                                activities.push({
+                                    type: 'review',
+                                    user_name: friend.name || friend.friend_name || 'Friend',
+                                    movie_title: reviews[0].movie_title || 'Unknown',
+                                    movie_id: reviews[0].movie_id,
+                                    content: reviews[0].review_text || '',
+                                    created_date: reviews[0].created_date
+                                });
+                            }
+                        }
+                    } catch (err) {}
+                }
+
+                if (activities.length > 0) {
+                    renderActivityFeed(activities);
+                } else {
+                    renderDemoActivity();
+                }
+            } catch (error) {
+                console.error('Failed to load friend activity:', error);
+                renderDemoActivity();
+            }
+        }
+
+        function renderActivityFeed(activities) {
+            const list = document.getElementById('activityFeed');
+            list.innerHTML = activities.slice(0, 5).map(a => `
+                <li class="flex gap-3 p-3 rounded-lg bg-slate-700/30 border border-slate-700/50 hover:border-slate-600 transition">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-xs font-bold shrink-0">
+                        ${(a.user_name || 'U')[0].toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm">
+                            <span class="font-medium">${a.user_name}</span>
+                            <span class="text-slate-400"> reviewed </span>
+                            <a href="./movie.html?id=${a.movie_id}" class="text-brand-400 hover:text-brand-300">${a.movie_title}</a>
+                        </p>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-1">${a.content.substring(0, 80)}${a.content.length > 80 ? '...' : ''}</p>
+                        <p class="text-xs text-slate-600 mt-1">${formatTime(a.created_date)}</p>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function renderDemoActivity() {
+            const activities = [
+                { user_name: 'Ahmed', movie_title: 'Inception', movie_id: 1, content: 'Mind-blowing movie! The concept of dreams within dreams is fascinating.', created_date: new Date(Date.now() - 3600000) },
+                { user_name: 'Sarah', movie_title: 'Parasite', movie_id: 3, content: 'Absolutely deserved the Oscar. A masterpiece of storytelling.', created_date: new Date(Date.now() - 7200000) },
+                { user_name: 'Ali', movie_title: 'The Dark Knight', movie_id: 2, content: 'Heath Ledger\'s Joker is legendary. Best superhero movie ever!', created_date: new Date(Date.now() - 10800000) }
+            ];
+            renderActivityFeed(activities);
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function useDemoData() {
+            animateNumber('stat-watchlist', 12);
+            animateNumber('stat-watched', 45);
+            animateNumber('stat-friends', 8);
+            animateNumber('stat-reviews', 15);
+            renderDemoRecommendedMovies();
+            renderDemoEvents();
+            renderDemoContinueWatching();
+            renderDemoActivity();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+
+            // Refresh buttons
+            document.getElementById('refreshActivity')?.addEventListener('click', () => {
+                document.getElementById('activityFeed').innerHTML = '<li class="h-16 rounded-lg bg-slate-700/50 animate-pulse"></li>';
+                loadFriendActivity();
+            });
+            document.getElementById('refreshRecommended')?.addEventListener('click', loadDashboard);
+
+            // Dropdowns
+            const notifBtn = document.getElementById('notifBtn');
+            const notifDropdown = document.getElementById('notifDropdown');
+            const profileBtn = document.getElementById('profileBtn');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const searchInput = document.getElementById('globalSearch');
+            const searchResults = document.getElementById('searchResults');
+
+            let searchTimer = null;
+
+            notifBtn?.addEventListener('click', async () => {
+                notifDropdown.classList.toggle('hidden');
+                profileDropdown.classList.add('hidden');
+                if (!notifDropdown.classList.contains('hidden')) {
+                    try {
+                        const res = await fetch('/api/notifications?unread=true', { credentials: 'include' });
+                        const notifs = await res.json();
+                        const list = document.getElementById('notifList');
+                        if (!notifs.length) {
+                            list.innerHTML = '<div class="px-4 py-4 text-sm text-slate-400 text-center">No new notifications</div>';
+                            document.getElementById('notifBadge').classList.add('hidden');
+                        } else {
+                            const badge = document.getElementById('notifBadge');
+                            badge.textContent = Math.min(notifs.length, 9);
+                            badge.classList.remove('hidden');
+                            list.innerHTML = notifs.slice(0, 5).map(n => `
+                                <div class="px-4 py-3 hover:bg-slate-700/50 cursor-pointer border-b border-slate-700/50 last:border-0">
+                                    <p class="text-sm">${n.message}</p>
+                                    <p class="text-xs text-slate-500 mt-1">${formatTime(n.created_date)}</p>
+                                </div>
+                            `).join('');
+                        }
+                    } catch {}
+                }
+            });
+
+            profileBtn?.addEventListener('click', () => {
+                profileDropdown.classList.toggle('hidden');
+                notifDropdown.classList.add('hidden');
+            });
+
+            searchInput?.addEventListener('input', (e) => {
+                const term = e.target.value.trim();
+                if (searchTimer) clearTimeout(searchTimer);
+                if (!term) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+                searchTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
+                        const movies = await res.json();
+                        if (!movies.length) {
+                            searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
+                        } else {
+                            searchResults.innerHTML = movies.map(m => `
+                                <a href="./movie.html?id=${m.id}" class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700/60">
+                                    <i class="fas fa-film text-slate-500"></i>
+                                    <span class="text-sm">${m.title}</span>
+                                    <span class="text-xs text-slate-500">(${m.release_year || ''})</span>
+                                </a>
+                            `).join('');
+                        }
+                        searchResults.classList.remove('hidden');
+                    } catch {}
+                }, 300);
+            });
+
+            document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                } catch {}
+                localStorage.clear();
+                window.location.href = './login.html';
+            });
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', (e) => {
+                if (!notifBtn?.contains(e.target) && !notifDropdown?.contains(e.target)) {
+                    notifDropdown?.classList.add('hidden');
+                }
+                if (!profileBtn?.contains(e.target) && !profileDropdown?.contains(e.target)) {
+                    profileDropdown?.classList.add('hidden');
+                }
+                if (!searchInput?.contains(e.target) && !searchResults?.contains(e.target)) {
+                    searchResults?.classList.add('hidden');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -148,7 +148,7 @@ async function sendFriendRequest(senderId, receiverId) {
 }
 
 /**
- * Respond to a friend request (accept/decline)
+ * Respond to a friend request (accept/decline) using stored procedure
  */
 async function respondToFriendRequest(userId, friendshipId, action) {
   if (!['accept', 'decline'].includes(action)) {
@@ -176,14 +176,20 @@ async function respondToFriendRequest(userId, friendshipId, action) {
     throw new Error('Friend request is not pending');
   }
 
-  const newStatus = action === 'accept' ? 'accepted' : 'declined';
-
-  await pool.query(
-    'UPDATE Friendship SET status = ?, response_date = CURRENT_TIMESTAMP WHERE friendship_id = ?',
-    [newStatus, friendshipId]
-  );
-
-  return { message: `Friend request ${action}ed`, status: newStatus };
+  // Use stored procedure - automatically creates notification on accept
+  try {
+    await pool.query('CALL sp_process_friend_request(?, ?)', [friendshipId, action]);
+    const newStatus = action === 'accept' ? 'accepted' : 'declined';
+    return { message: `Friend request ${action}ed`, status: newStatus };
+  } catch (error) {
+    // Fallback to manual update if procedure doesn't exist
+    const newStatus = action === 'accept' ? 'accepted' : 'declined';
+    await pool.query(
+      'UPDATE Friendship SET status = ?, response_date = CURRENT_TIMESTAMP WHERE friendship_id = ?',
+      [newStatus, friendshipId]
+    );
+    return { message: `Friend request ${action}ed`, status: newStatus };
+  }
 }
 
 /**
