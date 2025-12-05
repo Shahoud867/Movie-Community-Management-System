@@ -240,6 +240,24 @@ CREATE TABLE Notification (
     INDEX idx_notification_sender (sender_id)
 );
 
+-- Message Table: Direct messages between users
+CREATE TABLE Message (
+    message_id INT PRIMARY KEY AUTO_INCREMENT,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    content TEXT NOT NULL,
+    sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_status BOOLEAN DEFAULT FALSE,
+    read_date TIMESTAMP NULL,
+    FOREIGN KEY (sender_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_message_nonempty CHECK (CHAR_LENGTH(content) > 0),
+    CONSTRAINT chk_no_self_message CHECK (sender_id != receiver_id),
+    INDEX idx_message_sender (sender_id),
+    INDEX idx_message_receiver (receiver_id),
+    INDEX idx_message_conversation (sender_id, receiver_id, sent_date)
+);
+
 -- ========================================
 -- 5. EVENTS & WATCH PARTIES
 -- ========================================
@@ -323,30 +341,30 @@ CREATE TABLE Audit_Trail (
 -- SAMPLE DATA INSERTS FOR MOVIE COMMUNITY DB
 -- ========================================
 
--- 1. Admins
+-- 1. Admins (all passwords are 'pass123' hashed with bcrypt)
 INSERT INTO Admin (name, email, password, role, is_super_admin) VALUES
-('Sarah Khan', 'sarah.admin@moviehub.com', 'admin123', 'superadmin', TRUE),
-('John Carter', 'john.carter@moviehub.com', 'securepass', 'moderator', FALSE),
-('Maria Rodriguez', 'maria.rod@moviehub.com', 'adminpass', 'moderator', FALSE),
-('Ali Reza', 'ali.reza@moviehub.com', 'adminiran', 'moderator', FALSE);
+('Sarah Khan', 'sarah.admin@moviehub.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'superadmin', TRUE),
+('John Carter', 'john.carter@moviehub.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'moderator', FALSE),
+('Maria Rodriguez', 'maria.rod@moviehub.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'moderator', FALSE),
+('Ali Reza', 'ali.reza@moviehub.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'moderator', FALSE);
 
--- 2. Users
+-- 2. Users (all passwords are 'pass123' hashed with bcrypt)
 INSERT INTO Users (name, email, password, fav_genre, bio, profile_picture) VALUES
-('Ahmed Malik', 'ahmed.malik@gmail.com', 'pass123', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
-('Laura Smith', 'laura.smith@gmail.com', 'hello123', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
-('Javier Torres', 'javier.torres@cine.es', 'clave123', 'Drama', 'Spanish film critic.', 'javier.jpg'),
-('Zahra Hosseini', 'zahra.hoss@iran.ir', 'iran123', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
-('Emily Brown', 'emily.brown@yahoo.com', 'pass432', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
-('Bilal Ahmed', 'bilal.ahmed@pakmail.com', 'pak789', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
-('Omar Farooq', 'omar.farooq@gmail.com', 'omarpass', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
-('Isabella Cruz', 'isabella.cruz@cine.es', 'cinephile', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
-('Hassan Raza', 'hassan.raza@yahoo.com', 'hassanpass', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
-('Natalie Green', 'natalie.green@gmail.com', 'npass', 'Drama', 'Love film discussions.', 'natalie.jpg'),
-('Fatima Noor', 'fatima.noor@pakmail.com', 'noor123', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
-('Pedro Sanchez', 'pedro.san@cine.es', 'spainpass', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
-('Mina Tavakoli', 'mina.tav@iran.ir', 'tava789', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
-('Robert Miller', 'robert.miller@gmail.com', 'robpass', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
-('Ayesha Karim', 'ayesha.karim@pakmail.com', 'ayespass', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
+('Ahmed Malik', 'ahmed.malik@gmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
+('Laura Smith', 'laura.smith@gmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
+('Javier Torres', 'javier.torres@cine.es', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Drama', 'Spanish film critic.', 'javier.jpg'),
+('Zahra Hosseini', 'zahra.hoss@iran.ir', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
+('Emily Brown', 'emily.brown@yahoo.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
+('Bilal Ahmed', 'bilal.ahmed@pakmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
+('Omar Farooq', 'omar.farooq@gmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
+('Isabella Cruz', 'isabella.cruz@cine.es', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
+('Hassan Raza', 'hassan.raza@yahoo.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
+('Natalie Green', 'natalie.green@gmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Drama', 'Love film discussions.', 'natalie.jpg'),
+('Fatima Noor', 'fatima.noor@pakmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
+('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
+('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
+('Robert Miller', 'robert.miller@gmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
+('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$6aGUTIyfGZfkcBzyeXnLye96RUoWAefmgDOMg.Qhn4wKgwEnjMQM6', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
 
 -- 3. Genres
 INSERT INTO Genre (genre_name, description) VALUES
@@ -362,19 +380,19 @@ INSERT INTO Genre (genre_name, description) VALUES
 
 -- 4. Movies (Hollywood, Spanish, Iranian, Pakistani)
 INSERT INTO Movie (title, synopsis, release_year, poster, duration_minutes, language, director, added_by_admin, average_rating) VALUES
-('Inception', 'A thief who steals corporate secrets through dream-sharing technology.', 2010, 'inception.jpg', 148, 'English', 'Christopher Nolan', 1, 9.0),
-('The Dark Knight', 'Batman faces the Joker in Gotham City.', 2008, 'darkknight.jpg', 152, 'English', 'Christopher Nolan', 1, 9.1),
-('La La Land', 'A love story between a jazz musician and an actress.', 2016, 'lalaland.jpg', 128, 'English', 'Damien Chazelle', 2, 8.5),
-('Parasite', 'A poor family infiltrates a wealthy household.', 2019, 'parasite.jpg', 132, 'Korean', 'Bong Joon-ho', 3, 9.0),
-('El Secreto de Sus Ojos', 'A retired legal counselor writes a novel to find closure.', 2009, 'secret_eyes.jpg', 129, 'Spanish', 'Juan José Campanella', 3, 8.8),
-('Baran', 'An Iranian refugee romance story.', 2001, 'baran.jpg', 94, 'Persian', 'Majid Majidi', 4, 8.2),
-('Khuda Kay Liye', 'A Pakistani musician’s spiritual journey.', 2007, 'khuda_kay_liye.jpg', 135, 'Urdu', 'Shoaib Mansoor', 4, 8.0),
-('Waar', 'A war on terror movie from Pakistan.', 2013, 'waar.jpg', 130, 'Urdu', 'Bilal Lashari', 2, 8.3),
-('A Separation', 'An Iranian family in moral and legal conflict.', 2011, 'separation.jpg', 123, 'Persian', 'Asghar Farhadi', 3, 9.0),
-('Pan’s Labyrinth', 'A dark fantasy in post–Civil War Spain.', 2006, 'pans_labyrinth.jpg', 118, 'Spanish', 'Guillermo del Toro', 3, 8.7),
-('Jawani Phir Nahi Ani', 'Comedy about friends reuniting.', 2015, 'jpna.jpg', 150, 'Urdu', 'Nadeem Baig', 2, 7.8),
-('The Revenant', 'A frontiersman fights for survival.', 2015, 'revenant.jpg', 156, 'English', 'Alejandro G. Iñárritu', 3, 8.5),
-('About Elly', 'Iranian drama of a trip gone wrong.', 2009, 'about_elly.jpg', 119, 'Persian', 'Asghar Farhadi', 4, 8.1);
+('Inception', 'A thief who steals corporate secrets through dream-sharing technology.', 2010, 'images/posters/inception.jpg', 148, 'English', 'Christopher Nolan', 1, 9.0),
+('The Dark Knight', 'Batman faces the Joker in Gotham City.', 2008, 'images/posters/darkknight.jpg', 152, 'English', 'Christopher Nolan', 1, 9.1),
+('La La Land', 'A love story between a jazz musician and an actress.', 2016, 'images/posters/lalaland.jpg', 128, 'English', 'Damien Chazelle', 2, 8.5),
+('Parasite', 'A poor family infiltrates a wealthy household.', 2019, 'images/posters/parasite.jpg', 132, 'Korean', 'Bong Joon-ho', 3, 9.0),
+('El Secreto de Sus Ojos', 'A retired legal counselor writes a novel to find closure.', 2009, 'images/posters/El_Screto_De_Tus_Ojos..webp', 129, 'Spanish', 'Juan JosÃ© Campanella', 3, 8.8),
+('Baran', 'An Iranian refugee romance story.', 2001, 'images/posters/baran.jpg', 94, 'Persian', 'Majid Majidi', 4, 8.2),
+('Khuda Kay Liye', 'A Pakistani musicianâ€™s spiritual journey.', 2007, 'images/posters/khuda_k_liye.webp', 135, 'Urdu', 'Shoaib Mansoor', 4, 8.0),
+('Waar', 'A war on terror movie from Pakistan.', 2013, 'images/posters/waar.jpg', 130, 'Urdu', 'Bilal Lashari', 2, 8.3),
+('A Separation', 'An Iranian family in moral and legal conflict.', 2011, 'images/posters/seperation.webp', 123, 'Persian', 'Asghar Farhadi', 3, 9.0),
+('Panâ€™s Labyrinth', 'A dark fantasy in postâ€"Civil War Spain.', 2006, 'images/posters/pan''s_labyrinth.webp', 118, 'Spanish', 'Guillermo del Toro', 3, 8.7),
+('Jawani Phir Nahi Ani', 'Comedy about friends reuniting.', 2015, 'images/posters/jawani_phir_nahi_ani.webp', 150, 'Urdu', 'Nadeem Baig', 2, 7.8),
+('The Revenant', 'A frontiersman fights for survival.', 2015, 'images/posters/the_revenant.webp', 156, 'English', 'Alejandro G. IÃ±Ã¡rritu', 3, 8.5),
+('About Elly', 'Iranian drama of a trip gone wrong.', 2009, 'images/posters/about_elly.webp', 119, 'Persian', 'Asghar Farhadi', 4, 8.1);
 
 -- 5. Movie Genres
 INSERT INTO Movie_Genre VALUES
@@ -427,19 +445,48 @@ INSERT INTO Post (user_id, movie_id, content, like_count, comment_count) VALUES
 (3,5,'Spanish thrillers are underrated gems.',6,2),
 (4,9,'A Separation deserves every award it got.',9,1),
 (6,8,'Waar is the best action film from Pakistan.',7,2),
-(8,10,'Pan’s Labyrinth broke my heart.',5,3);
+(8,10,'Panâ€™s Labyrinth broke my heart.',5,3);
 
 -- 12. Comments
 INSERT INTO Comment (post_id, user_id, review_id, content) VALUES
 (1,2,1,'Totally agree, Nolan is a genius!'),
 (2,3,3,'Yes! The direction was incredible.'),
-(3,4,4,'Very true, Farhadi’s realism is unmatched.'),
+(3,4,4,'Very true, Farhadiâ€™s realism is unmatched.'),
 (4,6,5,'Proud moment for Pakistan cinema!'),
 (5,8,6,'So emotional and dark.');
 
 -- 13. Likes on Posts
 INSERT INTO Like_Post (post_id, user_id) VALUES
 (1,2),(1,3),(2,4),(2,5),(3,6),(4,7),(5,9),(5,10);
+
+-- 14. Messages (between friends)
+INSERT INTO Message (sender_id, receiver_id, content, read_status) VALUES
+(1, 2, 'Hey Laura! Have you seen Inception?', TRUE),
+(2, 1, 'Yes! It was amazing, Nolan is a genius!', TRUE),
+(1, 2, 'Right? The ending still blows my mind.', FALSE),
+(1, 3, 'Javier, any Spanish movie recommendations?', TRUE),
+(3, 1, 'Try El Secreto de Sus Ojos, it is a masterpiece!', TRUE),
+(3, 4, 'Zahra, have you watched A Separation?', TRUE),
+(4, 3, 'Of course! Farhadi is my favorite director.', TRUE),
+(5, 6, 'Bilal, recommend me a good horror movie!', TRUE),
+(6, 5, 'You should watch The Conjuring series.', FALSE),
+(7, 9, 'Hassan, what do you think about Waar?', TRUE),
+(9, 7, 'Best Pakistani action film ever made!', TRUE),
+(8, 10, 'Natalie, Pan''s Labyrinth made me cry.', TRUE),
+(10, 8, 'Same here! Such an emotional film.', FALSE);
+
+-- 15. Events (Watch Parties)
+INSERT INTO Event (title, description, host_id, movie_id, event_datetime, capacity, current_participants, status) VALUES
+('Inception Movie Night', 'Join us for a mind-bending journey through dreams! We''ll discuss the plot twists after.', 1, 1, '2025-12-15 20:00:00', 30, 5, 'scheduled'),
+('The Dark Knight Marathon', 'Experience the greatest superhero film of all time together!', 7, 2, '2025-12-20 19:00:00', 50, 12, 'scheduled'),
+('La La Land Sing-Along', 'Romantic musical evening with optional sing-along. Bring tissues!', 2, 3, '2025-12-22 18:30:00', 25, 8, 'scheduled'),
+('Parasite Watch Party', 'Oscar-winning thriller that will keep you on edge. No spoilers!', 3, 4, '2025-12-18 21:00:00', 40, 15, 'scheduled'),
+('Spanish Cinema Night', 'El Secreto de Sus Ojos - A masterpiece of Spanish thriller cinema.', 3, 5, '2025-12-25 20:00:00', 20, 3, 'scheduled'),
+('Pakistani Film Festival', 'Waar screening followed by discussion on Pakistani cinema.', 6, 8, '2025-12-28 19:30:00', 35, 10, 'scheduled'),
+('Iranian Drama Evening', 'A Separation - Powerful storytelling from Asghar Farhadi.', 4, 9, '2025-12-30 20:00:00', 25, 7, 'scheduled'),
+('New Year Film Celebration', 'Ring in 2026 with Pan''s Labyrinth - a dark fantasy masterpiece!', 8, 10, '2025-12-31 22:00:00', 45, 20, 'scheduled'),
+('Comedy Night: JPNA', 'Start the new year with laughter! Jawani Phir Nahi Ani screening.', 11, 11, '2026-01-02 19:00:00', 50, 0, 'scheduled'),
+('Survival Cinema: The Revenant', 'Experience the brutal beauty of nature and survival.', 14, 12, '2026-01-05 20:30:00', 30, 0, 'scheduled');
 
 -- 19. Moderation Actions
 INSERT INTO Moderation (admin_id, content_type, content_id, action, reason) VALUES
@@ -460,5 +507,7 @@ INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value
 (3,'INSERT','Genre',9,'NULL','Mystery genre added','192.168.1.18');
 
 -- ========================================
--- DATA INSERTION COMPLETE ✅
+-- DATA INSERTION COMPLETE âœ…
 -- ========================================
+
+
