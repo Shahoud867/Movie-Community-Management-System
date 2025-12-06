@@ -40,6 +40,18 @@ CREATE TABLE Password_Reset_Token (
 
 ### 2. Email Configuration
 
+**⚠️ SECURITY WARNING:** Never commit your actual `.env` file with real credentials to GitHub! Use `.env.example` as a template.
+
+#### Setup Steps:
+
+1. **Copy the example file:**
+```bash
+cd backend
+cp .env.example .env
+```
+
+2. **Edit `.env` with your real credentials** (this file is gitignored):
+
 #### Option A: Gmail (Recommended for Development)
 
 1. **Enable 2-Factor Authentication** on your Gmail account
