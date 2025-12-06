@@ -16,7 +16,6 @@ CREATE TABLE Users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    plain_password VARCHAR(50) NOT NULL,
     fav_genre VARCHAR(50),
     profile_picture VARCHAR(255),
     bio TEXT,
@@ -32,7 +31,6 @@ CREATE TABLE Admin (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    plain_password VARCHAR(50) NOT NULL,
     role VARCHAR(50) DEFAULT 'moderator',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_super_admin BOOLEAN DEFAULT FALSE,
@@ -377,30 +375,30 @@ CREATE TABLE Audit_Trail (
 -- SAMPLE DATA INSERTS FOR MOVIE COMMUNITY DB
 -- ========================================
 
--- 1. Admins (each has different password - see plain_password column)
-INSERT INTO Admin (name, email, password, plain_password, role, is_super_admin) VALUES
-('Sarah Khan', 'sarah.admin@moviehub.com', '$2a$10$Dq6oVj0mBpbuUHY5WK6Ok.OagEHLBjoYnZa6YmPtMHH7gN/O7XMPW', 'admin123', 'superadmin', TRUE),
-('John Carter', 'john.carter@moviehub.com', '$2a$10$hKS.v56vcCktzFe6sMDO2./esxIWteC15C6my0CpYEEf9wUh7Ms56', 'john456', 'moderator', FALSE),
-('Maria Rodriguez', 'maria.rod@moviehub.com', '$2a$10$6FUc1CrO5WE9ur7c8Xzkw.jCWCcdtdN97YKoOLKPaxr8RfY7DZiae', 'maria789', 'moderator', FALSE),
-('Ali Reza', 'ali.reza@moviehub.com', '$2a$10$OJq2h.w6uJL930i1FCaXCOn56KD9GMLba6Arqa3vyx5DX8wl5jNHW', 'ali2024', 'moderator', FALSE);
+-- 1. Admins
+INSERT INTO Admin (name, email, password, role, is_super_admin) VALUES
+('Sarah Khan', 'sarah.admin@moviehub.com', '$2a$10$Dq6oVj0mBpbuUHY5WK6Ok.OagEHLBjoYnZa6YmPtMHH7gN/O7XMPW', 'superadmin', TRUE),
+('John Carter', 'john.carter@moviehub.com', '$2a$10$hKS.v56vcCktzFe6sMDO2./esxIWteC15C6my0CpYEEf9wUh7Ms56', 'moderator', FALSE),
+('Maria Rodriguez', 'maria.rod@moviehub.com', '$2a$10$6FUc1CrO5WE9ur7c8Xzkw.jCWCcdtdN97YKoOLKPaxr8RfY7DZiae', 'moderator', FALSE),
+('Ali Reza', 'ali.reza@moviehub.com', '$2a$10$OJq2h.w6uJL930i1FCaXCOn56KD9GMLba6Arqa3vyx5DX8wl5jNHW', 'moderator', FALSE);
 
--- 2. Users (each has different password - see plain_password column)
-INSERT INTO Users (name, email, password, plain_password, fav_genre, bio, profile_picture) VALUES
-('Ahmed Malik', 'ahmed.malik@gmail.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'ahmed111', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
-('Laura Smith', 'laura.smith@gmail.com', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'sara222', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
-('Javier Torres', 'javier.torres@cine.es', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'omar333', 'Drama', 'Spanish film critic.', 'javier.jpg'),
-('Zahra Hosseini', 'zahra.hoss@iran.ir', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'ahmed111', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
-('Emily Brown', 'emily.brown@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'fatima444', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
-('Bilal Ahmed', 'bilal.ahmed@pakmail.com', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'ali555', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
-('Omar Farooq', 'omar.farooq@gmail.com', '$2a$10$3zA04UpEf6k826cYmZG8o.W66ViEXnrfH2dDeDptvV2EDUK275/62', 'maryam666', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
-('Isabella Cruz', 'isabella.cruz@cine.es', '$2a$10$qO2Lzxbs.a6T1PfqBFmjoeZFxgT5ldSGC.WUsfCxTanvs9gpK0nB.', 'hassan777', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
-('Hassan Raza', 'hassan.raza@yahoo.com', '$2a$10$hulqNPqOPYN3IOyi4rxpsuvYo5mnt1xlxyQfr7QUwIfK3m0GJK2s6', 'zainab888', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
-('Natalie Green', 'natalie.green@gmail.com', '$2a$10$o8SfrF2e.y/UvAK.2gLzxe15zIJQWrlq8WG16sr0BjULqin3inPBa', 'bilal999', 'Drama', 'Love film discussions.', 'natalie.jpg'),
-('Fatima Noor', 'fatima.noor@pakmail.com', '$2a$10$63K9STQSkao6T25rcYqS.ukGWEteVhv6EyoBuAYpYEhSkD8Kz2Lg.', 'amna000', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
-('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$a12fWQDZzgRejquZKQnXeutbGovugk7PaGfMdueI87csHIgxefEn.', 'usman001', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
-('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$k/jfvZGGfAtXa0IX2Ndlb.lzA4m/ycjTF3J4tq/dsizHQLNBjsNni', 'hira002', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
-('Robert Miller', 'robert.miller@gmail.com', '$2a$10$Y3/qBFOamG10Utge./hHIuXuXEWECmbTttqQxNW1Euy88hkKyfvva', 'kamran003', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
-('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'ayesha004', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
+-- 2. Users
+INSERT INTO Users (name, email, password, fav_genre, bio, profile_picture) VALUES
+('Ahmed Malik', 'ahmed.malik@gmail.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
+('Laura Smith', 'laura.smith@gmail.com', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
+('Javier Torres', 'javier.torres@cine.es', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'Drama', 'Spanish film critic.', 'javier.jpg'),
+('Zahra Hosseini', 'zahra.hoss@iran.ir', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
+('Emily Brown', 'emily.brown@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
+('Bilal Ahmed', 'bilal.ahmed@pakmail.com', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
+('Omar Farooq', 'omar.farooq@gmail.com', '$2a$10$3zA04UpEf6k826cYmZG8o.W66ViEXnrfH2dDeDptvV2EDUK275/62', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
+('Isabella Cruz', 'isabella.cruz@cine.es', '$2a$10$qO2Lzxbs.a6T1PfqBFmjoeZFxgT5ldSGC.WUsfCxTanvs9gpK0nB.', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
+('Hassan Raza', 'hassan.raza@yahoo.com', '$2a$10$hulqNPqOPYN3IOyi4rxpsuvYo5mnt1xlxyQfr7QUwIfK3m0GJK2s6', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
+('Natalie Green', 'natalie.green@gmail.com', '$2a$10$o8SfrF2e.y/UvAK.2gLzxe15zIJQWrlq8WG16sr0BjULqin3inPBa', 'Drama', 'Love film discussions.', 'natalie.jpg'),
+('Fatima Noor', 'fatima.noor@pakmail.com', '$2a$10$63K9STQSkao6T25rcYqS.ukGWEteVhv6EyoBuAYpYEhSkD8Kz2Lg.', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
+('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$a12fWQDZzgRejquZKQnXeutbGovugk7PaGfMdueI87csHIgxefEn.', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
+('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$k/jfvZGGfAtXa0IX2Ndlb.lzA4m/ycjTF3J4tq/dsizHQLNBjsNni', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
+('Robert Miller', 'robert.miller@gmail.com', '$2a$10$Y3/qBFOamG10Utge./hHIuXuXEWECmbTttqQxNW1Euy88hkKyfvva', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
+('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
 
 -- 3. Genres
 INSERT INTO Genre (genre_name, description) VALUES

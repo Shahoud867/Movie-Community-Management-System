@@ -6,6 +6,7 @@ const {
   requestPasswordReset,
   resetPassword,
   validateResetToken,
+  changePassword: changePasswordService,
 } = require('./auth.service');
 
 async function register(req, res, next) {
@@ -156,6 +157,32 @@ async function validateToken(req, res, next) {
   }
 }
 
+/**
+ * Change password (authenticated users)
+ */
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const result = await changePasswordService(userId, currentPassword, newPassword);
+    res.json(result);
+  } catch (err) {
+    if (err.message === 'Current password is incorrect') {
+      return res.status(400).json({ error: err.message });
+    }
+    next(err);
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -164,4 +191,5 @@ module.exports = {
   forgotPassword,
   resetPasswordController,
   validateToken,
+  changePassword,
 };

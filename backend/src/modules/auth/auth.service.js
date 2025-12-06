@@ -206,6 +206,37 @@ async function validateResetToken(token) {
   return { valid: true, message: 'Token is valid' };
 }
 
+async function changePassword(userId, currentPassword, newPassword) {
+  // Fetch user
+  const [users] = await pool.query(
+    'SELECT user_id, password FROM Users WHERE user_id = ?',
+    [userId]
+  );
+
+  if (users.length === 0) {
+    throw new Error('User not found');
+  }
+
+  const user = users[0];
+
+  // Verify current password
+  const isValid = await comparePassword(currentPassword, user.password);
+  if (!isValid) {
+    throw new Error('Current password is incorrect');
+  }
+
+  // Hash new password
+  const hashedPassword = await hashPassword(newPassword);
+
+  // Update password
+  await pool.query(
+    'UPDATE Users SET password = ? WHERE user_id = ?',
+    [hashedPassword, userId]
+  );
+
+  return { message: 'Password changed successfully' };
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -214,4 +245,5 @@ module.exports = {
   requestPasswordReset,
   resetPassword,
   validateResetToken,
+  changePassword,
 };

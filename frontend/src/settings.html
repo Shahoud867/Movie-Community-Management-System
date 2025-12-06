@@ -175,10 +175,57 @@
         </div>
       </form>
 
-      <!-- Additional Settings Sections (Future) -->
+      <!-- Password Change Section -->
       <div class="mt-8 p-6 bg-slate-800/40 rounded-xl border border-slate-700/40">
-        <h2 class="text-lg font-semibold mb-2">Other Settings</h2>
-        <p class="text-sm text-slate-400">Password, privacy, and notification settings coming soon.</p>
+        <h2 class="text-lg font-semibold mb-4">Change Password</h2>
+        <form id="passwordForm" class="space-y-4">
+          <div>
+            <label for="currentPassword" class="block text-sm font-medium mb-1.5">Current Password</label>
+            <input 
+              type="password" 
+              id="currentPassword" 
+              class="w-full rounded-md bg-slate-900/60 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
+              required
+            />
+          </div>
+          <div>
+            <label for="newPassword" class="block text-sm font-medium mb-1.5">New Password</label>
+            <input 
+              type="password" 
+              id="newPassword" 
+              class="w-full rounded-md bg-slate-900/60 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
+              required
+              minlength="6"
+            />
+            <p class="text-xs text-slate-400 mt-1">Must be at least 6 characters</p>
+          </div>
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium mb-1.5">Confirm New Password</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              class="w-full rounded-md bg-slate-900/60 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600"
+              required
+              minlength="6"
+            />
+          </div>
+          <div id="passwordError" class="hidden text-sm text-red-400"></div>
+          <div id="passwordSuccess" class="hidden text-sm text-green-400"></div>
+          <div class="flex gap-3 pt-2">
+            <button 
+              type="submit" 
+              class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-md text-sm font-medium transition-colors"
+            >
+              Update Password
+            </button>
+            <a 
+              href="./forgot-password.html" 
+              class="inline-flex items-center gap-2 px-6 py-2.5 text-brand-400 hover:text-brand-300 text-sm font-medium transition-colors"
+            >
+              Forgot Password?
+            </a>
+          </div>
+        </form>
       </div>
     </div>
   </main>
@@ -409,7 +456,72 @@
       // Form submission
       const form = document.getElementById('settingsForm');
       form.addEventListener('submit', handleSubmit);
+
+      // Password change form
+      const passwordForm = document.getElementById('passwordForm');
+      passwordForm.addEventListener('submit', handlePasswordChange);
     });
+
+    // Handle password change
+    async function handlePasswordChange(e) {
+      e.preventDefault();
+
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const errorDiv = document.getElementById('passwordError');
+      const successDiv = document.getElementById('passwordSuccess');
+
+      // Hide previous messages
+      errorDiv.classList.add('hidden');
+      successDiv.classList.add('hidden');
+
+      // Validate passwords match
+      if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'New passwords do not match';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      // Validate password length
+      if (newPassword.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Failed to change password');
+        }
+
+        // Show success message
+        successDiv.textContent = 'Password changed successfully!';
+        successDiv.classList.remove('hidden');
+
+        // Clear form
+        document.getElementById('passwordForm').reset();
+
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.classList.remove('hidden');
+      }
+    }
   </script>
   <script>
   (function() {
