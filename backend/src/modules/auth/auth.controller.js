@@ -1,4 +1,12 @@
-const { registerUser, loginUser, loginAdmin, getUserById } = require('./auth.service');
+const {
+  registerUser,
+  loginUser,
+  loginAdmin,
+  getUserById,
+  requestPasswordReset,
+  resetPassword,
+  validateResetToken,
+} = require('./auth.service');
 
 async function register(req, res, next) {
   try {
@@ -81,4 +89,79 @@ async function logout(req, res) {
   res.json({ message: 'Logged out successfully' });
 }
 
-module.exports = { register, login, me, logout };
+/**
+ * Request password reset - send email with reset link
+ */
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const result = await requestPasswordReset(email);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Reset password using token
+ */
+async function resetPasswordController(req, res, next) {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const result = await resetPassword(token, newPassword);
+    res.json(result);
+  } catch (err) {
+    if (err.message === 'Invalid or expired reset token') {
+      return res.status(400).json({ error: err.message });
+    }
+    next(err);
+  }
+}
+
+/**
+ * Validate reset token
+ */
+async function validateToken(req, res, next) {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    const result = await validateResetToken(token);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  register,
+  login,
+  me,
+  logout,
+  forgotPassword,
+  resetPasswordController,
+  validateToken,
+};

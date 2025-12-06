@@ -260,6 +260,20 @@ CREATE TABLE Message (
     INDEX idx_message_conversation (sender_id, receiver_id, sent_date)
 );
 
+-- Password_Reset_Token Table: Manages password reset tokens
+CREATE TABLE Password_Reset_Token (
+    token_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    INDEX idx_reset_token (token),
+    INDEX idx_reset_user (user_id),
+    INDEX idx_reset_expiry (expires_at)
+);
+
 -- ========================================
 -- 5. EVENTS & WATCH PARTIES
 -- ========================================
@@ -372,21 +386,21 @@ INSERT INTO Admin (name, email, password, plain_password, role, is_super_admin) 
 
 -- 2. Users (each has different password - see plain_password column)
 INSERT INTO Users (name, email, password, plain_password, fav_genre, bio, profile_picture) VALUES
-('Ahmed Malik', 'ahmed.malik@gmail.com', '$2a$10$sQqfDgjHW1A9eDCj7BAsj.cWVsqcq.v5DwoUtrYwzFlGjAMGq2VmK', 'ahmed111', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
-('Laura Smith', 'laura.smith@gmail.com', '$2a$10$xU8yYxuaXTp/USwr2DRJSONwdaLltEpW245y9o6vUhSiYrXQS.fie', 'laura222', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
-('Javier Torres', 'javier.torres@cine.es', '$2a$10$6B0AhwqGEspeimtJMGRXiujYNHSC/GgytAtU/evjjsHK338yZit/O', 'javier333', 'Drama', 'Spanish film critic.', 'javier.jpg'),
-('Zahra Hosseini', 'zahra.hoss@iran.ir', '$2a$10$lf.BkDUpdKASoTFfEmBb1eQjCEhN83XAAJqJUK4A2jIdoVXK2JDuO', 'zahra444', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
-('Emily Brown', 'emily.brown@yahoo.com', '$2a$10$MNFdzgGFz1sMDaCrv7on/uKQCWv6B/xReiTB74C2HoaJAkEs6FihS', 'emily555', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
-('Bilal Ahmed', 'bilal.ahmed@pakmail.com', '$2a$10$uvor.i56nwk1EmQcOzuyyuvYxmJI3ZyBLqATeBapEMDAzrqXmmR2W', 'bilal666', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
-('Omar Farooq', 'omar.farooq@gmail.com', '$2a$10$49Cvfh8XpsTmgTaKqXh1Puu4oFXJHF2Ob0qjy0wd05MQ1WGPxPBQ.', 'omar777', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
-('Isabella Cruz', 'isabella.cruz@cine.es', '$2a$10$iCtr4GmoMGWMQ5/Wogrp1ey7M01ClGSrDYLFROJy7C0GcIWB7X2xW', 'isabella888', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
-('Hassan Raza', 'hassan.raza@yahoo.com', '$2a$10$tWzRs3IlU2ba9Kx9IY8mjuO9AC3x2kHiR7An4ilm0enlM/65hAfcK', 'hassan999', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
-('Natalie Green', 'natalie.green@gmail.com', '$2a$10$wZVOBqcLw2oMko0G6P1yweuoFvHCDU7PIOgQwbbmGH5074gsvSPoK', 'natalie000', 'Drama', 'Love film discussions.', 'natalie.jpg'),
-('Fatima Noor', 'fatima.noor@pakmail.com', '$2a$10$X0orC0utNkNRzpTuUlspLeQZgv117oFVg/t8KzJLpUoth8V50LHvi', 'fatima101', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
-('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$1Akyg9PQkyjrDVfKKDi30OykdSaW0.Rq6sSKhlaF.bDc7sIWc0ekO', 'pedro202', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
-('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$Mf9Bd/n4SZHTg/QuCEqdr.lA4aDWc7I9ScYIOm0VEGIjxeFLpW69.', 'mina303', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
-('Robert Miller', 'robert.miller@gmail.com', '$2a$10$v8lHYRq2gvnTUe7nKd/UBOVKO0XjGnkq472Yzvahqe4kUlwy2b0VG', 'robert404', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
-('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$UtfpoSRN0Fj.QZfrGX/xfOrgKhShrZ4I9.IbgkFo1UUHuek41z/a2', 'ayesha505', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
+('Ahmed Malik', 'ahmed.malik@gmail.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'ahmed111', 'Action', 'Movie lover from Lahore.', 'ahmed.jpg'),
+('Laura Smith', 'laura.smith@gmail.com', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'sara222', 'Romance', 'Netflix binge watcher.', 'laura.jpg'),
+('Javier Torres', 'javier.torres@cine.es', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'omar333', 'Drama', 'Spanish film critic.', 'javier.jpg'),
+('Zahra Hosseini', 'zahra.hoss@iran.ir', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'ahmed111', 'Thriller', 'Iranian cinema enthusiast.', 'zahra.jpg'),
+('Emily Brown', 'emily.brown@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'fatima444', 'Comedy', 'Loves light-hearted films.', 'emily.jpg'),
+('Bilal Ahmed', 'bilal.ahmed@pakmail.com', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'ali555', 'Horror', 'Horror genre expert.', 'bilal.jpg'),
+('Omar Farooq', 'omar.farooq@gmail.com', '$2a$10$3zA04UpEf6k826cYmZG8o.W66ViEXnrfH2dDeDptvV2EDUK275/62', 'maryam666', 'Sci-Fi', 'Fascinated by futuristic films.', 'omar.jpg'),
+('Isabella Cruz', 'isabella.cruz@cine.es', '$2a$10$qO2Lzxbs.a6T1PfqBFmjoeZFxgT5ldSGC.WUsfCxTanvs9gpK0nB.', 'hassan777', 'Romance', 'Love is the theme of every movie.', 'isabella.jpg'),
+('Hassan Raza', 'hassan.raza@yahoo.com', '$2a$10$hulqNPqOPYN3IOyi4rxpsuvYo5mnt1xlxyQfr7QUwIfK3m0GJK2s6', 'zainab888', 'Action', 'Adrenaline junkie.', 'hassan.jpg'),
+('Natalie Green', 'natalie.green@gmail.com', '$2a$10$o8SfrF2e.y/UvAK.2gLzxe15zIJQWrlq8WG16sr0BjULqin3inPBa', 'bilal999', 'Drama', 'Love film discussions.', 'natalie.jpg'),
+('Fatima Noor', 'fatima.noor@pakmail.com', '$2a$10$63K9STQSkao6T25rcYqS.ukGWEteVhv6EyoBuAYpYEhSkD8Kz2Lg.', 'amna000', 'Comedy', 'Pakistani film fan.', 'fatima.jpg'),
+('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$a12fWQDZzgRejquZKQnXeutbGovugk7PaGfMdueI87csHIgxefEn.', 'usman001', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
+('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$k/jfvZGGfAtXa0IX2Ndlb.lzA4m/ycjTF3J4tq/dsizHQLNBjsNni', 'hira002', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
+('Robert Miller', 'robert.miller@gmail.com', '$2a$10$Y3/qBFOamG10Utge./hHIuXuXEWECmbTttqQxNW1Euy88hkKyfvva', 'kamran003', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
+('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'ayesha004', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
 
 -- 3. Genres
 INSERT INTO Genre (genre_name, description) VALUES
