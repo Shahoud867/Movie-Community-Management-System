@@ -273,9 +273,9 @@
         select.innerHTML = '<option value="">Select a genre (optional)</option>';
         
         const genreList = genres.genres || genres;
-        genreList.forEach(genre => {
+        genres.forEach(genre => {
           const option = document.createElement('option');
-          option.value = genre.genre_id;
+          option.value = genre.genre_name;
           option.textContent = genre.genre_name;
           select.appendChild(option);
         });

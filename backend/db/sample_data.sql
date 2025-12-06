@@ -1217,4 +1217,6 @@ DELIMITER ;
 -- DATABASE SETUP COMPLETE ✅
 -- ========================================
 
+select * from users;
+
 

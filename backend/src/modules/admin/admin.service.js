@@ -57,15 +57,22 @@ async function getDashboardStats() {
         // Try to use the view first
         const [stats] = await pool.query('SELECT * FROM vw_admin_dashboard');
         if (stats.length > 0) {
+            // Get additional stats not in the view
+            const [avgRating] = await pool.query('SELECT AVG(average_rating) as avg_rating FROM Movie WHERE average_rating IS NOT NULL');
+            const [ratingCount] = await pool.query('SELECT COUNT(*) as total_ratings FROM Rating');
+            const [activeUsersCount] = await pool.query('SELECT COUNT(*) as count FROM Users WHERE is_active = TRUE AND last_login >= DATE_SUB(NOW(), INTERVAL 30 DAY)');
+            
             return {
                 total_users: stats[0].total_users,
                 total_movies: stats[0].total_movies,
-                flagged_content: stats[0].flagged_content,
-                scheduled_events: stats[0].upcoming_events,
+                total_events: stats[0].upcoming_events,
+                pending_reports: stats[0].flagged_content,
                 total_posts: stats[0].total_posts,
                 total_reviews: stats[0].total_reviews,
-                active_users: stats[0].active_users,
+                active_users: activeUsersCount[0].count,
                 new_users_week: stats[0].new_users_week,
+                avg_rating: avgRating[0].avg_rating ? parseFloat(avgRating[0].avg_rating).toFixed(2) : null,
+                total_ratings: ratingCount[0].total_ratings,
             };
         }
     } catch (error) {
@@ -83,14 +90,20 @@ async function getDashboardStats() {
     );
     const [postCount] = await pool.query('SELECT COUNT(*) as count FROM Post');
     const [reviewCount] = await pool.query('SELECT COUNT(*) as count FROM Review');
+    const [avgRating] = await pool.query('SELECT AVG(average_rating) as avg_rating FROM Movie WHERE average_rating IS NOT NULL');
+    const [ratingCount] = await pool.query('SELECT COUNT(*) as total_ratings FROM Rating');
+    const [activeUsersCount] = await pool.query('SELECT COUNT(*) as count FROM Users WHERE is_active = TRUE AND last_login >= DATE_SUB(NOW(), INTERVAL 30 DAY)');
 
     return {
         total_users: userCount[0].count,
         total_movies: movieCount[0].count,
-        flagged_content: flaggedCount[0].count,
-        scheduled_events: eventCount[0].count,
+        total_events: eventCount[0].count,
+        pending_reports: flaggedCount[0].count,
         total_posts: postCount[0].count,
         total_reviews: reviewCount[0].count,
+        avg_rating: avgRating[0].avg_rating ? parseFloat(avgRating[0].avg_rating).toFixed(2) : null,
+        total_ratings: ratingCount[0].total_ratings,
+        active_users: activeUsersCount[0].count,
     };
 }
 

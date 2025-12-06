@@ -175,11 +175,53 @@
     function renderMessageBubble(msg){
       const mine = msg.sender_id === currentUser?.user_id;
       const row = document.createElement('div');
-      row.className = 'flex ' + (mine ? 'justify-end' : 'justify-start');
+      row.className = 'flex flex-col gap-1 ' + (mine ? 'items-end' : 'items-start');
+      
+      // Sender name for received messages
+      if (!mine && activeUser) {
+        const senderName = document.createElement('div');
+        senderName.className = 'text-xs text-slate-400 px-1';
+        senderName.textContent = activeUser.name || 'User';
+        row.appendChild(senderName);
+      }
+      
       const b = document.createElement('div');
       b.className = 'bubble px-3 py-2 rounded-lg text-sm ' + (mine ? 'bg-brand-600 text-white' : 'bg-slate-700/70');
       b.textContent = msg.content;
       row.appendChild(b);
+      
+      // Timestamp and read status
+      const meta = document.createElement('div');
+      meta.className = 'flex items-center gap-2 px-1 text-xs text-slate-400';
+      
+      // Format timestamp
+      const time = new Date(msg.sent_date).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = time;
+      meta.appendChild(timeSpan);
+      
+      // Read status for sent messages (mine)
+      if (mine) {
+        const statusIcon = document.createElement('span');
+        statusIcon.className = 'flex items-center';
+        if (msg.read_status) {
+          // Double checkmark for read
+          statusIcon.innerHTML = '✓✓';
+          statusIcon.className += ' text-blue-400';
+          statusIcon.title = `Read ${msg.read_date ? new Date(msg.read_date).toLocaleString() : ''}`;
+        } else {
+          // Single checkmark for sent but not read
+          statusIcon.innerHTML = '✓';
+          statusIcon.className += ' text-slate-400';
+          statusIcon.title = 'Sent';
+        }
+        meta.appendChild(statusIcon);
+      }
+      
+      row.appendChild(meta);
       return row;
     }
 
@@ -208,6 +250,16 @@
         const msgs = await apiFetch(`/api/messages?user_id=${otherId}`);
         msgs.forEach(m => scroll.appendChild(renderMessageBubble(m)));
         setTimeout(() => { scroll.scrollTop = scroll.scrollHeight; }, 0);
+        
+        // Mark conversation as read
+        await apiFetch('/api/messages/mark-read', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ user_id: otherId })
+        }).catch(() => {}); // Silently fail if error
+        
+        // Refresh conversation list to update unread counts
+        await loadConversations();
       } catch(e){
         scroll.innerHTML = `<p class='text-sm text-red-400'>${e.message}</p>`;
       }
@@ -237,7 +289,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      try { currentUser = await apiFetch('/api/auth/me'); } catch {}
+      try { 
+        const response = await apiFetch('/api/auth/me');
+        currentUser = response.user || response;
+      } catch {}
       await loadConversations();
       await loadChat(ACTIVE_ID);
       qs('#chatForm').addEventListener('submit', sendMessage);

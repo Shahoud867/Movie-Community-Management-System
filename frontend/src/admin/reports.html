@@ -4,331 +4,903 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin • Reports</title>
+    <title>Admin • System Reports</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
     <div id="sidebar"></div>
     <main class="flex-1 min-w-0">
         <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
-            <h1 class="text-lg font-semibold">System Reports</h1>
-            <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+            <h1 class="text-lg font-semibold">📊 System Reports & Analytics</h1>
+            <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to Dashboard</a>
         </header>
+
+        <!-- Tab Navigation -->
+        <div class="border-b border-slate-800/60 px-4">
+            <nav class="flex space-x-6">
+                <button class="tab-btn py-3 px-2 text-sm font-medium border-b-2 border-transparent hover:text-blue-400 transition active" data-tab="overview">
+                    📈 Overview
+                </button>
+                <button class="tab-btn py-3 px-2 text-sm font-medium border-b-2 border-transparent hover:text-blue-400 transition" data-tab="movies">
+                    🎬 Movie Statistics
+                </button>
+                <button class="tab-btn py-3 px-2 text-sm font-medium border-b-2 border-transparent hover:text-blue-400 transition" data-tab="users">
+                    👥 User Activity
+                </button>
+                <button class="tab-btn py-3 px-2 text-sm font-medium border-b-2 border-transparent hover:text-blue-400 transition" data-tab="events">
+                    🎉 Events Report
+                </button>
+                <button class="tab-btn py-3 px-2 text-sm font-medium border-b-2 border-transparent hover:text-blue-400 transition" data-tab="moderation">
+                    🛡️ Moderation Log
+                </button>
+            </nav>
+        </div>
+
         <section class="p-4">
-            <!-- Generate Report Form -->
-            <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-6 mb-6">
-                <h2 class="text-lg font-semibold mb-4">Generate New Report</h2>
-                <form id="generateReportForm" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="report_type" class="block text-sm font-medium text-slate-300 mb-2">Report Type
-                                *</label>
-                            <select id="report_type" name="report_type" required
-                                class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm">
-                                <option value="">Select report type</option>
-                                <option value="most_watched">Most Watched Movies</option>
-                                <option value="highest_rated">Highest Rated Movies</option>
-                                <option value="most_active_users">Most Active Users</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="date_range_start" class="block text-sm font-medium text-slate-300 mb-2">Start
-                                Date *</label>
-                            <input type="date" id="date_range_start" name="date_range_start" required
-                                class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label for="date_range_end" class="block text-sm font-medium text-slate-300 mb-2">End Date
-                                *</label>
-                            <input type="date" id="date_range_end" name="date_range_end" required
-                                class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm">
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <div class="text-sm text-slate-400">Total Movies</div>
+                        <div class="text-2xl font-bold mt-1" id="total-movies">-</div>
+                    </div>
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <div class="text-sm text-slate-400">Total Users</div>
+                        <div class="text-2xl font-bold mt-1" id="total-users">-</div>
+                    </div>
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <div class="text-sm text-slate-400">Total Events</div>
+                        <div class="text-2xl font-bold mt-1" id="total-events">-</div>
+                    </div>
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <div class="text-sm text-slate-400">Pending Moderation</div>
+                        <div class="text-2xl font-bold mt-1 text-yellow-400" id="pending-moderation">-</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <h3 class="text-sm font-semibold mb-3 text-slate-300">Platform Overview</h3>
+                        <div style="height: 250px;">
+                            <canvas id="overviewChart"></canvas>
                         </div>
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit"
-                            class="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded transition duration-200">
-                            Generate Report
-                        </button>
+                    <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4">
+                        <h3 class="text-sm font-semibold mb-3 text-slate-300">Content Distribution</h3>
+                        <div style="height: 250px;">
+                            <canvas id="contentChart"></canvas>
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-6">
+                    <h2 class="text-lg font-semibold mb-4">Dashboard Summary</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="dashboard-table">
+                            <thead>
+                                <tr class="border-b border-slate-700">
+                                    <th class="text-left py-2 px-3">Metric</th>
+                                    <th class="text-right py-2 px-3">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-body">
+                                <tr><td colspan="2" class="text-center py-4 text-slate-400">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <!-- Past Reports -->
-            <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
-                <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
-                    <h2 class="text-lg font-semibold">Past Reports</h2>
-                    <button id="refreshBtn"
-                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm transition duration-200">
-                        Refresh
-                    </button>
+            <!-- Movies Tab -->
+            <div id="movies-tab" class="tab-content">
+                <!-- Chart -->
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4 mb-4">
+                    <h3 class="text-sm font-semibold mb-3 text-slate-300">Top 10 Movies by Ratings</h3>
+                    <div style="height: 300px;">
+                        <canvas id="moviesChart"></canvas>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="text-slate-400 border-b border-slate-700">
-                            <tr>
-                                <th class="text-left py-2 px-2">Report ID</th>
-                                <th class="text-left py-2 px-2">Report Type</th>
-                                <th class="text-left py-2 px-2">Date Range</th>
-                                <th class="text-left py-2 px-2">Generated By</th>
-                                <th class="text-left py-2 px-2">Generated Date</th>
-                                <th class="text-left py-2 px-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportsTableBody" class="divide-y divide-slate-700"></tbody>
-                    </table>
+
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
+                    <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">🎬 Movie Statistics (vw_movie_statistics)</h2>
+                        <button id="export-movies-btn" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="movies-table">
+                            <thead>
+                                <tr class="border-b border-slate-700 bg-slate-900/50">
+                                    <th class="text-left py-3 px-4">Movie Title</th>
+                                    <th class="text-center py-3 px-4">Avg Rating</th>
+                                    <th class="text-center py-3 px-4">Total Ratings</th>
+                                    <th class="text-center py-3 px-4">Reviews</th>
+                                    <th class="text-center py-3 px-4">Watchlist Adds</th>
+                                    <th class="text-right py-3 px-4">Release Year</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movies-body">
+                                <tr><td colspan="6" class="text-center py-4 text-slate-400">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content">
+                <!-- Chart -->
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4 mb-4">
+                    <h3 class="text-sm font-semibold mb-3 text-slate-300">User Engagement Metrics</h3>
+                    <div style="height: 300px;">
+                        <canvas id="usersChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
+                    <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">👥 User Activity Report (vw_user_activity_report)</h2>
+                        <button id="export-users-btn" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="users-table">
+                            <thead>
+                                <tr class="border-b border-slate-700 bg-slate-900/50">
+                                    <th class="text-left py-3 px-4">Name</th>
+                                    <th class="text-left py-3 px-4">Email</th>
+                                    <th class="text-center py-3 px-4">Posts</th>
+                                    <th class="text-center py-3 px-4">Reviews</th>
+                                    <th class="text-center py-3 px-4">Watchlist</th>
+                                    <th class="text-center py-3 px-4">Friends</th>
+                                    <th class="text-right py-3 px-4">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-body">
+                                <tr><td colspan="7" class="text-center py-4 text-slate-400">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Tab -->
+            <div id="events-tab" class="tab-content">
+                <!-- Chart -->
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 p-4 mb-4">
+                    <h3 class="text-sm font-semibold mb-3 text-slate-300">Event Participation</h3>
+                    <div style="height: 300px;">
+                        <canvas id="eventsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
+                    <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">🎉 Events Report (vw_event_report)</h2>
+                        <button id="export-events-btn" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="events-table">
+                            <thead>
+                                <tr class="border-b border-slate-700 bg-slate-900/50">
+                                    <th class="text-left py-3 px-4">Event Name</th>
+                                    <th class="text-left py-3 px-4">Host</th>
+                                    <th class="text-center py-3 px-4">Movie</th>
+                                    <th class="text-center py-3 px-4">Date</th>
+                                    <th class="text-center py-3 px-4">Attendees</th>
+                                    <th class="text-right py-3 px-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-body">
+                                <tr><td colspan="6" class="text-center py-4 text-slate-400">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderation Tab -->
+            <div id="moderation-tab" class="tab-content">
+                <div class="bg-slate-800/60 rounded-lg border border-slate-700/50 overflow-hidden">
+                    <div class="p-4 border-b border-slate-700/50 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">🛡️ Moderation Log (vw_moderation_report)</h2>
+                        <button id="export-moderation-btn" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm">
+                            📥 Export CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="moderation-table">
+                            <thead>
+                                <tr class="border-b border-slate-700 bg-slate-900/50">
+                                    <th class="text-left py-3 px-4">Content Type</th>
+                                    <th class="text-left py-3 px-4">Content Preview</th>
+                                    <th class="text-center py-3 px-4">Action Type</th>
+                                    <th class="text-center py-3 px-4">Status</th>
+                                    <th class="text-left py-3 px-4">Admin</th>
+                                    <th class="text-right py-3 px-4">Action Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moderation-body">
+                                <tr><td colspan="6" class="text-center py-4 text-slate-400">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Report View Modal -->
-    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-slate-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center">
-                <h3 class="text-xl font-semibold" id="modalTitle">Report Details</h3>
-                <button data-action="close-modal" class="text-slate-400 hover:text-slate-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <div id="modalContent" class="text-slate-300"></div>
-            </div>
-            <div class="p-6 border-t border-slate-700 flex justify-end">
-                <button data-action="close-modal"
-                    class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded transition duration-200">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        (async function () {
-            document.getElementById('sidebar').innerHTML = await fetch('../components/admin-sidebar.html').then(r => r.text());
+        // Global data storage for CSV export
+        let movieData = [], userData = [], eventData = [], moderationData = [];
 
-            const tbody = document.getElementById('reportsTableBody');
+        // Helper function to safely format dates
+        function formatDate(dateValue) {
+            if (!dateValue) return 'N/A';
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return 'Invalid Date';
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch (error) {
+                console.error('Error formatting date:', dateValue, error);
+                return 'N/A';
+            }
+        }
 
-            async function loadReports() {
-                try {
-                    tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400">Loading reports...</td></tr>';
-
-                    const response = await fetch('/api/admin/reports');
-
-                    if (!response.ok) {
-                        throw new Error('Failed to load reports');
-                    }
-
-                    const reports = await response.json();
-
-                    if (reports.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-500">No reports found. Generate a new one above.</td></tr>';
+        // CSV Export function (defined globally before IIFE)
+        function exportTableToCSV(tableId, filename) {
+            try {
+                let data = [];
+                let headers = [];
+                
+                // Determine which data to export based on table ID
+                if (tableId === 'movies-table') {
+                    if (!movieData || movieData.length === 0) {
+                        alert('No movie data available to export. Please load the Movie Statistics tab first.');
                         return;
                     }
-
-                    tbody.innerHTML = reports.map(report => `
-            <tr class="hover:bg-slate-800/20">
-              <td class="py-2 px-2 text-slate-400">#${report.report_id}</td>
-              <td class="py-2 px-2">${getReportTypeBadge(report.report_type)}</td>
-              <td class="py-2 px-2 text-slate-400">${new Date(report.date_range_start).toLocaleDateString()} - ${new Date(report.date_range_end).toLocaleDateString()}</td>
-              <td class="py-2 px-2 text-slate-400">${report.admin_name || 'System'}</td>
-              <td class="py-2 px-2 text-slate-400">${new Date(report.generated_date).toLocaleString()}</td>
-              <td class="py-2 px-2">
-                <button data-action="view" data-report='${JSON.stringify(report).replace(/'/g, "&#39;")}' class="text-brand-400 hover:text-brand-300 text-xs mr-2">View</button>
-                <button data-action="delete" data-id="${report.report_id}" class="text-red-400 hover:text-red-300 text-xs">Delete</button>
-              </td>
-            </tr>
-          `).join('');
-
-                } catch (error) {
-                    console.error('Error loading reports:', error);
-                    tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-red-400">Error loading reports. Please try again.</td></tr>';
-                }
-            }
-
-            function getReportTypeBadge(type) {
-                const badges = {
-                    most_watched: '<span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs">Most Watched</span>',
-                    highest_rated: '<span class="px-2 py-1 bg-purple-900/30 text-purple-400 rounded text-xs">Highest Rated</span>',
-                    most_active_users: '<span class="px-2 py-1 bg-green-900/30 text-green-400 rounded text-xs">Active Users</span>',
-                };
-                return badges[type] || `<span class="px-2 py-1 bg-slate-900/30 text-slate-400 rounded text-xs">${type}</span>`;
-            }
-
-            // Event delegation for table buttons
-            tbody.addEventListener('click', async (e) => {
-                const button = e.target.closest('button[data-action]');
-                if (!button) return;
-
-                const action = button.dataset.action;
-
-                if (action === 'view') {
-                    const report = JSON.parse(button.dataset.report);
-                    viewReport(report);
-                } else if (action === 'delete') {
-                    const id = button.dataset.id;
-                    if (!confirm('Are you sure you want to delete this report?')) return;
-
-                    try {
-                        const response = await fetch(`/api/admin/reports/${id}`, { method: 'DELETE' });
-                        if (response.ok) {
-                            loadReports();
-                        } else {
-                            alert('Failed to delete report');
-                        }
-                    } catch (error) {
-                        console.error('Error deleting report:', error);
-                        alert('Failed to delete report');
+                    headers = ['Title', 'Average Rating', 'Total Ratings', 'Total Reviews', 'Watchlist Adds', 'Release Year'];
+                    data = movieData.map(row => [
+                        row.title || '',
+                        parseFloat(row.average_rating || 0).toFixed(2),
+                        row.total_ratings || 0,
+                        row.total_reviews || 0,
+                        row.watchlist_adds || 0,
+                        row.release_year || 'N/A'
+                    ]);
+                } else if (tableId === 'users-table') {
+                    if (!userData || userData.length === 0) {
+                        alert('No user data available to export. Please load the User Activity tab first.');
+                        return;
                     }
-                }
-            });
-
-            // Event delegation for modal close buttons
-            document.getElementById('reportModal').addEventListener('click', (e) => {
-                const button = e.target.closest('button[data-action="close-modal"]');
-                if (button || e.target.id === 'reportModal') {
-                    document.getElementById('reportModal').classList.add('hidden');
-                }
-            });
-
-            function viewReport(report) {
-                const modal = document.getElementById('reportModal');
-                const title = document.getElementById('modalTitle');
-                const content = document.getElementById('modalContent');
-
-                title.textContent = `${getReportTypeLabel(report.report_type)} - ${new Date(report.date_range_start).toLocaleDateString()} to ${new Date(report.date_range_end).toLocaleDateString()}`;
-
-                let html = '<div class="space-y-4">';
-
-                if (report.report_data && typeof report.report_data === 'object') {
-                    html += '<div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">';
-                    html += '<h4 class="font-semibold text-slate-200 mb-3">Report Summary</h4>';
-                    html += renderReportData(report.report_data);
-                    html += '</div>';
-                } else {
-                    html += '<p class="text-slate-500">No data available for this report.</p>';
-                }
-
-                html += `<div class="mt-4 text-sm text-slate-400">
-          <p><strong>Generated by:</strong> ${report.admin_name || 'System'}</p>
-          <p><strong>Generated on:</strong> ${new Date(report.generated_date).toLocaleString()}</p>
-        </div>`;
-                html += '</div>';
-
-                content.innerHTML = html;
-                modal.classList.remove('hidden');
-            }
-
-            function renderReportData(data) {
-                let html = '';
-
-                for (const [key, value] of Object.entries(data)) {
-                    html += '<div class="mb-3">';
-                    html += `<div class="font-medium text-slate-300 mb-1">${formatKey(key)}:</div>`;
-
-                    if (Array.isArray(value)) {
-                        if (value.length === 0) {
-                            html += '<p class="text-slate-500 ml-4">No data</p>';
-                        } else if (typeof value[0] === 'object') {
-                            html += '<div class="ml-4 overflow-x-auto">';
-                            html += '<table class="min-w-full text-sm border border-slate-700">';
-                            html += '<thead class="bg-slate-800"><tr>';
-                            Object.keys(value[0]).forEach(k => {
-                                html += `<th class="px-3 py-2 text-left border-b border-slate-700">${formatKey(k)}</th>`;
-                            });
-                            html += '</tr></thead><tbody>';
-                            value.forEach(item => {
-                                html += '<tr>';
-                                Object.values(item).forEach(v => {
-                                    html += `<td class="px-3 py-2 border-b border-slate-700">${v}</td>`;
-                                });
-                                html += '</tr>';
-                            });
-                            html += '</tbody></table></div>';
-                        } else {
-                            html += '<ul class="ml-4 list-disc list-inside">';
-                            value.forEach(item => {
-                                html += `<li>${item}</li>`;
-                            });
-                            html += '</ul>';
-                        }
-                    } else if (typeof value === 'object' && value !== null) {
-                        html += '<div class="ml-4">';
-                        html += renderReportData(value);
-                        html += '</div>';
-                    } else {
-                        html += `<p class="ml-4 text-slate-200">${value}</p>`;
+                    headers = ['Name', 'Email', 'Posts', 'Reviews', 'Watchlist', 'Friends', 'Joined Date'];
+                    data = userData.map(row => [
+                        row.name || '',
+                        row.email || '',
+                        row.posts_created || 0,
+                        row.reviews_written || 0,
+                        row.movies_in_watchlist || 0,
+                        row.friends_count || 0,
+                        formatDate(row.joined_date)
+                    ]);
+                } else if (tableId === 'events-table') {
+                    if (!eventData || eventData.length === 0) {
+                        alert('No event data available to export. Please load the Events Report tab first.');
+                        return;
                     }
-
-                    html += '</div>';
+                    headers = ['Event Title', 'Host Name', 'Movie', 'Date', 'Participants', 'Capacity', 'Status'];
+                    data = eventData.map(row => [
+                        row.event_title || '',
+                        row.host_name || '',
+                        row.movie_title || 'TBA',
+                        formatDate(row.event_datetime),
+                        row.current_participants || 0,
+                        row.capacity || 0,
+                        row.status || 'active'
+                    ]);
+                } else if (tableId === 'moderation-table') {
+                    if (!moderationData || moderationData.length === 0) {
+                        alert('No moderation data available to export. Please load the Moderation Log tab first.');
+                        return;
+                    }
+                    headers = ['Content Type', 'Content Preview', 'Action', 'Admin', 'Action Date'];
+                    data = moderationData.map(row => [
+                        row.content_type || '',
+                        row.content_preview ? row.content_preview.substring(0, 100).replace(/\n/g, ' ') : 'N/A',
+                        row.action || '',
+                        row.admin_name || 'System',
+                        formatDate(row.action_date)
+                    ]);
                 }
 
-                return html;
-            }
-
-            function formatKey(key) {
-                return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            }
-
-            function getReportTypeLabel(type) {
-                const labels = {
-                    most_watched: 'Most Watched Movies',
-                    highest_rated: 'Highest Rated Movies',
-                    most_active_users: 'Most Active Users'
-                };
-                return labels[type] || type;
-            }
-
-            // Generate new report
-            document.getElementById('generateReportForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const report_type = document.getElementById('report_type').value;
-                const start_date = document.getElementById('date_range_start').value;
-                const end_date = document.getElementById('date_range_end').value;
-
-                if (!report_type || !start_date || !end_date) {
-                    alert('Please fill in all fields');
+                if (data.length === 0) {
+                    alert('No data available to export.');
                     return;
                 }
 
-                try {
-                    const response = await fetch('/api/admin/reports', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ report_type, start_date, end_date })
-                    });
+                // Build CSV
+                const csv = [];
+                csv.push(headers.map(h => `"${h}"`).join(','));
+                data.forEach(row => {
+                    csv.push(row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','));
+                });
 
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        alert('Report generated successfully!');
-                        loadReports();
-                    } else {
-                        alert(result.error || 'Failed to generate report');
-                    }
-                } catch (error) {
-                    console.error('Error generating report:', error);
-                    alert('Failed to generate report');
+                // Create and download
+                const csvContent = csv.join('\n');
+                const BOM = '\uFEFF'; // UTF-8 BOM for proper Excel encoding
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+                
+                // Create download link
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    // Show success message
+                    console.log(`CSV exported successfully: ${filename}`);
+                } else {
+                    alert('Your browser does not support file downloads.');
                 }
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Failed to export CSV. Please check the console for details.');
+            }
+        }
+
+        (async function () {
+            // Load sidebar
+            document.getElementById('sidebar').innerHTML = await fetch('../components/admin-sidebar.html').then(r => r.text());
+
+            // Tab switching
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    // Update button states
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Update content visibility
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // Load data for the active tab
+                    loadTabData(tabId);
+                });
             });
 
-            // Refresh button
-            document.getElementById('refreshBtn').addEventListener('click', loadReports);
+            // Load initial data
+            loadTabData('overview');
 
-            // Set default dates (last 30 days)
-            const today = new Date();
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            // Chart instances
+            let overviewChart, contentChart, moviesChart, usersChart, eventsChart;
 
-            document.getElementById('date_range_start').value = thirtyDaysAgo.toISOString().split('T')[0];
-            document.getElementById('date_range_end').value = today.toISOString().split('T')[0];
+            async function loadTabData(tab) {
+                switch(tab) {
+                    case 'overview':
+                        await loadDashboardStats();
+                        break;
+                    case 'movies':
+                        await loadMovieStats();
+                        break;
+                    case 'users':
+                        await loadUserActivity();
+                        break;
+                    case 'events':
+                        await loadEventStats();
+                        break;
+                    case 'moderation':
+                        await loadModerationStats();
+                        break;
+                }
+            }
 
-            // Initial load
-            loadReports();
+            async function loadDashboardStats() {
+                try {
+                    const response = await fetch('/api/admin/dashboard');
+                    if (!response.ok) throw new Error('Failed to load dashboard');
+                    const result = await response.json();
+                    const data = result.stats || {};
+
+                    document.getElementById('total-movies').textContent = data.total_movies || 0;
+                    document.getElementById('total-users').textContent = data.total_users || 0;
+                    document.getElementById('total-events').textContent = data.total_events || 0;
+                    document.getElementById('pending-moderation').textContent = data.pending_reports || 0;
+
+                    const tbody = document.getElementById('dashboard-body');
+                    tbody.innerHTML = `
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-2 px-3">Average Movie Rating</td>
+                            <td class="text-right py-2 px-3">${data.avg_rating || 'N/A'}</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-2 px-3">Total Ratings Given</td>
+                            <td class="text-right py-2 px-3">${data.total_ratings || 0}</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-2 px-3">Total Reviews</td>
+                            <td class="text-right py-2 px-3">${data.total_reviews || 0}</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-2 px-3">Active Users (30 days)</td>
+                            <td class="text-right py-2 px-3">${data.active_users || 0}</td>
+                        </tr>
+                    `;
+
+                    // Create overview charts
+                    createOverviewCharts(data);
+                } catch (error) {
+                    console.error('Error loading dashboard:', error);
+                    document.getElementById('dashboard-body').innerHTML = 
+                        '<tr><td colspan="2" class="text-center py-4 text-red-400">Error loading dashboard</td></tr>';
+                }
+            }
+
+            function createOverviewCharts(data) {
+                // Destroy existing charts
+                if (overviewChart) overviewChart.destroy();
+                if (contentChart) contentChart.destroy();
+
+                // Platform Overview Chart (Doughnut)
+                const overviewCtx = document.getElementById('overviewChart');
+                overviewChart = new Chart(overviewCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Total Users', 'Active Users', 'Total Movies', 'Total Events'],
+                        datasets: [{
+                            data: [
+                                data.total_users || 0,
+                                data.active_users || 0,
+                                data.total_movies || 0,
+                                data.total_events || 0
+                            ],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(139, 92, 246, 0.8)'
+                            ],
+                            borderColor: 'rgba(30, 41, 59, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#cbd5e1', font: { size: 11 } }
+                            }
+                        }
+                    }
+                });
+
+                // Content Distribution Chart (Bar)
+                const contentCtx = document.getElementById('contentChart');
+                contentChart = new Chart(contentCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Posts', 'Reviews', 'Ratings', 'Pending Mod'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [
+                                data.total_posts || 0,
+                                data.total_reviews || 0,
+                                data.total_ratings || 0,
+                                data.pending_reports || 0
+                            ],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(239, 68, 68, 0.8)'
+                            ],
+                            borderColor: 'rgba(30, 41, 59, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async function loadMovieStats() {
+                try {
+                    const response = await fetch('/api/admin/reports/movies');
+                    if (!response.ok) throw new Error('Failed to load movie stats');
+                    const result = await response.json();
+                    const data = result.movies || [];
+                    
+                    // Store for CSV export
+                    movieData = data;
+
+                    const tbody = document.getElementById('movies-body');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-400">No data available</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(row => `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="py-2 px-4">${row.title}</td>
+                            <td class="text-center py-2 px-4">
+                                <span class="px-2 py-1 bg-yellow-900/30 text-yellow-400 rounded text-xs">
+                                    ⭐ ${parseFloat(row.average_rating || 0).toFixed(1)}
+                                </span>
+                            </td>
+                            <td class="text-center py-2 px-4">${row.total_ratings || 0}</td>
+                            <td class="text-center py-2 px-4">${row.total_reviews || 0}</td>
+                            <td class="text-center py-2 px-4">${row.watchlist_adds || 0}</td>
+                            <td class="text-right py-2 px-4 text-slate-400">${row.release_year || 'N/A'}</td>
+                        </tr>
+                    `).join('');
+
+                    // Create movies chart
+                    createMoviesChart(data.slice(0, 10));
+                } catch (error) {
+                    console.error('Error loading movie stats:', error);
+                    document.getElementById('movies-body').innerHTML = 
+                        '<tr><td colspan="6" class="text-center py-4 text-red-400">Error loading data</td></tr>';
+                }
+            }
+
+            function createMoviesChart(data) {
+                if (moviesChart) moviesChart.destroy();
+
+                const ctx = document.getElementById('moviesChart');
+                moviesChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(m => m.title.length > 20 ? m.title.substring(0, 20) + '...' : m.title),
+                        datasets: [{
+                            label: 'Average Rating',
+                            data: data.map(m => parseFloat(m.average_rating || 0)),
+                            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Total Reviews',
+                            data: data.map(m => m.total_reviews || 0),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { color: '#cbd5e1', font: { size: 11 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' },
+                                title: { display: true, text: 'Rating', color: '#cbd5e1' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { display: false },
+                                title: { display: true, text: 'Reviews', color: '#cbd5e1' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1', font: { size: 10 } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async function loadUserActivity() {
+                try {
+                    const response = await fetch('/api/admin/reports/users');
+                    if (!response.ok) throw new Error('Failed to load user activity');
+                    const result = await response.json();
+                    const data = result.users || [];
+                    
+                    // Store for CSV export
+                    userData = data;
+
+                    const tbody = document.getElementById('users-body');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-400">No data available</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(row => `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="py-2 px-4">${row.name}</td>
+                            <td class="py-2 px-4 text-slate-400">${row.email}</td>
+                            <td class="text-center py-2 px-4">${row.posts_created || 0}</td>
+                            <td class="text-center py-2 px-4">${row.reviews_written || 0}</td>
+                            <td class="text-center py-2 px-4">${row.movies_in_watchlist || 0}</td>
+                            <td class="text-center py-2 px-4">${row.friends_count || 0}</td>
+                            <td class="text-right py-2 px-4 text-slate-400">${formatDate(row.joined_date)}</td>
+                        </tr>
+                    `).join('');
+
+                    // Create users chart
+                    createUsersChart(data.slice(0, 10));
+                } catch (error) {
+                    console.error('Error loading user activity:', error);
+                    document.getElementById('users-body').innerHTML = 
+                        '<tr><td colspan="7" class="text-center py-4 text-red-400">Error loading data</td></tr>';
+                }
+            }
+
+            function createUsersChart(data) {
+                if (usersChart) usersChart.destroy();
+
+                const ctx = document.getElementById('usersChart');
+                usersChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(u => u.name.length > 15 ? u.name.substring(0, 15) + '...' : u.name),
+                        datasets: [{
+                            label: 'Posts',
+                            data: data.map(u => u.posts_created || 0),
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Reviews',
+                            data: data.map(u => u.reviews_written || 0),
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Watchlist',
+                            data: data.map(u => u.movies_in_watchlist || 0),
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { color: '#cbd5e1', font: { size: 11 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1', font: { size: 10 } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async function loadEventStats() {
+                try {
+                    const response = await fetch('/api/admin/reports/events');
+                    if (!response.ok) throw new Error('Failed to load event stats');
+                    const result = await response.json();
+                    const data = result.events || [];
+                    
+                    // Store for CSV export
+                    eventData = data;
+
+                    const tbody = document.getElementById('events-body');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-400">No data available</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(row => `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="py-2 px-4">${row.event_title}</td>
+                            <td class="py-2 px-4 text-slate-400">${row.host_name}</td>
+                            <td class="text-center py-2 px-4">${row.movie_title || 'TBA'}</td>
+                            <td class="text-center py-2 px-4">${formatDate(row.event_datetime)}</td>
+                            <td class="text-center py-2 px-4">
+                                <span class="px-2 py-1 bg-green-900/30 text-green-400 rounded text-xs">
+                                    ${row.current_participants || 0} attending
+                                </span>
+                            </td>
+                            <td class="text-right py-2 px-4">
+                                <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs">
+                                    ${row.status || 'active'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    // Create events chart
+                    createEventsChart(data);
+                } catch (error) {
+                    console.error('Error loading event stats:', error);
+                    document.getElementById('events-body').innerHTML = 
+                        '<tr><td colspan="6" class="text-center py-4 text-red-400">Error loading data</td></tr>';
+                }
+            }
+
+            function createEventsChart(data) {
+                if (eventsChart) eventsChart.destroy();
+
+                const ctx = document.getElementById('eventsChart');
+                eventsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.slice(0, 10).map(e => e.event_title.length > 15 ? e.event_title.substring(0, 15) + '...' : e.event_title),
+                        datasets: [{
+                            label: 'Participants',
+                            data: data.slice(0, 10).map(e => e.current_participants || 0),
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Capacity',
+                            data: data.slice(0, 10).map(e => e.capacity || 0),
+                            backgroundColor: 'rgba(71, 85, 105, 0.5)',
+                            borderColor: 'rgba(71, 85, 105, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: { color: '#cbd5e1', font: { size: 11 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: 'rgba(71, 85, 105, 0.3)' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1', font: { size: 10 } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async function loadModerationStats() {
+                try {
+                    const response = await fetch('/api/admin/reports/moderation');
+                    if (!response.ok) throw new Error('Failed to load moderation stats');
+                    const result = await response.json();
+                    const data = result.moderation || [];
+                    
+                    // Store for CSV export
+                    moderationData = data;
+
+                    const tbody = document.getElementById('moderation-body');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-400">No data available</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(row => `
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="py-2 px-4">
+                                <span class="px-2 py-1 bg-purple-900/30 text-purple-400 rounded text-xs">
+                                    ${row.content_type}
+                                </span>
+                            </td>
+                            <td class="py-2 px-4">${row.content_preview ? row.content_preview.substring(0, 50) + '...' : 'N/A'}</td>
+                            <td class="text-center py-2 px-4">
+                                <span class="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs">
+                                    ${row.action}
+                                </span>
+                            </td>
+                            <td class="text-center py-2 px-4">
+                                <span class="px-2 py-1 ${row.action === 'approved' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'} rounded text-xs">
+                                    ${row.action}
+                                </span>
+                            </td>
+                            <td class="py-2 px-4">${row.admin_name || 'System'}</td>
+                            <td class="text-right py-2 px-4 text-slate-400">${formatDate(row.action_date)}</td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.error('Error loading moderation stats:', error);
+                    document.getElementById('moderation-body').innerHTML = 
+                        '<tr><td colspan="6" class="text-center py-4 text-red-400">Error loading data</td></tr>';
+                }
+            }
+
+            // Add event listeners for export buttons
+            document.getElementById('export-movies-btn').addEventListener('click', () => {
+                exportTableToCSV('movies-table', 'movie-statistics.csv');
+            });
+
+            document.getElementById('export-users-btn').addEventListener('click', () => {
+                exportTableToCSV('users-table', 'user-activity.csv');
+            });
+
+            document.getElementById('export-events-btn').addEventListener('click', () => {
+                exportTableToCSV('events-table', 'events-report.csv');
+            });
+
+            document.getElementById('export-moderation-btn').addEventListener('click', () => {
+                exportTableToCSV('moderation-table', 'moderation-report.csv');
+            });
         })();
     </script>
 </body>
