@@ -162,6 +162,7 @@
     function renderParticipants(){
       const root = document.getElementById('participantsGrid');
       root.innerHTML = '';
+      console.log('Rendering participants. Count:', PARTICIPANTS.length, 'Data:', PARTICIPANTS);
       if(!PARTICIPANTS.length){
         root.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No participants yet.</p>';
         return;
@@ -238,6 +239,7 @@
       if(evt.movie_id){ movieLink.href = `./movie.html?id=${evt.movie_id}`; } else { movieLink.removeAttribute('href'); }
 
       PARTICIPANTS = await apiFetch(`/api/events/${EVENT_ID}/participants`);
+      console.log('Loaded participants:', PARTICIPANTS);
       renderParticipants();
       updateJoinButton();
     }

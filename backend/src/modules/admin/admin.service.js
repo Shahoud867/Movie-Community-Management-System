@@ -908,9 +908,12 @@ async function getAllAdmins() {
  * Create admin
  */
 async function createAdmin(name, email, password, role = 'moderator', isSuperAdmin = false) {
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const [result] = await pool.query(
         'INSERT INTO Admin (name, email, password, role, is_super_admin) VALUES (?, ?, ?, ?, ?)',
-        [name, email, password, role, isSuperAdmin]
+        [name, email, hashedPassword, role, isSuperAdmin]
     );
 
     return {

@@ -293,11 +293,10 @@
             window.location.href = 'login.html';
         }
 
-        // Update admin name
-        const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
-        if (adminData.name) {
-            document.getElementById('admin-name').textContent = adminData.name;
-        }
+        // Update admin name - check both 'admin' and 'adminData' keys for backwards compatibility
+        let adminData = JSON.parse(localStorage.getItem('admin') || localStorage.getItem('adminData') || '{}');
+        const adminName = adminData.name || adminData.username || 'Admin';
+        document.getElementById('admin-name').textContent = adminName;
 
         // Initialize Chart
         let analyticsChart;

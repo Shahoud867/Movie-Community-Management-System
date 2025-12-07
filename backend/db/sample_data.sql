@@ -1218,5 +1218,5 @@ DELIMITER ;
 -- ========================================
 
 select * from users;
-
+select * from admin;
 
