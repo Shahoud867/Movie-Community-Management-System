@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analytics Dashboard - Movie System</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
     <style>
@@ -145,6 +146,17 @@
                 const response = await fetch(componentPath);
                 const html = await response.text();
                 document.getElementById(containerId).innerHTML = html;
+                
+                // Execute the navbar script manually since innerHTML doesn't execute scripts
+                if (componentPath.includes('navbar-enhanced.html')) {
+                    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+                    if (scriptMatch) {
+                        const scriptContent = scriptMatch[1];
+                        const scriptEl = document.createElement('script');
+                        scriptEl.textContent = scriptContent;
+                        document.body.appendChild(scriptEl);
+                    }
+                }
             } catch (error) {
                 console.error(`Error loading ${componentPath}:`, error);
             }

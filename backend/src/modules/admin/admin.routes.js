@@ -69,6 +69,9 @@ router.get('/audit', requireAdmin, adminController.getAuditTrail);
 // Event Management
 router.use('/events', eventsRouter);
 
+// System Maintenance
+router.post('/system/cleanup-notifications', requireAdmin, adminController.cleanupNotifications);
+
 // ========================================
 // SUPER ADMIN ONLY ROUTES
 // ========================================

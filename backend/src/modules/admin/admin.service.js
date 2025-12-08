@@ -984,6 +984,25 @@ async function deleteAdmin(adminId) {
     return { message: 'Admin deleted successfully' };
 }
 
+// ========================================
+// SYSTEM MAINTENANCE
+// ========================================
+
+/**
+ * Clean up old notifications manually
+ */
+async function cleanupOldNotifications(daysOld = 30) {
+    const [result] = await pool.query(
+        'CALL sp_cleanup_old_notifications(?)',
+        [daysOld]
+    );
+    
+    return {
+        message: 'Old notifications cleaned up successfully',
+        deleted_count: result[0][0].deleted_count
+    };
+}
+
 module.exports = {
     // Auth
     adminLogin,
@@ -1043,4 +1062,7 @@ module.exports = {
     createAdmin,
     updateAdmin,
     deleteAdmin,
+    
+    // System Maintenance
+    cleanupOldNotifications,
 };

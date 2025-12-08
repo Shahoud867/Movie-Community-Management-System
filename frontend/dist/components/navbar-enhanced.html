@@ -1,53 +1,64 @@
 <!-- Enhanced Main Navbar with Search, Notifications, Profile Dropdown -->
-<header class="w-full border-b border-slate-800/60 bg-slate-900">
+<header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800/60">
   <link rel="stylesheet" href="/css/styles.css" />
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
     <!-- Logo -->
     <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
-      <div class="h-10 w-10 bg-gradient-to-br from-brand-600 to-purple-600 rounded flex items-center justify-center text-white group-hover:from-brand-700 group-hover:to-purple-700 transition-all shadow-lg">
+      <div class="h-10 w-10 bg-gradient-to-br from-brand-600 to-purple-600 rounded-lg flex items-center justify-center text-white group-hover:from-brand-500 group-hover:to-purple-500 transition shadow-lg">
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
         </svg>
       </div>
-      <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
+      <span class="hidden sm:inline font-semibold">Movie Community</span>
     </a>
 
     <!-- Search Bar -->
     <div class="flex-1 max-w-md relative">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
       <input 
         id="globalSearch" 
         type="search" 
-        placeholder="Search movies..." 
-        class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
+        placeholder="Search movies, events, friends..." 
+        class="w-full rounded-lg bg-slate-800/60 border border-slate-700 pl-10 pr-4 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
         autocomplete="off"
       />
-      <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto"></div>
+      <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden max-h-80 overflow-y-auto"></div>
     </div>
 
     <!-- Nav Links -->
-    <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
-      <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
-      <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
-      <a href="./events.html" class="hover:text-white transition-colors">Events</a>
-      <a href="./analytics.html" class="hover:text-white transition-colors">Analytics</a>
-      <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
-      <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
+    <nav class="hidden lg:flex items-center gap-1 text-sm">
+      <a href="./movies.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-film mr-2 text-purple-400"></i>Movies
+      </a>
+      <a href="./watchlist.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-bookmark mr-2 text-blue-400"></i>Watchlist
+      </a>
+      <a href="./events.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-calendar mr-2 text-green-400"></i>Events
+      </a>
+      <a href="./analytics.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-chart-line mr-2 text-cyan-400"></i>Analytics
+      </a>
+      <a href="./messages.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-envelope mr-2 text-pink-400"></i>Messages
+      </a>
+      <a href="./friends.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-users mr-2 text-yellow-400"></i>Friends
+      </a>
     </nav>
 
     <!-- Notifications Bell -->
     <div class="relative">
-      <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors" aria-label="Notifications">
-        <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-        </svg>
-        <span id="notifBadge" class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
+      <button id="notifBtn" class="relative p-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-bell text-slate-300"></i>
+        <span id="notifBadge" class="hidden absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">0</span>
       </button>
-      <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
-        <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
-          <span class="text-sm font-semibold">Notifications</span>
+      <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-slate-800/80">
+          <span class="font-semibold">Notifications</span>
           <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
         </div>
-        <div id="notifList" class="divide-y divide-slate-700/60">
+        <div id="notifList" class="max-h-80 overflow-y-auto">
           <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
         </div>
       </div>
@@ -55,21 +66,29 @@
 
     <!-- Profile Dropdown -->
     <div class="relative">
-      <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
-        <div id="profileAvatar" class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
-        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
+      <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800 transition">
+        <div id="profileAvatar" class="h-9 w-9 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-sm font-bold">U</div>
+        <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
       </button>
-      <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
-        <div class="px-4 py-2 border-b border-slate-700/60">
-          <p id="profileName" class="text-sm font-medium">User</p>
+      <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-700 bg-slate-800/80">
+          <p id="profileName" class="font-medium">User</p>
           <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
         </div>
         <div class="py-1">
-          <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My Profile</a>
-          <a href="./settings.html" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
-          <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
+          <a href="./profile.html?id=me" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
+            <i class="fas fa-user text-slate-400 w-5"></i>
+            <span class="text-sm">My Profile</span>
+          </a>
+          <a href="./settings.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
+            <i class="fas fa-cog text-slate-400 w-5"></i>
+            <span class="text-sm">Settings</span>
+          </a>
+          <hr class="border-slate-700 my-1">
+          <button id="logoutBtn" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition w-full text-left text-red-400">
+            <i class="fas fa-sign-out-alt w-5"></i>
+            <span class="text-sm">Logout</span>
+          </button>
         </div>
       </div>
     </div>
@@ -141,10 +160,10 @@
       badge.classList.remove('hidden');
       notifs.slice(0, 5).forEach(n => {
         const div = document.createElement('div');
-        div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
+        div.className = 'px-4 py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/40 cursor-pointer text-sm';
         div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
         div.addEventListener('click', async () => {
-          await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
+          await fetch(`/api/notifications/${n.notification_id}/seen`, { method: 'POST' });
           await loadNotifications();
         });
         list.appendChild(div);

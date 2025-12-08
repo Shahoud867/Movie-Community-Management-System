@@ -256,16 +256,12 @@ async function joinEvent(eventId, userId) {
   }
   
   // Add participation
-  await pool.query(
+  const [result] = await pool.query(
     'INSERT INTO Participation (event_id, user_id) VALUES (?, ?)',
     [eventId, userId]
   );
   
-  // Increment participant count
-  await pool.query(
-    'UPDATE Event SET current_participants = current_participants + 1 WHERE event_id = ?',
-    [eventId]
-  );
+  // Trigger trg_participation_insert will automatically increment current_participants
   
   return { message: 'Successfully joined the event' };
 }
@@ -283,11 +279,7 @@ async function leaveEvent(eventId, userId) {
     throw new Error('You are not registered for this event');
   }
   
-  // Decrement participant count
-  await pool.query(
-    'UPDATE Event SET current_participants = GREATEST(0, current_participants - 1) WHERE event_id = ?',
-    [eventId]
-  );
+  // Trigger trg_participation_delete will automatically decrement current_participants
   
   return { message: 'Successfully left the event' };
 }

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Browse Movies — Movie Community</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
     tailwind.config = {
       theme: {
@@ -29,77 +30,7 @@
   <a href="#main"
     class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip
     to content</a>
-  <header class="w-full border-b border-slate-800/60 bg-slate-900">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-      <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
-        <div
-          class="h-10 w-10 bg-brand-600 rounded flex items-center justify-center font-bold text-white group-hover:bg-brand-700 transition-colors">
-          MC</div>
-        <span class="hidden sm:inline font-semibold tracking-wide">Movie Community</span>
-      </a>
-      <div class="flex-1 max-w-md relative">
-        <input id="globalSearch" type="search" placeholder="Search movies..."
-          class="w-full rounded-md bg-slate-800/60 border border-slate-700 px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-600"
-          autocomplete="off" />
-        <div id="searchResults"
-          class="absolute z-50 mt-1 w-full bg-slate-900/95 border border-slate-700/80 rounded-md shadow-lg hidden max-h-80 overflow-y-auto">
-        </div>
-      </div>
-      <nav class="hidden lg:flex items-center gap-4 text-sm text-slate-300">
-        <a href="./movies.html" class="hover:text-white transition-colors">Movies</a>
-        <a href="./watchlist.html" class="hover:text-white transition-colors">Watchlist</a>
-        <a href="./events.html" class="hover:text-white transition-colors">Events</a>
-        <a href="./messages.html" class="hover:text-white transition-colors">Messages</a>
-        <a href="./friends.html" class="hover:text-white transition-colors">Friends</a>
-      </nav>
-      <div class="relative">
-        <button id="notifBtn" class="relative p-2 rounded-md hover:bg-slate-800/60 transition-colors"
-          aria-label="Notifications">
-          <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span id="notifBadge"
-            class="hidden absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white"></span>
-        </button>
-        <div id="notifDropdown"
-          class="hidden absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
-          <div class="px-4 py-2 border-b border-slate-700/60 flex items-center justify-between">
-            <span class="text-sm font-semibold">Notifications</span>
-            <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
-          </div>
-          <div id="notifList" class="divide-y divide-slate-700/60">
-            <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
-          </div>
-        </div>
-      </div>
-      <div class="relative">
-        <button id="profileBtn"
-          class="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-800/60 transition-colors">
-          <div id="profileAvatar"
-            class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold">U</div>
-          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div id="profileDropdown"
-          class="hidden absolute right-0 mt-2 w-48 bg-slate-800/95 backdrop-blur border border-slate-700/80 rounded-md shadow-lg z-50">
-          <div class="px-4 py-2 border-b border-slate-700/60">
-            <p id="profileName" class="text-sm font-medium">User</p>
-            <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
-          </div>
-          <div class="py-1">
-            <a href="./profile.html?id=me" class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">My
-              Profile</a>
-            <a href="./settings.html"
-              class="block px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors">Settings</a>
-            <button id="logoutBtn"
-              class="block w-full text-left px-4 py-2 text-sm hover:bg-slate-700/60 transition-colors text-red-400">Logout</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
+  <div id="navbar-container"></div>
   <main id="main" class="flex-1">
     <div class="max-w-7xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[250px_1fr]">
       <!-- Sidebar Filters -->
@@ -426,6 +357,24 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
+      // Load navbar component
+      try {
+        const response = await fetch('/components/navbar-enhanced.html');
+        const html = await response.text();
+        document.getElementById('navbar-container').innerHTML = html;
+        
+        // Execute the navbar script manually since innerHTML doesn't execute scripts
+        const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+        if (scriptMatch) {
+          const scriptContent = scriptMatch[1];
+          const scriptEl = document.createElement('script');
+          scriptEl.textContent = scriptContent;
+          document.body.appendChild(scriptEl);
+        }
+      } catch (error) {
+        console.error('Failed to load navbar:', error);
+      }
+
       await fetchGenres();
       updateRangeDisplays();
       fetchMovies();

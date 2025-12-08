@@ -82,6 +82,23 @@ async function createReview(userId, movieId, reviewText, isSpoiler = false) {
 }
 
 /**
+ * Create review with rating using stored procedure (for atomic transaction)
+ */
+async function createReviewWithRating(userId, movieId, reviewText, rating) {
+  // Use stored procedure for atomic review + rating insertion
+  const [result] = await pool.query(
+    'CALL sp_add_review_with_rating(?, ?, ?, ?)',
+    [userId, movieId, reviewText, rating]
+  );
+  
+  return {
+    message: result[0][0].message,
+    user_id: userId,
+    movie_id: movieId
+  };
+}
+
+/**
  * Update a review
  */
 async function updateReview(reviewId, userId, updates) {
@@ -177,6 +194,7 @@ module.exports = {
   getMovieReviews,
   getUserReviews,
   createReview,
+  createReviewWithRating,
   updateReview,
   deleteReview,
   markReviewHelpful,

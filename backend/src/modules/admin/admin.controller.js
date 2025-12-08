@@ -817,6 +817,27 @@ async function getModerationStats(req, res, next) {
     }
 }
 
+// ========================================
+// SYSTEM MAINTENANCE
+// ========================================
+
+/**
+ * Clean up old notifications
+ */
+async function cleanupNotifications(req, res, next) {
+    try {
+        const daysOld = parseInt(req.query.days) || 30;
+        const result = await adminService.cleanupOldNotifications(daysOld);
+        
+        await logAuditTrail(req.admin.admin_id, 'CLEANUP', 'Notification', null, null, 
+            `Cleaned up notifications older than ${daysOld} days`);
+        
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     // Auth
     login,
@@ -875,4 +896,7 @@ module.exports = {
     createAdmin,
     editAdmin,
     removeAdmin,
+    
+    // System Maintenance
+    cleanupNotifications,
 };

@@ -1572,10 +1572,77 @@ DELIMITER ;
 -- SELECT * FROM vw_admin_dashboard;
 -- SELECT * FROM vw_event_report WHERE status = 'scheduled';
 
+
+-- =====================================================
+-- PART 13: SCHEDULED EVENTS FOR AUTOMATED TASKS
+-- =====================================================
+
+-- Enable event scheduler (required for MySQL events to run)
+SET GLOBAL event_scheduler = ON;
+
+-- Event 1: Auto-cleanup old read notifications (runs daily at 2 AM)
+DROP EVENT IF EXISTS evt_cleanup_old_notifications;
+DELIMITER //
+CREATE EVENT evt_cleanup_old_notifications
+ON SCHEDULE EVERY 1 DAY
+STARTS TIMESTAMP(CURRENT_DATE) + INTERVAL 1 DAY + INTERVAL 2 HOUR
+DO
+BEGIN
+    -- Clean up notifications older than 30 days that have been read
+    CALL sp_cleanup_old_notifications(30);
+END //
+DELIMITER ;
+
+-- Event 2: Auto-update event status (runs every hour)
+DROP EVENT IF EXISTS evt_update_event_status;
+DELIMITER //
+CREATE EVENT evt_update_event_status
+ON SCHEDULE EVERY 1 HOUR
+DO
+BEGIN
+    -- Mark past events as completed
+    UPDATE Event 
+    SET status = 'completed'
+    WHERE event_datetime < NOW() 
+    AND status = 'scheduled';
+    
+    -- Mark events as cancelled if datetime passed and no participants
+    UPDATE Event
+    SET status = 'cancelled'
+    WHERE event_datetime < NOW()
+    AND current_participants = 0
+    AND status = 'scheduled';
+END //
+DELIMITER ;
+
+-- Event 3: Generate weekly engagement report (runs every Monday at 9 AM)
+DROP EVENT IF EXISTS evt_weekly_engagement_report;
+DELIMITER //
+CREATE EVENT evt_weekly_engagement_report
+ON SCHEDULE EVERY 1 WEEK
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL (1 - WEEKDAY(CURRENT_DATE)) DAY + INTERVAL 9 HOUR)
+DO
+BEGIN
+    -- Insert weekly report into Report table
+    INSERT INTO Report (report_type, report_data, generated_by_admin, generated_date)
+    SELECT 
+        'Weekly Engagement',
+        JSON_OBJECT(
+            'total_users', (SELECT COUNT(*) FROM Users WHERE is_active = TRUE),
+            'new_users_this_week', (SELECT COUNT(*) FROM Users WHERE joined_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)),
+            'total_reviews', (SELECT COUNT(*) FROM Review WHERE created_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)),
+            'total_posts', (SELECT COUNT(*) FROM Post WHERE created_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)),
+            'total_events', (SELECT COUNT(*) FROM Event WHERE created_date >= DATE_SUB(NOW(), INTERVAL 7 DAY))
+        ),
+        1,
+        NOW();
+END //
+DELIMITER ;
+
 -- ========================================
 -- DATABASE SETUP COMPLETE ✅
 -- ========================================
 
 select * from users;
 select * from admin;
-
+select * from movie;
