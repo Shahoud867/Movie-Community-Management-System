@@ -19,6 +19,7 @@ const { ratingsRouter } = require('./modules/ratings/ratings.routes');
 const { postsRouter } = require('./modules/posts/posts.routes');
 const { eventsRouter } = require('./modules/events/events.routes');
 const { adminRouter } = require('./modules/admin/admin.routes');
+const { analyticsRouter } = require('./modules/analytics/analytics.routes');
 const { notFound, errorHandler } = require('./middleware/error');
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/api/ratings', ratingsRouter);
 app.use('/api/posts', postsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/analytics', analyticsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

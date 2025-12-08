@@ -23,11 +23,18 @@
       </div>
       <div id="addForm" class="hidden bg-slate-800/60 border border-slate-700 rounded p-4 mb-4">
         <h2 class="text-sm font-semibold mb-3">Add New Admin</h2>
-        <form id="adminForm" class="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr_auto] gap-3">
+        <form id="adminForm" class="grid grid-cols-1 md:grid-cols-[2fr_2fr_1.5fr_1fr_auto] gap-3">
           <input id="new-name" required class="bg-slate-900/60 border border-slate-700 rounded px-3 py-2 text-sm"
             placeholder="Name*" />
           <input id="new-email" type="email" required
             class="bg-slate-900/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="Email*" />
+          <select id="new-role" required class="bg-slate-900/60 border border-slate-700 rounded px-3 py-2 text-sm capitalize">
+            <option value="">Select Role*</option>
+            <option value="admin">Admin</option>
+            <option value="moderator">Moderator</option>
+            <option value="content_manager">Content Manager</option>
+            <option value="support">Support</option>
+          </select>
           <label
             class="flex items-center gap-2 text-sm bg-slate-900/60 border border-slate-700 rounded px-3 py-2 cursor-pointer">
             <input id="new-super" type="checkbox" class="rounded bg-slate-700 border-slate-600" />
@@ -99,10 +106,12 @@
                 <input class="edit-mode hidden bg-slate-900/60 border border-slate-700 rounded px-2 py-1 text-xs w-full" value="${admin.email}" data-field="email">
               </td>
               <td class="py-2 px-2 text-slate-400">
-                <span class="view-mode capitalize">${admin.role}</span>
-                 <select class="edit-mode hidden bg-slate-900/60 border border-slate-700 rounded px-2 py-1 text-xs w-full" data-field="role">
+                <span class="view-mode capitalize">${admin.role.replace('_', ' ')}</span>
+                 <select class="edit-mode hidden bg-slate-900/60 border border-slate-700 rounded px-2 py-1 text-xs w-full capitalize" data-field="role">
                   <option value="admin" ${admin.role === 'admin' ? 'selected' : ''}>Admin</option>
                   <option value="moderator" ${admin.role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                  <option value="content_manager" ${admin.role === 'content_manager' ? 'selected' : ''}>Content Manager</option>
+                  <option value="support" ${admin.role === 'support' ? 'selected' : ''}>Support</option>
                 </select>
               </td>
               <td class="py-2 px-2">
@@ -141,6 +150,7 @@
 
         const name = document.getElementById('new-name').value;
         const email = document.getElementById('new-email').value;
+        const role = document.getElementById('new-role').value;
         const is_super_admin = document.getElementById('new-super').checked;
         const password = 'password123'; // Default password, should be changed by user later or input field added
 
@@ -148,7 +158,7 @@
           const response = await fetch('/api/admin/admins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, role: 'admin', is_super_admin })
+            body: JSON.stringify({ name, email, password, role, is_super_admin })
           });
 
           if (!response.ok) {

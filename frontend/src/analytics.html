@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Movie System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f9ff',
+                            100: '#e6f0ff',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        .section-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="navbar-container"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">📊 Analytics Dashboard</h1>
+            <p class="text-gray-400">Your personal movie journey and community insights</p>
+        </div>
+
+        <!-- Personal Stats Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <span class="mr-3">🎬</span> My Movie Stats
+            </h2>
+            
+            <!-- Overview Cards -->
+            <div id="overview-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Cards will be populated dynamically -->
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Genre Distribution -->
+                <div class="section-card rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🎭</span> Genre Distribution
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="genreChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Rated Movies -->
+                <div class="section-card rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="mr-2">⭐</span> My Top Rated Movies
+                    </h3>
+                    <div id="top-rated-list" class="space-y-3 overflow-y-auto" style="max-height: 300px;">
+                        <!-- List will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Activity Chart -->
+            <div class="section-card rounded-xl p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="mr-2">📈</span> Monthly Activity (Last 12 Months)
+                </h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Year in Review Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <span class="mr-3">🎆</span> 2025 Year in Review
+            </h2>
+            <div id="year-review-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Year review cards will be populated dynamically -->
+            </div>
+        </section>
+
+        <!-- Community Trends Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <span class="mr-3">🌍</span> Community Trends
+            </h2>
+
+            <!-- Community Stats Cards -->
+            <div id="community-stats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <!-- Stats will be populated dynamically -->
+            </div>
+
+            <!-- Charts and Lists Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Trending This Week -->
+                <div class="section-card rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🔥</span> Trending This Week
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="trendingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Popular Movies -->
+                <div class="section-card rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🏆</span> Most Popular Movies
+                    </h3>
+                    <div id="popular-movies-list" class="space-y-3 overflow-y-auto" style="max-height: 300px;">
+                        <!-- List will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script type="module">
+        const API_URL = 'http://localhost:3000/api';
+        const token = localStorage.getItem('userToken');
+
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Load navbar
+        async function loadComponent(containerId, componentPath) {
+            try {
+                const response = await fetch(componentPath);
+                const html = await response.text();
+                document.getElementById(containerId).innerHTML = html;
+            } catch (error) {
+                console.error(`Error loading ${componentPath}:`, error);
+            }
+        }
+
+        await loadComponent('navbar-container', '/components/navbar-enhanced.html');
+        await loadComponent('footer-container', '/components/footer.html');
+
+        // Fetch Personal Analytics
+        async function fetchPersonalAnalytics() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/personal`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch personal analytics');
+                const data = await response.json();
+                renderPersonalAnalytics(data);
+            } catch (error) {
+                console.error('Error fetching personal analytics:', error);
+            }
+        }
+
+        // Fetch Community Analytics
+        async function fetchCommunityAnalytics() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/community`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch community analytics');
+                const data = await response.json();
+                renderCommunityAnalytics(data);
+            } catch (error) {
+                console.error('Error fetching community analytics:', error);
+            }
+        }
+
+        // Render Personal Analytics
+        function renderPersonalAnalytics(data) {
+            // Overview Cards
+            const overviewHTML = `
+                <div class="stat-card rounded-xl p-6 text-white">
+                    <div class="text-4xl mb-2">🎬</div>
+                    <div class="text-3xl font-bold">${data.overview.total_watched || 0}</div>
+                    <div class="text-sm opacity-80">Movies Watched</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-white">
+                    <div class="text-4xl mb-2">⏱️</div>
+                    <div class="text-3xl font-bold">${Math.round(data.overview.total_hours || 0)}</div>
+                    <div class="text-sm opacity-80">Hours Spent</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-white">
+                    <div class="text-4xl mb-2">⭐</div>
+                    <div class="text-3xl font-bold">${data.overview.avg_rating || 'N/A'}</div>
+                    <div class="text-sm opacity-80">Average Rating</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-white">
+                    <div class="text-4xl mb-2">📝</div>
+                    <div class="text-3xl font-bold">${data.overview.total_reviews || 0}</div>
+                    <div class="text-sm opacity-80">Reviews Written</div>
+                </div>
+            `;
+            document.getElementById('overview-cards').innerHTML = overviewHTML;
+
+            // Genre Distribution Pie Chart
+            if (data.genre_distribution && data.genre_distribution.length > 0) {
+                const genreCtx = document.getElementById('genreChart').getContext('2d');
+                new Chart(genreCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.genre_distribution.map(g => g.genre_name),
+                        datasets: [{
+                            data: data.genre_distribution.map(g => g.count),
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#1f2937'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#fff', padding: 15 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Top Rated Movies List
+            if (data.top_rated_movies && data.top_rated_movies.length > 0) {
+                const topRatedHTML = data.top_rated_movies.map((movie, idx) => `
+                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl font-bold text-purple-400">${idx + 1}</span>
+                            <div>
+                                <div class="font-semibold">${movie.title}</div>
+                                <div class="text-sm text-gray-400">${movie.release_year}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="text-yellow-400">⭐</span>
+                            <span class="font-bold">${movie.rating}/5</span>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('top-rated-list').innerHTML = topRatedHTML;
+            } else {
+                document.getElementById('top-rated-list').innerHTML = '<p class="text-gray-400 text-center py-8">No rated movies yet</p>';
+            }
+
+            // Monthly Activity Bar Chart
+            if (data.monthly_activity && data.monthly_activity.length > 0) {
+                const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+                new Chart(monthlyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.monthly_activity.map(m => m.month),
+                        datasets: [{
+                            label: 'Movies Watched',
+                            data: data.monthly_activity.map(m => m.count),
+                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#9ca3af', stepSize: 1 },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        }
+                    }
+                });
+            }
+
+            // Year in Review Cards
+            if (data.year_in_review) {
+                const yearReviewHTML = `
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">🎬</div>
+                        <div class="text-3xl font-bold">${data.year_in_review.movies_watched || 0}</div>
+                        <div class="text-sm opacity-80">Movies in 2025</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">⏱️</div>
+                        <div class="text-3xl font-bold">${Math.round(data.year_in_review.hours_spent || 0)}</div>
+                        <div class="text-sm opacity-80">Hours This Year</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">🎭</div>
+                        <div class="text-3xl font-bold">${data.year_in_review.favorite_genre || 'N/A'}</div>
+                        <div class="text-sm opacity-80">Top Genre of 2025</div>
+                    </div>
+                `;
+                document.getElementById('year-review-cards').innerHTML = yearReviewHTML;
+            }
+        }
+
+        // Render Community Analytics
+        function renderCommunityAnalytics(data) {
+            // Community Stats Cards
+            if (data.overall_stats) {
+                const communityStatsHTML = `
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">👥</div>
+                        <div class="text-3xl font-bold">${data.overall_stats.total_users || 0}</div>
+                        <div class="text-sm opacity-80">Active Users</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">🎬</div>
+                        <div class="text-3xl font-bold">${data.overall_stats.total_movies || 0}</div>
+                        <div class="text-sm opacity-80">Total Movies</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">👁️</div>
+                        <div class="text-3xl font-bold">${data.overall_stats.total_watches || 0}</div>
+                        <div class="text-sm opacity-80">Total Watches</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-6 text-white">
+                        <div class="text-4xl mb-2">📝</div>
+                        <div class="text-3xl font-bold">${data.overall_stats.total_reviews || 0}</div>
+                        <div class="text-sm opacity-80">Reviews</div>
+                    </div>
+                `;
+                document.getElementById('community-stats').innerHTML = communityStatsHTML;
+            }
+
+            // Trending This Week Chart
+            if (data.trending_this_week && data.trending_this_week.length > 0) {
+                const trendingCtx = document.getElementById('trendingChart').getContext('2d');
+                new Chart(trendingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.trending_this_week.map(m => m.title.substring(0, 20) + (m.title.length > 20 ? '...' : '')),
+                        datasets: [{
+                            label: 'Views This Week',
+                            data: data.trending_this_week.map(m => m.recent_watches),
+                            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        }
+                    }
+                });
+            }
+
+            // Popular Movies List
+            if (data.popular_movies && data.popular_movies.length > 0) {
+                const popularHTML = data.popular_movies.map((movie, idx) => `
+                    <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl font-bold text-purple-400">${idx + 1}</span>
+                            <div>
+                                <div class="font-semibold">${movie.title}</div>
+                                <div class="text-sm text-gray-400">${movie.release_year} • ${movie.watch_count} watches</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="text-yellow-400">⭐</span>
+                            <span class="font-bold">${movie.avg_rating || 'N/A'}</span>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('popular-movies-list').innerHTML = popularHTML;
+            } else {
+                document.getElementById('popular-movies-list').innerHTML = '<p class="text-gray-400 text-center py-8">No data available</p>';
+            }
+        }
+
+        // Initialize
+        await fetchPersonalAnalytics();
+        await fetchCommunityAnalytics();
+    </script>
+</body>
+</html>

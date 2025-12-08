@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin • Event Management</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100 antialiased flex">
+  <div id="sidebar"></div>
+  <main class="flex-1 min-w-0">
+    <header class="border-b border-slate-800/60 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Event Management</h1>
+      <a class="text-sm text-brand-400 hover:text-brand-300" href="../dashboard.html">← Back to App</a>
+    </header>
+    <section class="p-4">
+      <div class="mb-4 flex gap-2 items-center justify-between">
+        <p class="text-sm text-slate-400">Manage watch party events and monitor participation.</p>
+        <div class="flex gap-2">
+          <select id="statusFilter" class="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm">
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+          <div class="text-slate-400 text-xs uppercase tracking-wide mb-1">Total Events</div>
+          <div class="text-2xl font-bold text-white" id="totalEvents">0</div>
+        </div>
+        <div class="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+          <div class="text-slate-400 text-xs uppercase tracking-wide mb-1">Upcoming</div>
+          <div class="text-2xl font-bold text-green-400" id="upcomingEvents">0</div>
+        </div>
+        <div class="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+          <div class="text-slate-400 text-xs uppercase tracking-wide mb-1">Total Participants</div>
+          <div class="text-2xl font-bold text-brand-400" id="totalParticipants">0</div>
+        </div>
+        <div class="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+          <div class="text-slate-400 text-xs uppercase tracking-wide mb-1">Avg Attendance</div>
+          <div class="text-2xl font-bold text-cyan-400" id="avgAttendance">0%</div>
+        </div>
+      </div>
+
+      <!-- Events Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="text-left py-2 px-2">Event ID</th>
+              <th class="text-left py-2 px-2">Title</th>
+              <th class="text-left py-2 px-2">Movie</th>
+              <th class="text-left py-2 px-2">Host</th>
+              <th class="text-left py-2 px-2">Date & Time</th>
+              <th class="text-left py-2 px-2">Participants</th>
+              <th class="text-left py-2 px-2">Status</th>
+              <th class="text-left py-2 px-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsList" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Event Details Modal -->
+  <div id="eventModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold" id="modalTitle">Event Details</h2>
+        <button id="closeModal" class="text-slate-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="modalContent" class="p-4"></div>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      document.getElementById('sidebar').innerHTML = await fetch('../components/admin-sidebar.html').then(r => r.text());
+
+      let allEvents = [];
+      let currentFilter = '';
+
+      async function loadStats() {
+        try {
+          const response = await fetch('/api/admin/events/stats');
+          if (!response.ok) throw new Error('Failed to load stats');
+          
+          const stats = await response.json();
+          document.getElementById('totalEvents').textContent = stats.total || 0;
+          document.getElementById('upcomingEvents').textContent = stats.upcoming || 0;
+          document.getElementById('totalParticipants').textContent = stats.total_participants || 0;
+          
+          // Handle avg_attendance - it might be null or a number
+          const avgAttendance = stats.avg_attendance !== null && stats.avg_attendance !== undefined 
+            ? Number(stats.avg_attendance).toFixed(1) 
+            : '0.0';
+          document.getElementById('avgAttendance').textContent = avgAttendance + '%';
+        } catch (error) {
+          console.error('Load stats error:', error);
+        }
+      }
+
+      async function loadEvents() {
+        const tbody = document.getElementById('eventsList');
+
+        try {
+          const response = await fetch('/api/admin/events');
+          if (!response.ok) throw new Error('Failed to load events');
+
+          allEvents = await response.json();
+          renderEvents();
+          loadStats();
+
+        } catch (error) {
+          console.error('Load events error:', error);
+          tbody.innerHTML = '<tr><td colspan="8" class="py-12 text-center text-red-400">Error loading events</td></tr>';
+        }
+      }
+
+      function renderEvents() {
+        const tbody = document.getElementById('eventsList');
+        const filtered = currentFilter ? allEvents.filter(e => e.status === currentFilter) : allEvents;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="py-12 text-center text-slate-400">No events found</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(event => {
+          const eventDate = new Date(event.event_datetime);
+          const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          
+          const statusColors = {
+            'scheduled': 'bg-blue-500/20 text-blue-400',
+            'ongoing': 'bg-green-500/20 text-green-400',
+            'completed': 'bg-slate-500/20 text-slate-400',
+            'cancelled': 'bg-red-500/20 text-red-400'
+          };
+
+          const participationRate = event.capacity > 0 ? ((event.current_participants / event.capacity) * 100).toFixed(0) : 0;
+
+          return `
+            <tr class="hover:bg-slate-800/20">
+              <td class="py-2 px-2 text-slate-400">#${event.event_id}</td>
+              <td class="py-2 px-2 font-medium text-white max-w-xs truncate">${event.title}</td>
+              <td class="py-2 px-2 text-slate-300">${event.movie_title || 'N/A'}</td>
+              <td class="py-2 px-2 text-slate-300">${event.host_name || 'Unknown'}</td>
+              <td class="py-2 px-2 text-slate-300">
+                <div>${formattedDate}</div>
+                <div class="text-xs text-slate-500">${formattedTime}</div>
+              </td>
+              <td class="py-2 px-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-white">${event.current_participants}/${event.capacity}</span>
+                  <div class="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-brand-500" style="width: ${participationRate}%"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-2 px-2">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColors[event.status] || 'bg-slate-500/20 text-slate-400'}">${event.status}</span>
+              </td>
+              <td class="py-2 px-2">
+                <div class="flex items-center gap-2">
+                  <button data-action="view" data-id="${event.event_id}" class="text-brand-400 hover:text-brand-300 text-xs font-medium px-2 py-1 rounded hover:bg-brand-400/10 transition-colors">View</button>
+                  <button data-action="status" data-id="${event.event_id}" data-current-status="${event.status}" class="text-cyan-400 hover:text-cyan-300 text-xs font-medium px-2 py-1 rounded hover:bg-cyan-400/10 transition-colors">Status</button>
+                  <button data-action="delete" data-id="${event.event_id}" class="text-red-400 hover:text-red-300 text-xs font-medium px-2 py-1 rounded hover:bg-red-400/10 transition-colors">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Event delegation for button clicks
+      document.getElementById('eventsList').addEventListener('click', async (e) => {
+        const button = e.target.closest('button[data-action]');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const eventId = button.dataset.id;
+
+        if (action === 'view') {
+          await viewEvent(eventId);
+        } else if (action === 'status') {
+          const currentStatus = button.dataset.currentStatus;
+          await updateStatus(eventId, currentStatus);
+        } else if (action === 'delete') {
+          await deleteEvent(eventId);
+        }
+      });
+
+      async function viewEvent(eventId) {
+        try {
+          const response = await fetch(`/api/admin/events/${eventId}`);
+          if (!response.ok) throw new Error('Failed to load event details');
+          
+          const event = await response.json();
+          const eventDate = new Date(event.event_datetime);
+          
+          document.getElementById('modalTitle').textContent = event.title;
+          document.getElementById('modalContent').innerHTML = `
+            <div class="space-y-4">
+              <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wide">Description</label>
+                <p class="text-sm text-slate-200 mt-1">${event.description || 'No description provided'}</p>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Movie</label>
+                  <p class="text-sm text-white font-medium mt-1">${event.movie_title || 'N/A'}</p>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Host</label>
+                  <p class="text-sm text-white font-medium mt-1">${event.host_name || 'Unknown'}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Date & Time</label>
+                  <p class="text-sm text-white mt-1">${eventDate.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Status</label>
+                  <p class="text-sm text-white mt-1 capitalize">${event.status}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Capacity</label>
+                  <p class="text-sm text-white mt-1">${event.capacity} people</p>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 uppercase tracking-wide">Current Participants</label>
+                  <p class="text-sm text-white mt-1">${event.current_participants} registered</p>
+                </div>
+              </div>
+
+              ${event.participants && event.participants.length > 0 ? `
+              <div>
+                <label class="text-xs text-slate-400 uppercase tracking-wide mb-2 block">Participants</label>
+                <div class="bg-slate-900/60 border border-slate-700 rounded p-3 max-h-48 overflow-y-auto">
+                  ${event.participants.map(p => `
+                    <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+                      <span class="text-sm text-slate-200">${p.name}</span>
+                      <span class="text-xs px-2 py-1 rounded ${p.attendance_status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${p.attendance_status}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              ` : '<p class="text-sm text-slate-400">No participants yet</p>'}
+            </div>
+          `;
+          
+          document.getElementById('eventModal').classList.remove('hidden');
+        } catch (error) {
+          console.error('View event error:', error);
+          alert('Failed to load event details');
+        }
+      }
+
+      async function updateStatus(eventId, currentStatus) {
+        const statuses = ['scheduled', 'ongoing', 'completed', 'cancelled'];
+        const newStatus = prompt(`Update status for event #${eventId}\nCurrent: ${currentStatus}\n\nEnter new status (${statuses.join(', ')}):`, currentStatus);
+        
+        if (!newStatus || !statuses.includes(newStatus.toLowerCase())) {
+          if (newStatus !== null) alert('Invalid status');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/admin/events/${eventId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus.toLowerCase() })
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update status');
+          }
+
+          loadEvents();
+        } catch (error) {
+          console.error('Update status error:', error);
+          alert(error.message);
+        }
+      }
+
+      async function deleteEvent(eventId) {
+        if (!confirm(`Are you sure you want to delete event #${eventId}? This will also remove all participant registrations.`)) return;
+
+        try {
+          const response = await fetch(`/api/admin/events/${eventId}`, {
+            method: 'DELETE'
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete event');
+          }
+
+          loadEvents();
+        } catch (error) {
+          console.error('Delete event error:', error);
+          alert(error.message);
+        }
+      }
+
+      document.getElementById('statusFilter').addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+        renderEvents();
+      });
+
+      document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('eventModal').classList.add('hidden');
+      });
+
+      document.getElementById('eventModal').addEventListener('click', (e) => {
+        if (e.target.id === 'eventModal') {
+          document.getElementById('eventModal').classList.add('hidden');
+        }
+      });
+
+      loadEvents();
+    })();
+  </script>
+</body>
+
+</html>

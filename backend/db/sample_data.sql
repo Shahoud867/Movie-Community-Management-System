@@ -77,6 +77,7 @@ CREATE TABLE Movie (
     duration_minutes INT,
     language VARCHAR(50),
     director VARCHAR(100),
+    trailer_url VARCHAR(255),
     added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     added_by_admin INT,
     average_rating DECIMAL(3,1) DEFAULT 0.0,
@@ -341,7 +342,10 @@ CREATE TABLE Moderation (
 -- Report Table: System-generated analytical reports
 CREATE TABLE Report (
     report_id INT PRIMARY KEY AUTO_INCREMENT,
-    report_type ENUM('most_watched', 'highest_rated', 'most_active_users', 'popular_forums') NOT NULL,
+    report_type ENUM('most_watched', 'highest_rated', 'most_active_users', 'popular_forums', 
+                     'weekly_engagement', 'monthly_growth', 'popular_genres', 'event_participation',
+                     'moderation_summary', 'user_retention', 'content_quality', 'friendship_network',
+                     'trending_movies', 'watchlist_analysis', 'message_activity', 'review_sentiment') NOT NULL,
     generated_by_admin INT NOT NULL,
     report_data JSON,
     generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -380,7 +384,10 @@ INSERT INTO Admin (name, email, password, role, is_super_admin) VALUES
 ('Sarah Khan', 'sarah.admin@moviehub.com', '$2a$10$Dq6oVj0mBpbuUHY5WK6Ok.OagEHLBjoYnZa6YmPtMHH7gN/O7XMPW', 'superadmin', TRUE),
 ('John Carter', 'john.carter@moviehub.com', '$2a$10$hKS.v56vcCktzFe6sMDO2./esxIWteC15C6my0CpYEEf9wUh7Ms56', 'moderator', FALSE),
 ('Maria Rodriguez', 'maria.rod@moviehub.com', '$2a$10$6FUc1CrO5WE9ur7c8Xzkw.jCWCcdtdN97YKoOLKPaxr8RfY7DZiae', 'moderator', FALSE),
-('Ali Reza', 'ali.reza@moviehub.com', '$2a$10$OJq2h.w6uJL930i1FCaXCOn56KD9GMLba6Arqa3vyx5DX8wl5jNHW', 'moderator', FALSE);
+('Ali Reza', 'ali.reza@moviehub.com', '$2a$10$OJq2h.w6uJL930i1FCaXCOn56KD9GMLba6Arqa3vyx5DX8wl5jNHW', 'moderator', FALSE),
+('Jennifer Lee', 'jennifer.lee@moviehub.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'moderator', FALSE),
+('Carlos Silva', 'carlos.silva@moviehub.com', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'content_manager', FALSE),
+('Fatima Ahmed', 'fatima.ahmed@moviehub.com', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'support', FALSE);
 
 -- 2. Users
 INSERT INTO Users (name, email, password, fav_genre, bio, profile_picture) VALUES
@@ -398,100 +405,307 @@ INSERT INTO Users (name, email, password, fav_genre, bio, profile_picture) VALUE
 ('Pedro Sanchez', 'pedro.san@cine.es', '$2a$10$a12fWQDZzgRejquZKQnXeutbGovugk7PaGfMdueI87csHIgxefEn.', 'Thriller', 'Spanish indie director.', 'pedro.jpg'),
 ('Mina Tavakoli', 'mina.tav@iran.ir', '$2a$10$k/jfvZGGfAtXa0IX2Ndlb.lzA4m/ycjTF3J4tq/dsizHQLNBjsNni', 'Drama', 'Appreciates artistic cinema.', 'mina.jpg'),
 ('Robert Miller', 'robert.miller@gmail.com', '$2a$10$Y3/qBFOamG10Utge./hHIuXuXEWECmbTttqQxNW1Euy88hkKyfvva', 'Adventure', 'Travel and movie buff.', 'robert.jpg'),
-('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg');
+('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'Romance', 'Bollywood and Lollywood lover.', 'ayesha.jpg'),
+('Marcus Chen', 'marcus.chen@gmail.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'Sci-Fi', 'Tech enthusiast and film geek.', 'marcus.jpg'),
+('Sofia Martinez', 'sofia.martinez@cine.es', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'Drama', 'Film student from Madrid.', 'sofia.jpg'),
+('Ali Hassan', 'ali.hassan@pakmail.com', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'Action', 'Pakistani action movie fanatic.', 'ali.jpg'),
+('Emma Thompson', 'emma.thompson@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'Thriller', 'Mystery and suspense lover.', 'emma.jpg'),
+('Reza Abbasi', 'reza.abbasi@iran.ir', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'Drama', 'Iranian film historian.', 'reza.jpg');
 
--- 3. Genres
+-- 3. Genres (Expanded descriptions)
 INSERT INTO Genre (genre_name, description) VALUES
-('Action', 'Fast-paced films with stunts and excitement'),
-('Drama', 'Emotionally intense and realistic storytelling'),
-('Comedy', 'Humorous and entertaining plots'),
-('Thriller', 'Suspenseful and mysterious movies'),
-('Romance', 'Love and relationships as main theme'),
-('Sci-Fi', 'Futuristic and science-based themes'),
-('Horror', 'Scary and supernatural stories'),
-('Adventure', 'Exciting journeys and discoveries'),
-('Mystery', 'Detective or crime-solving focus');
+('Action', 'Fast-paced films with stunts, chases, explosions, and physical conflict. Includes superhero films, martial arts, and adventure thrillers.'),
+('Drama', 'Emotionally intense and realistic storytelling that explores complex human relationships, moral dilemmas, and character development.'),
+('Comedy', 'Humorous and entertaining plots designed to make audiences laugh through witty dialogue, situational humor, or slapstick.'),
+('Thriller', 'Suspenseful and mysterious movies that keep viewers on edge with plot twists, tension, and psychological elements.'),
+('Romance', 'Love and relationships as the central theme, exploring emotional connections, heartbreak, and romantic journeys.'),
+('Sci-Fi', 'Futuristic and science-based themes featuring advanced technology, space exploration, alternate realities, and speculative concepts.'),
+('Horror', 'Scary and supernatural stories designed to frighten and thrill audiences with monsters, ghosts, or psychological terror.'),
+('Adventure', 'Exciting journeys and discoveries featuring quests, exploration, and characters facing challenges in exotic locations.'),
+('Mystery', 'Detective or crime-solving focus with puzzles, clues, and investigations leading to revelations and solutions.'),
+('Fantasy', 'Magical and mythical worlds featuring supernatural elements, mythical creatures, and imaginative settings beyond reality.'),
+('Crime', 'Stories centered around criminal activities, law enforcement, heists, and the criminal underworld.'),
+('Biography', 'Films based on real people\'s lives, documenting their achievements, struggles, and impact on history or society.');
 
 -- 4. Movies (Hollywood, Spanish, Iranian, Pakistani)
-INSERT INTO Movie (title, synopsis, release_year, poster, duration_minutes, language, director, added_by_admin, average_rating) VALUES
-('Inception', 'A thief who steals corporate secrets through dream-sharing technology.', 2010, 'images/posters/inception.jpg', 148, 'English', 'Christopher Nolan', 1, 9.0),
-('The Dark Knight', 'Batman faces the Joker in Gotham City.', 2008, 'images/posters/darkknight.jpg', 152, 'English', 'Christopher Nolan', 1, 9.1),
-('La La Land', 'A love story between a jazz musician and an actress.', 2016, 'images/posters/lalaland.jpg', 128, 'English', 'Damien Chazelle', 2, 8.5),
-('Parasite', 'A poor family infiltrates a wealthy household.', 2019, 'images/posters/parasite.jpg', 132, 'Korean', 'Bong Joon-ho', 3, 9.0),
-('El Secreto de Sus Ojos', 'A retired legal counselor writes a novel to find closure.', 2009, 'images/posters/El_Screto_De_Tus_Ojos..webp', 129, 'Spanish', 'Juan JosÃ© Campanella', 3, 8.8),
-('Baran', 'An Iranian refugee romance story.', 2001, 'images/posters/baran.jpg', 94, 'Persian', 'Majid Majidi', 4, 8.2),
-('Khuda Kay Liye', 'A Pakistani musicianâ€™s spiritual journey.', 2007, 'images/posters/khuda_k_liye.webp', 135, 'Urdu', 'Shoaib Mansoor', 4, 8.0),
-('Waar', 'A war on terror movie from Pakistan.', 2013, 'images/posters/waar.jpg', 130, 'Urdu', 'Bilal Lashari', 2, 8.3),
-('A Separation', 'An Iranian family in moral and legal conflict.', 2011, 'images/posters/seperation.webp', 123, 'Persian', 'Asghar Farhadi', 3, 9.0),
-('Panâ€™s Labyrinth', 'A dark fantasy in postâ€"Civil War Spain.', 2006, 'images/posters/pan''s_labyrinth.webp', 118, 'Spanish', 'Guillermo del Toro', 3, 8.7),
-('Jawani Phir Nahi Ani', 'Comedy about friends reuniting.', 2015, 'images/posters/jawani_phir_nahi_ani.webp', 150, 'Urdu', 'Nadeem Baig', 2, 7.8),
-('The Revenant', 'A frontiersman fights for survival.', 2015, 'images/posters/the_revenant.webp', 156, 'English', 'Alejandro G. IÃ±Ã¡rritu', 3, 8.5),
-('About Elly', 'Iranian drama of a trip gone wrong.', 2009, 'images/posters/about_elly.webp', 119, 'Persian', 'Asghar Farhadi', 4, 8.1);
+INSERT INTO Movie (title, synopsis, release_year, poster, duration_minutes, language, director, trailer_url, added_by_admin, average_rating) VALUES
+('Inception', 'A thief who steals corporate secrets through dream-sharing technology.', 2010, 'images/posters/inception.jpg', 148, 'English', 'Christopher Nolan', 'YoHD9XEInc0', 1, 9.0),
+('The Dark Knight', 'Batman faces the Joker in Gotham City.', 2008, 'images/posters/darkknight.jpg', 152, 'English', 'Christopher Nolan', 'EXeTwQWrcwY', 1, 9.1),
+('La La Land', 'A love story between a jazz musician and an actress.', 2016, 'images/posters/lalaland.jpg', 128, 'English', 'Damien Chazelle', '0pdqf4P9MB8', 2, 8.5),
+('Parasite', 'A poor family infiltrates a wealthy household.', 2019, 'images/posters/parasite.jpg', 132, 'Korean', 'Bong Joon-ho', '5xH0HfJHsaY', 3, 9.0),
+('El Secreto de Sus Ojos', 'A retired legal counselor writes a novel to find closure.', 2009, 'images/posters/El_Screto_De_Tus_Ojos..webp', 129, 'Spanish', 'Juan JosÃ© Campanella', 'OB1JrYCVJTg', 3, 8.8),
+('Baran', 'An Iranian refugee romance story.', 2001, 'images/posters/baran.jpg', 94, 'Persian', 'Majid Majidi', 'T5UGItdsqUI', 4, 8.2),
+('Khuda Kay Liye', 'A Pakistani musicianâ€™s spiritual journey.', 2007, 'images/posters/khuda_k_liye.webp', 135, 'Urdu', 'Shoaib Mansoor', 'EX65wpFll9o', 4, 8.0),
+('Waar', 'A war on terror movie from Pakistan.', 2013, 'images/posters/waar.jpg', 130, 'Urdu', 'Bilal Lashari', '6Gc45eyvSL4', 2, 8.3),
+('A Separation', 'An Iranian family in moral and legal conflict.', 2011, 'images/posters/seperation.webp', 123, 'Persian', 'Asghar Farhadi', 'VgPG6FdlKcA', 3, 9.0),
+('Panâ€™s Labyrinth', 'A dark fantasy in postâ€"Civil War Spain.', 2006, 'images/posters/pan''s_labyrinth.webp', 118, 'Spanish', 'Guillermo del Toro', 'jVZRnnVSQ8k', 3, 8.7),
+('Jawani Phir Nahi Ani', 'Comedy about friends reuniting.', 2015, 'images/posters/jawani_phir_nahi_ani.webp', 150, 'Urdu', 'Nadeem Baig', 'tYZAG0FMmKY', 2, 7.8),
+('The Revenant', 'A frontiersman fights for survival.', 2015, 'images/posters/the_revenant.webp', 156, 'English', 'Alejandro G. IÃ±Ã¡rritu', 'LoebZZ8K5N0', 3, 8.5),
+('About Elly', 'Iranian drama of a trip gone wrong.', 2009, 'images/posters/about_elly.webp', 119, 'Persian', 'Asghar Farhadi', 'MdqMICWhxuA', 4, 8.1);
 
 -- 5. Movie Genres
+-- 5. Movie Genres (Expanded to show multiple genre classifications)
 INSERT INTO Movie_Genre VALUES
-(1,1),(1,6),(2,1),(2,9),(3,5),(3,2),
-(4,4),(4,2),(5,4),(5,2),(6,5),(6,2),
-(7,2),(7,5),(8,1),(8,4),(9,2),(9,4),
-(10,4),(10,8),(11,3),(11,5),(12,8),(12,1),(13,2),(13,4);
+-- Inception: Action, Sci-Fi, Thriller, Mystery
+(1,1),(1,6),(1,4),(1,9),
+-- The Dark Knight: Action, Crime, Drama, Thriller
+(2,1),(2,11),(2,2),(2,4),
+-- La La Land: Romance, Drama, Comedy
+(3,5),(3,2),(3,3),
+-- Parasite: Thriller, Drama, Mystery, Comedy
+(4,4),(4,2),(4,9),(4,3),
+-- El Secreto de Sus Ojos: Thriller, Drama, Romance, Mystery
+(5,4),(5,2),(5,5),(5,9),
+-- Baran: Romance, Drama
+(6,5),(6,2),
+-- Khuda Kay Liye: Drama, Thriller
+(7,2),(7,4),
+-- Waar: Action, Thriller, Crime
+(8,1),(8,4),(8,11),
+-- A Separation: Drama, Thriller, Mystery
+(9,2),(9,4),(9,9),
+-- Pan's Labyrinth: Fantasy, Drama, Adventure, Thriller
+(10,10),(10,2),(10,8),(10,4),
+-- Jawani Phir Nahi Ani: Comedy, Romance, Adventure
+(11,3),(11,5),(11,8),
+-- The Revenant: Adventure, Drama, Action, Biography
+(12,8),(12,2),(12,1),(12,12),
+-- About Elly: Drama, Mystery, Thriller
+(13,2),(13,9),(13,4);
 
--- 6. Friendships
+-- 6. Friendships (Expanded network with pending and declined requests)
 INSERT INTO Friendship (sender_id, receiver_id, status) VALUES
-(1,2,'accepted'),
-(1,3,'accepted'),
-(2,5,'pending'),
-(3,4,'accepted'),
-(5,6,'accepted'),
-(7,9,'accepted'),
-(8,10,'accepted'),
-(11,15,'accepted');
+-- Accepted friendships
+(1,2,'accepted'),(1,3,'accepted'),(1,9,'accepted'),(1,16,'accepted'),
+(2,5,'accepted'),(2,10,'accepted'),(2,14,'accepted'),
+(3,4,'accepted'),(3,12,'accepted'),(3,17,'accepted'),
+(4,13,'accepted'),(4,20,'accepted'),
+(5,6,'accepted'),(5,11,'accepted'),(5,15,'accepted'),
+(6,7,'accepted'),(6,18,'accepted'),
+(7,9,'accepted'),(7,16,'accepted'),
+(8,10,'accepted'),(8,17,'accepted'),
+(9,14,'accepted'),(9,18,'accepted'),
+(10,11,'accepted'),(10,19,'accepted'),
+(11,15,'accepted'),(11,20,'accepted'),
+(12,14,'accepted'),(12,16,'accepted'),
+(13,15,'accepted'),(13,18,'accepted'),
+(14,17,'accepted'),(14,20,'accepted'),
+(15,19,'accepted'),(16,19,'accepted'),
+-- Pending friendship requests
+(1,5,'pending'),(2,8,'pending'),(3,7,'pending'),
+(4,6,'pending'),(5,9,'pending'),(6,12,'pending'),
+(7,11,'pending'),(8,13,'pending'),(9,15,'pending'),
+(10,16,'pending'),(11,17,'pending'),(12,18,'pending'),
+-- Declined friendship requests
+(1,8,'declined'),(3,6,'declined'),(5,10,'declined'),
+(7,14,'declined'),(9,12,'declined');
 
--- 7. Watchlist
-INSERT INTO Watchlist (user_id, movie_id, status, progress_percent) VALUES
-(1,1,'completed',100),(1,4,'watching',70),(2,3,'to-watch',0),
-(3,5,'completed',100),(4,9,'watching',60),(5,11,'to-watch',0),
-(6,8,'completed',100),(7,2,'completed',100),(8,10,'to-watch',0),
-(9,12,'to-watch',0),(10,13,'completed',100);
+-- 7. Watchlist (Expanded with dates spanning 2025 for analytics)
+INSERT INTO Watchlist (user_id, movie_id, status, progress_percent, added_date) VALUES
+-- January 2025
+(1,1,'completed',100,'2025-01-05 14:30:00'),(1,2,'completed',100,'2025-01-12 18:00:00'),(1,8,'completed',100,'2025-01-20 20:15:00'),
+(2,3,'completed',100,'2025-01-08 16:45:00'),(2,4,'completed',100,'2025-01-18 19:30:00'),
+(3,5,'completed',100,'2025-01-10 21:00:00'),(3,9,'completed',100,'2025-01-25 17:20:00'),
+(4,6,'completed',100,'2025-01-15 15:10:00'),(4,7,'completed',100,'2025-01-28 19:45:00'),
+-- February 2025
+(1,10,'completed',100,'2025-02-14 20:00:00'),
+(2,1,'completed',100,'2025-02-07 17:15:00'),(2,12,'completed',100,'2025-02-22 21:30:00'),
+(3,2,'completed',100,'2025-02-10 16:00:00'),(3,8,'completed',100,'2025-02-28 19:00:00'),
+(5,1,'completed',100,'2025-02-12 20:45:00'),(5,11,'completed',100,'2025-02-25 18:20:00'),
+-- March 2025
+(1,12,'completed',100,'2025-03-05 19:30:00'),(1,6,'completed',100,'2025-03-18 21:00:00'),
+(2,9,'completed',100,'2025-03-08 17:45:00'),(2,13,'completed',100,'2025-03-22 20:15:00'),
+(3,1,'completed',100,'2025-03-12 18:30:00'),(3,11,'completed',100,'2025-03-28 19:45:00'),
+(4,2,'completed',100,'2025-03-15 16:20:00'),(4,10,'completed',100,'2025-03-30 21:10:00'),
+(6,1,'completed',100,'2025-03-10 17:00:00'),(6,8,'completed',100,'2025-03-25 20:30:00'),
+-- April 2025
+(1,9,'completed',100,'2025-04-06 18:15:00'),(1,13,'completed',100,'2025-04-20 19:45:00'),
+(2,2,'completed',100,'2025-04-10 16:30:00'),(2,10,'completed',100,'2025-04-28 21:00:00'),
+(3,4,'completed',100,'2025-04-14 17:20:00'),(3,12,'completed',100,'2025-04-25 20:15:00'),
+(5,2,'completed',100,'2025-04-08 19:00:00'),(5,8,'completed',100,'2025-04-22 18:45:00'),
+(7,1,'completed',100,'2025-04-12 20:30:00'),(7,2,'completed',100,'2025-04-26 17:15:00'),
+-- May 2025
+(1,5,'completed',100,'2025-05-05 18:00:00'),(1,11,'completed',100,'2025-05-18 20:45:00'),
+(2,5,'completed',100,'2025-05-10 19:30:00'),(2,8,'completed',100,'2025-05-24 17:00:00'),
+(3,3,'completed',100,'2025-05-12 16:45:00'),(3,13,'completed',100,'2025-05-28 21:15:00'),
+(4,1,'completed',100,'2025-05-08 20:00:00'),(4,12,'completed',100,'2025-05-22 18:30:00'),
+(6,4,'completed',100,'2025-05-15 19:15:00'),(6,9,'completed',100,'2025-05-30 20:45:00'),
+-- June 2025
+(1,7,'completed',100,'2025-06-04 17:30:00'),(1,3,'completed',100,'2025-06-18 19:00:00'),
+(2,6,'completed',100,'2025-06-08 20:15:00'),(2,11,'completed',100,'2025-06-25 18:45:00'),
+(3,7,'completed',100,'2025-06-12 17:00:00'),(3,10,'completed',100,'2025-06-28 21:30:00'),
+(5,4,'completed',100,'2025-06-10 19:45:00'),(5,9,'completed',100,'2025-06-22 16:20:00'),
+(8,1,'completed',100,'2025-06-15 20:00:00'),(8,10,'completed',100,'2025-06-29 18:15:00'),
+-- July 2025
+(1,4,'watching',70,'2025-07-05 16:00:00'),(2,7,'to-watch',0,'2025-07-10 14:30:00'),
+(3,6,'watching',85,'2025-07-15 17:45:00'),(4,4,'to-watch',0,'2025-07-20 15:20:00'),
+(5,3,'completed',100,'2025-07-08 19:30:00'),(5,13,'completed',100,'2025-07-25 21:00:00'),
+(6,2,'completed',100,'2025-07-12 18:00:00'),(6,12,'completed',100,'2025-07-28 20:45:00'),
+(7,4,'completed',100,'2025-07-18 17:30:00'),(7,9,'completed',100,'2025-07-30 19:15:00'),
+-- August 2025
+(8,2,'completed',100,'2025-08-05 18:30:00'),(8,9,'completed',100,'2025-08-20 20:00:00'),
+(9,1,'completed',100,'2025-08-10 17:00:00'),(9,12,'completed',100,'2025-08-25 19:45:00'),
+(10,3,'completed',100,'2025-08-12 16:30:00'),(10,13,'completed',100,'2025-08-28 21:15:00'),
+(11,1,'completed',100,'2025-08-08 20:30:00'),(11,8,'completed',100,'2025-08-22 18:00:00'),
+-- September 2025
+(7,5,'completed',100,'2025-09-06 19:00:00'),(7,10,'completed',100,'2025-09-20 17:45:00'),
+(8,4,'completed',100,'2025-09-10 18:15:00'),(8,12,'completed',100,'2025-09-25 20:30:00'),
+(9,2,'completed',100,'2025-09-14 16:45:00'),(9,8,'completed',100,'2025-09-28 19:15:00'),
+(10,1,'completed',100,'2025-09-08 20:00:00'),(10,9,'completed',100,'2025-09-22 18:45:00'),
+-- October 2025
+(11,2,'completed',100,'2025-10-05 17:30:00'),(11,9,'completed',100,'2025-10-18 19:00:00'),
+(12,1,'completed',100,'2025-10-10 20:15:00'),(12,4,'completed',100,'2025-10-24 18:30:00'),
+(13,3,'completed',100,'2025-10-12 16:00:00'),(13,10,'completed',100,'2025-10-28 21:00:00'),
+(14,1,'completed',100,'2025-10-15 19:45:00'),(14,8,'completed',100,'2025-10-30 17:20:00'),
+-- November 2025
+(11,4,'completed',100,'2025-11-06 18:00:00'),(11,12,'completed',100,'2025-11-20 20:30:00'),
+(12,2,'completed',100,'2025-11-10 17:15:00'),(12,9,'completed',100,'2025-11-25 19:45:00'),
+(13,1,'completed',100,'2025-11-14 16:30:00'),(13,8,'completed',100,'2025-11-28 21:15:00'),
+(15,1,'completed',100,'2025-11-08 20:00:00'),(15,4,'completed',100,'2025-11-22 18:45:00'),
+-- December 2025 (Recent)
+(16,1,'completed',100,'2025-12-01 19:30:00'),(16,2,'watching',60,'2025-12-02 17:00:00'),
+(17,3,'completed',100,'2025-12-03 15:30:00'),(17,4,'to-watch',0,'2025-12-04 16:45:00'),
+(18,1,'completed',100,'2025-12-05 18:20:00'),(18,5,'watching',45,'2025-12-06 19:00:00'),
+(5,6,'completed',100,'2025-12-01 19:30:00'),(5,12,'completed',100,'2025-12-06 20:15:00'),
+(9,10,'to-watch',0,'2025-12-07 16:00:00'),(10,8,'watching',75,'2025-12-06 17:30:00'),
+(19,1,'completed',100,'2025-12-02 20:00:00'),(19,9,'completed',100,'2025-12-05 18:30:00'),
+(20,2,'completed',100,'2025-12-03 19:15:00'),(20,4,'watching',50,'2025-12-07 17:00:00');
 
 -- 8. Watch History
 INSERT INTO Watch_History (user_id, movie_id, completion_source) VALUES
 (1,1,'watchlist'),(3,5,'event'),(4,9,'watchlist'),(6,8,'direct'),
 (10,13,'watchlist'),(7,2,'watchlist');
 
--- 9. Reviews
-INSERT INTO Review (user_id, movie_id, review_text, is_spoiler, helpful_count) VALUES
-(1,1,'Mind-bending and visually stunning.',FALSE,15),
-(2,3,'Emotional and beautiful musical.',FALSE,10),
-(3,5,'Excellent storytelling and suspense.',FALSE,8),
-(4,9,'Realistic and powerful acting.',FALSE,12),
-(6,8,'Patriotic and thrilling.',FALSE,9),
-(10,13,'Sad yet thought-provoking.',FALSE,7);
+-- 9. Reviews (Expanded with more reviews and dates)
+INSERT INTO Review (user_id, movie_id, review_text, is_spoiler, helpful_count, created_date) VALUES
+(1,1,'Mind-bending and visually stunning. Nolan at his finest!',FALSE,25,'2025-01-05 15:30:00'),
+(1,2,'The best superhero movie ever made. Ledger\'s performance is legendary.',FALSE,30,'2025-01-12 19:00:00'),
+(1,8,'A patriotic masterpiece that showcases Pakistani cinema at its peak.',FALSE,18,'2025-01-20 21:30:00'),
+(2,3,'Emotional and beautiful musical that captures the magic of LA.',FALSE,22,'2025-01-08 17:45:00'),
+(2,4,'Brilliant social commentary wrapped in a thriller. Masterful direction.',FALSE,28,'2025-01-18 20:30:00'),
+(2,1,'Inception keeps you guessing until the very end. A must-watch!',FALSE,20,'2025-02-07 18:15:00'),
+(3,5,'Excellent storytelling and suspense. Spanish cinema at its best.',FALSE,15,'2025-01-10 22:00:00'),
+(3,9,'Realistic and powerful acting. Farhadi is a genius storyteller.',FALSE,24,'2025-01-25 18:20:00'),
+(3,2,'Dark, gritty, and absolutely brilliant. The Joker steals every scene.',FALSE,26,'2025-02-10 17:00:00'),
+(4,6,'Beautiful Iranian love story. Majidi\'s direction is poetic.',FALSE,12,'2025-01-15 16:10:00'),
+(4,7,'Groundbreaking Pakistani film that started important conversations.',FALSE,16,'2025-01-28 20:45:00'),
+(4,2,'The Dark Knight sets the bar for all comic book movies.',FALSE,23,'2025-03-15 17:20:00'),
+(5,1,'Inception is a cinematic achievement. Mind-blowing visuals and story.',FALSE,19,'2025-02-12 21:45:00'),
+(5,11,'Hilarious and entertaining. Pakistani comedy at its finest!',FALSE,14,'2025-02-25 19:20:00'),
+(6,1,'One of the greatest sci-fi films ever made. Rewatchable masterpiece.',FALSE,21,'2025-03-10 18:00:00'),
+(6,8,'Waar is thrilling and action-packed. Proud of Pakistani cinema!',FALSE,17,'2025-03-25 21:30:00'),
+(6,4,'Parasite deserves every award. A perfect blend of genres.',FALSE,27,'2025-05-15 20:15:00'),
+(7,1,'Inception changed how we think about movies. Absolute genius.',FALSE,22,'2025-04-12 21:15:00'),
+(7,2,'The Dark Knight is not just a superhero film, it\'s a crime epic.',FALSE,29,'2025-04-26 18:15:00'),
+(8,1,'Mind-bending brilliance. Nolan\'s best work in my opinion.',FALSE,20,'2025-06-15 21:00:00'),
+(8,10,'Pan\'s Labyrinth is hauntingly beautiful. Del Toro\'s masterpiece.',FALSE,18,'2025-06-29 19:15:00'),
+(8,2,'The best Batman film ever. Ledger\'s Joker is unforgettable.',FALSE,25,'2025-08-05 19:30:00'),
+(9,1,'Inception keeps me thinking days after watching. Phenomenal!',FALSE,17,'2025-08-10 18:00:00'),
+(9,12,'The Revenant is brutal and beautiful. DiCaprio at his best.',FALSE,15,'2025-08-25 20:45:00'),
+(10,13,'About Elly is sad yet thought-provoking. Iranian cinema excellence.',FALSE,13,'2025-08-28 22:15:00'),
+(10,1,'Inception is a work of art. Complex but incredibly rewarding.',FALSE,19,'2025-09-08 21:00:00'),
+(11,2,'The Dark Knight transcends the superhero genre entirely.',FALSE,24,'2025-10-05 18:30:00'),
+(12,1,'Inception is the kind of movie that gets better with each viewing.',FALSE,21,'2025-10-10 21:15:00'),
+(13,3,'La La Land is pure magic. A love letter to dreamers everywhere.',FALSE,16,'2025-10-12 17:00:00'),
+(14,1,'Inception is visually stunning with a mind-bending plot. Love it!',FALSE,18,'2025-10-15 20:45:00'),
+(15,1,'One of my all-time favorites. Nolan is a master filmmaker.',FALSE,20,'2025-11-08 21:00:00'),
+(5,3,'Beautiful musical that stays with you long after it ends.',FALSE,14,'2025-07-08 20:30:00'),
+(7,5,'Gripping thriller with phenomenal performances. Highly recommend!',FALSE,15,'2025-09-06 20:00:00'),
+(11,4,'Parasite is a genre-defying masterpiece. Absolutely brilliant.',FALSE,26,'2025-11-06 19:00:00'),
+(12,4,'Best Picture winner that truly deserves all the praise.',FALSE,22,'2025-10-24 19:30:00');
 
--- 10. Ratings
-INSERT INTO Rating (user_id, movie_id, score) VALUES
-(1,1,9.5),(1,4,8.8),(2,3,9.0),(3,5,9.2),
-(4,9,8.7),(5,11,7.8),(6,8,8.5),(7,2,9.1),
-(8,10,8.9),(10,13,8.0),(9,12,9.0);
+-- 10. Ratings (Expanded with dates throughout 2025)
+INSERT INTO Rating (user_id, movie_id, score, rated_date) VALUES
+-- January-March 2025
+(1,1,9.5,'2025-01-05 15:00:00'),(1,2,9.0,'2025-01-12 18:30:00'),(1,8,8.5,'2025-01-20 21:00:00'),
+(2,3,9.0,'2025-01-08 17:15:00'),(2,4,8.8,'2025-01-18 20:00:00'),(2,1,9.2,'2025-02-07 17:45:00'),
+(3,5,9.2,'2025-01-10 21:30:00'),(3,9,8.7,'2025-01-25 17:50:00'),(3,2,8.9,'2025-02-10 16:30:00'),
+(4,6,8.0,'2025-01-15 15:40:00'),(4,7,7.8,'2025-01-28 20:15:00'),(4,2,9.1,'2025-03-15 16:50:00'),
+(5,1,9.3,'2025-02-12 21:15:00'),(5,11,7.8,'2025-02-25 18:50:00'),(5,2,8.8,'2025-04-08 19:30:00'),
+(6,1,9.4,'2025-03-10 17:30:00'),(6,8,8.5,'2025-03-25 21:00:00'),(6,4,8.6,'2025-05-15 19:45:00'),
+(7,1,9.2,'2025-04-12 20:45:00'),(7,2,9.1,'2025-04-26 17:45:00'),(7,4,8.7,'2025-07-18 18:00:00'),
+(8,1,9.5,'2025-06-15 20:30:00'),(8,10,8.9,'2025-06-29 18:45:00'),(8,2,9.0,'2025-08-05 19:00:00'),
+-- April-June 2025
+(1,4,8.8,'2025-02-03 19:00:00'),(1,10,8.6,'2025-02-14 20:30:00'),(1,12,8.4,'2025-03-05 20:00:00'),
+(2,12,8.3,'2025-02-22 22:00:00'),(2,9,8.5,'2025-03-08 18:15:00'),(2,13,8.0,'2025-03-22 20:45:00'),
+(3,8,8.7,'2025-02-28 19:30:00'),(3,1,9.6,'2025-03-12 19:00:00'),(3,11,7.9,'2025-03-28 20:15:00'),
+(4,10,8.8,'2025-03-30 21:40:00'),(4,1,9.3,'2025-05-08 20:30:00'),(4,12,8.2,'2025-05-22 19:00:00'),
+(5,8,8.4,'2025-04-22 19:15:00'),(5,4,8.7,'2025-06-10 20:15:00'),(5,9,8.6,'2025-06-22 16:50:00'),
+(6,9,8.5,'2025-05-30 21:15:00'),(6,2,9.0,'2025-07-12 18:30:00'),(6,12,8.1,'2025-07-28 21:15:00'),
+(7,5,8.9,'2025-09-06 19:30:00'),(7,9,8.6,'2025-07-30 19:45:00'),(7,10,8.8,'2025-09-20 18:15:00'),
+-- July-September 2025
+(1,9,8.7,'2025-04-06 18:45:00'),(1,13,8.3,'2025-04-20 20:15:00'),(1,5,8.9,'2025-05-05 18:30:00'),
+(2,2,9.1,'2025-04-10 17:00:00'),(2,10,8.8,'2025-04-28 21:30:00'),(2,5,8.7,'2025-05-10 20:00:00'),
+(3,4,8.6,'2025-04-14 17:50:00'),(3,12,8.2,'2025-04-25 20:45:00'),(3,3,9.0,'2025-05-12 17:15:00'),
+(8,4,8.5,'2025-09-10 18:45:00'),(8,9,8.7,'2025-08-20 20:30:00'),(8,12,8.3,'2025-09-25 21:00:00'),
+(9,1,9.4,'2025-08-10 17:30:00'),(9,12,8.4,'2025-08-25 20:15:00'),(9,2,9.0,'2025-09-14 17:15:00'),
+(10,3,8.8,'2025-08-12 17:00:00'),(10,13,8.0,'2025-08-28 21:45:00'),(10,1,9.3,'2025-09-08 20:30:00'),
+-- October-December 2025
+(1,6,8.2,'2025-03-18 21:30:00'),(1,7,8.0,'2025-06-04 18:00:00'),(1,3,9.1,'2025-06-18 19:30:00'),
+(2,6,8.1,'2025-06-08 20:45:00'),(2,11,7.9,'2025-06-25 19:15:00'),(2,8,8.6,'2025-05-24 17:30:00'),
+(3,7,8.3,'2025-06-12 17:30:00'),(3,10,8.9,'2025-06-28 22:00:00'),(3,13,8.1,'2025-05-28 21:45:00'),
+(5,3,8.8,'2025-07-08 20:00:00'),(5,13,8.2,'2025-07-25 21:30:00'),
+(9,8,8.6,'2025-09-28 19:45:00'),(9,4,8.8,'2025-12-02 18:30:00'),(10,9,8.5,'2025-09-22 19:15:00'),
+(10,4,8.7,'2025-12-03 20:15:00'),(11,1,9.2,'2025-08-08 21:00:00'),(11,8,8.4,'2025-08-22 18:30:00'),
+(11,2,9.0,'2025-10-05 18:00:00'),(11,9,8.6,'2025-10-18 19:30:00'),(11,4,8.5,'2025-11-06 18:30:00'),
+(12,1,9.5,'2025-10-10 20:45:00'),(12,4,8.9,'2025-10-24 19:00:00'),(12,2,9.1,'2025-11-10 17:45:00'),
+(13,3,8.7,'2025-10-12 16:30:00'),(13,10,8.8,'2025-10-28 21:30:00'),(13,1,9.3,'2025-11-14 17:00:00'),
+(14,1,9.4,'2025-10-15 20:15:00'),(14,8,8.5,'2025-10-30 17:50:00'),(15,1,9.6,'2025-11-08 20:30:00'),
+(15,4,8.8,'2025-11-22 19:15:00'),(5,6,8.3,'2025-12-01 20:00:00'),(5,12,8.1,'2025-12-06 20:45:00'),
+(11,12,8.2,'2025-11-20 21:00:00'),(12,9,8.6,'2025-11-25 20:15:00'),(13,8,8.4,'2025-11-28 21:45:00');
 
 -- 11. Posts
 INSERT INTO Post (user_id, movie_id, content, like_count, comment_count) VALUES
-(1,1,'Just rewatched Inception, still mind-blowing!',10,3),
-(3,5,'Spanish thrillers are underrated gems.',6,2),
-(4,9,'A Separation deserves every award it got.',9,1),
-(6,8,'Waar is the best action film from Pakistan.',7,2),
-(8,10,'Panâ€™s Labyrinth broke my heart.',5,3);
+(1,1,'Just rewatched Inception, still mind-blowing!',10,8),
+(3,5,'Spanish thrillers are underrated gems.',8,3),
+(4,9,'A Separation deserves every award it got.',9,4),
+(6,8,'Waar is the best action film from Pakistan.',7,5),
+(8,10,'Panâ€™s Labyrinth broke my heart.',11,5),
+(2,2,'The Dark Knight is the greatest superhero movie ever made!',15,4),
+(5,4,'Parasite\'s social commentary is brilliant and timely.',12,3),
+(7,11,'Jawani Phir Nahi Ani had me laughing throughout!',8,2),
+(9,6,'Baran is such a beautiful and touching love story.',6,3),
+(10,3,'La La Land - a modern musical masterpiece!',10,2),
+(11,12,'The Revenant\'s cinematography is breathtaking!',9,3),
+(12,13,'About Elly keeps you guessing till the end.',7,2),
+(13,7,'Khuda Ke Liye addresses important social issues.',8,3),
+(14,1,'Inception\'s soundtrack by Hans Zimmer is iconic!',11,2),
+(15,9,'Iranian cinema is unparalleled in emotional depth.',9,4),
+(16,2,'Heath Ledger\'s Joker will never be topped.',13,3),
+(17,4,'Bong Joon-ho is a genius filmmaker!',10,2),
+(18,8,'Pakistani cinema is finally getting the recognition it deserves.',7,3),
+(19,10,'Pan\'s Labyrinth is dark fantasy at its finest.',12,2),
+(20,5,'El Secreto de Sus Ojos has the best ending twist!',8,3);
 
--- 12. Comments
+-- 12. Comments (Expanded)
 INSERT INTO Comment (post_id, user_id, review_id, content) VALUES
 (1,2,1,'Totally agree, Nolan is a genius!'),
 (2,3,3,'Yes! The direction was incredible.'),
 (3,4,4,'Very true, Farhadiâ€™s realism is unmatched.'),
 (4,6,5,'Proud moment for Pakistan cinema!'),
-(5,8,6,'So emotional and dark.');
+(5,8,6,'So emotional and dark.'),
+(1,3,NULL,'The dream sequences were beautifully shot!'),
+(1,5,NULL,'I still don''t understand the ending though.'),
+(2,5,NULL,'Heath Ledger''s performance was legendary!'),
+(2,8,NULL,'This movie redefined superhero films.'),
+(3,9,NULL,'Every scene was emotionally charged.'),
+(4,10,NULL,'Pakistani cinema is rising!'),
+(4,11,NULL,'The soundtrack was epic!'),
+(5,12,NULL,'Guillermo del Toro is a master storyteller.'),
+(5,14,NULL,'The visuals were stunning and haunting.'),
+(1,9,NULL,'Watched it 5 times, still finding new details!'),
+(2,12,NULL,'The interrogation scene gives me chills.'),
+(3,15,NULL,'Farhadi captures human complexity perfectly.'),
+(4,16,NULL,'We need more films like this from Pakistan.'),
+(5,17,NULL,'The parallel between fantasy and reality was brilliant.');
 
--- 13. Likes on Posts
+-- 13. Likes on Posts (Expanded to show variety of engagement)
 INSERT INTO Like_Post (post_id, user_id) VALUES
-(1,2),(1,3),(2,4),(2,5),(3,6),(4,7),(5,9),(5,10);
+(1,2),(1,3),(1,5),(1,7),(1,9),(1,10),(1,12),(1,14),(1,16),(1,18),
+(2,4),(2,5),(2,8),(2,11),(2,13),(2,15),(2,17),(2,19),
+(3,6),(3,7),(3,8),(3,10),(3,12),(3,14),(3,16),(3,18),(3,20),
+(4,7),(4,9),(4,10),(4,11),(4,13),(4,15),(4,17),
+(5,9),(5,10),(5,11),(5,12),(5,13),(5,14),(5,15),(5,16),(5,18),(5,19),(5,20);
 
 -- 14. Messages (between friends)
 INSERT INTO Message (sender_id, receiver_id, content, read_status) VALUES
@@ -572,39 +786,158 @@ INSERT INTO Event (title, description, host_id, movie_id, event_datetime, capaci
 ('Comedy Night: JPNA', 'Start the new year with laughter! Jawani Phir Nahi Ani screening.', 11, 11, '2026-01-02 19:00:00', 50, 0, 'scheduled'),
 ('Survival Cinema: The Revenant', 'Experience the brutal beauty of nature and survival.', 14, 12, '2026-01-05 20:30:00', 30, 0, 'scheduled');
 
--- 16. Participation (Event attendees)
+-- 16. Participation (Event attendees - Expanded)
 INSERT INTO Participation (event_id, user_id, attendance_status) VALUES
+-- Inception Movie Night (Event 1)
 (1, 2, 'confirmed'),
 (1, 3, 'confirmed'),
-(1, 5, 'pending'),
+(1, 5, 'confirmed'),
+(1, 7, 'confirmed'),
+(1, 9, 'pending'),
+-- The Dark Knight Marathon (Event 2)
 (2, 1, 'confirmed'),
 (2, 4, 'confirmed'),
-(2, 6, 'pending'),
+(2, 6, 'confirmed'),
+(2, 8, 'confirmed'),
+(2, 10, 'confirmed'),
+(2, 11, 'confirmed'),
+(2, 12, 'confirmed'),
+(2, 13, 'confirmed'),
+(2, 14, 'pending'),
+(2, 15, 'pending'),
+(2, 16, 'pending'),
+(2, 17, 'confirmed'),
+-- La La Land Sing-Along (Event 3)
 (3, 1, 'confirmed'),
+(3, 2, 'confirmed'),
 (3, 8, 'confirmed'),
+(3, 10, 'confirmed'),
+(3, 12, 'confirmed'),
+(3, 15, 'confirmed'),
+(3, 18, 'pending'),
+(3, 19, 'pending'),
+-- Parasite Watch Party (Event 4)
+(4, 3, 'confirmed'),
 (4, 5, 'confirmed'),
-(4, 7, 'pending');
+(4, 7, 'confirmed'),
+(4, 9, 'confirmed'),
+(4, 11, 'confirmed'),
+(4, 13, 'confirmed'),
+(4, 14, 'confirmed'),
+(4, 16, 'confirmed'),
+(4, 17, 'confirmed'),
+(4, 18, 'confirmed'),
+(4, 19, 'confirmed'),
+(4, 20, 'confirmed'),
+(4, 1, 'pending'),
+(4, 2, 'pending'),
+(4, 4, 'pending'),
+-- Spanish Cinema Night (Event 5)
+(5, 3, 'confirmed'),
+(5, 8, 'confirmed'),
+(5, 12, 'pending'),
+-- Pakistani Film Festival (Event 6)
+(6, 1, 'confirmed'),
+(6, 6, 'confirmed'),
+(6, 7, 'confirmed'),
+(6, 9, 'confirmed'),
+(6, 11, 'confirmed'),
+(6, 15, 'confirmed'),
+(6, 18, 'confirmed'),
+(6, 19, 'pending'),
+(6, 20, 'pending'),
+(6, 2, 'pending'),
+-- Iranian Drama Evening (Event 7)
+(7, 4, 'confirmed'),
+(7, 13, 'confirmed'),
+(7, 20, 'confirmed'),
+(7, 3, 'confirmed'),
+(7, 8, 'confirmed'),
+(7, 14, 'pending'),
+(7, 17, 'pending'),
+-- New Year Film Celebration (Event 8)
+(8, 1, 'confirmed'),
+(8, 2, 'confirmed'),
+(8, 3, 'confirmed'),
+(8, 5, 'confirmed'),
+(8, 7, 'confirmed'),
+(8, 8, 'confirmed'),
+(8, 10, 'confirmed'),
+(8, 11, 'confirmed'),
+(8, 12, 'confirmed'),
+(8, 13, 'confirmed'),
+(8, 14, 'confirmed'),
+(8, 15, 'confirmed'),
+(8, 16, 'confirmed'),
+(8, 17, 'confirmed'),
+(8, 18, 'confirmed'),
+(8, 19, 'confirmed'),
+(8, 20, 'confirmed'),
+(8, 4, 'pending'),
+(8, 6, 'pending'),
+(8, 9, 'pending');
 
--- 17. Restricted Words (for content moderation)
+-- 17. Restricted Words (for content moderation - Expanded)
 INSERT INTO Restricted_Word (word, severity, added_by_admin) VALUES
 ('spam', 'low', 1),
 ('inappropriate', 'medium', 1),
 ('offensive', 'high', 1),
 ('hate', 'high', 2),
 ('scam', 'medium', 2),
-('fake', 'low', 3);
+('fake', 'low', 3),
+('abuse', 'high', 1),
+('harassment', 'high', 2),
+('violence', 'high', 1),
+('explicit', 'medium', 3),
+('profanity', 'medium', 2),
+('misleading', 'low', 3),
+('clickbait', 'low', 1),
+('plagiarism', 'medium', 2),
+('piracy', 'high', 1),
+('copyright', 'medium', 3),
+('illegal', 'high', 2),
+('threat', 'high', 1),
+('spoiler', 'low', 3),
+('toxic', 'medium', 2);
 
--- 19. Moderation Actions
+-- 19. Moderation Actions (Expanded to show various content moderation)
 INSERT INTO Moderation (admin_id, content_type, content_id, action, reason) VALUES
 (2,'post',5,'approved','Clean and relevant post'),
 (3,'comment',2,'approved','No violations'),
-(1,'review',1,'flagged','Possible spoiler detected');
+(1,'review',1,'flagged','Possible spoiler detected'),
+(1,'post',1,'approved','Engaging discussion about the movie'),
+(2,'post',2,'approved','Valid critique and opinion'),
+(3,'comment',5,'approved','Constructive feedback'),
+(1,'comment',7,'flagged','Contains minor spoiler warning needed'),
+(2,'review',3,'approved','Well-written review'),
+(3,'post',6,'approved','Encourages community discussion'),
+(1,'comment',10,'approved','Positive community engagement'),
+(2,'post',8,'approved','Promotes Pakistani cinema'),
+(1,'review',5,'approved','Detailed and thoughtful analysis'),
+(3,'comment',12,'approved','Respectful disagreement'),
+(2,'post',11,'approved','Shares personal movie experience'),
+(1,'comment',15,'flagged','Check for excessive caps usage'),
+(3,'review',8,'approved','Balanced critique'),
+(2,'post',14,'approved','Celebrates film achievement'),
+(1,'comment',18,'approved','Adds value to discussion');
 
--- 20. Reports
+-- 20. Reports (Expanded with various analytics reports)
 INSERT INTO Report (report_type, generated_by_admin, report_data, date_range_start, date_range_end) VALUES
 ('most_watched',1,'{"movie":"Inception","views":1200}','2025-01-01','2025-11-01'),
 ('highest_rated',3,'{"movie":"A Separation","rating":9.0}','2025-01-01','2025-11-01'),
-('most_active_users',2,'{"user":"Ahmed Malik","posts":5}','2025-01-01','2025-11-01');
+('most_active_users',2,'{"user":"Ahmed Malik","posts":5}','2025-01-01','2025-11-01'),
+('weekly_engagement',1,'{"total_posts":45,"total_comments":123,"total_likes":567}','2025-11-25','2025-12-01'),
+('monthly_growth',2,'{"new_users":8,"new_reviews":35,"new_ratings":80}','2025-11-01','2025-12-01'),
+('popular_genres',3,'{"top_genre":"Drama","count":45}','2025-01-01','2025-12-01'),
+('event_participation',1,'{"total_events":10,"total_attendees":87}','2025-12-01','2025-12-31'),
+('moderation_summary',2,'{"approved":85,"flagged":5,"removed":2}','2025-11-01','2025-12-01'),
+('user_retention',3,'{"active_users":18,"returning_users":15}','2025-11-01','2025-12-01'),
+('content_quality',1,'{"avg_review_length":250,"avg_rating":8.2}','2025-01-01','2025-12-01'),
+('friendship_network',2,'{"total_friendships":28,"avg_friends_per_user":2.8}','2025-01-01','2025-12-01'),
+('trending_movies',3,'{"movie":"The Dark Knight","recent_activity":45}','2025-11-20','2025-12-05'),
+('watchlist_analysis',1,'{"avg_watchlist_size":7,"most_added":"Inception"}','2025-01-01','2025-12-01'),
+('message_activity',2,'{"total_messages":58,"active_conversations":12}','2025-11-01','2025-12-01'),
+('review_sentiment',3,'{"positive":75,"neutral":20,"negative":5}','2025-01-01','2025-12-01');
 
 -- 21. Audit Trail
 INSERT INTO Audit_Trail (admin_id, operation, target_table, target_id, old_value, new_value, ip_address) VALUES
@@ -1183,6 +1516,32 @@ BEGIN
         FALSE,
         NOW()
     );
+END //
+DELIMITER ;
+
+-- Trigger 4: Auto-increment participant count when someone joins an event
+DROP TRIGGER IF EXISTS trg_participation_insert;
+DELIMITER //
+CREATE TRIGGER trg_participation_insert
+AFTER INSERT ON Participation
+FOR EACH ROW
+BEGIN
+    UPDATE Event 
+    SET current_participants = current_participants + 1
+    WHERE event_id = NEW.event_id;
+END //
+DELIMITER ;
+
+-- Trigger 5: Auto-decrement participant count when someone leaves an event
+DROP TRIGGER IF EXISTS trg_participation_delete;
+DELIMITER //
+CREATE TRIGGER trg_participation_delete
+AFTER DELETE ON Participation
+FOR EACH ROW
+BEGIN
+    UPDATE Event 
+    SET current_participants = GREATEST(0, current_participants - 1)
+    WHERE event_id = OLD.event_id;
 END //
 DELIMITER ;
 

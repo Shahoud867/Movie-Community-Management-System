@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('./admin.controller');
+const eventsRouter = require('./events.routes');
 const { requireAdmin, requireSuperAdmin } = require('../../middleware/adminAuth');
 
 // ========================================
@@ -64,6 +65,9 @@ router.get('/reports/moderation', requireAdmin, adminController.getModerationSta
 
 // Audit Trail
 router.get('/audit', requireAdmin, adminController.getAuditTrail);
+
+// Event Management
+router.use('/events', eventsRouter);
 
 // ========================================
 // SUPER ADMIN ONLY ROUTES
