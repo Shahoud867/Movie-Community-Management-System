@@ -89,7 +89,7 @@ async function getMovies({
     SELECT DISTINCT
       m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
       m.duration_minutes, m.language, m.director, m.average_rating,
-      m.total_reviews, m.view_count, m.added_date, m.added_by_admin
+      m.total_reviews, m.view_count, m.added_date, m.added_by_admin, m.trailer_url
     FROM Movie m
     ${genreJoin}
     ${whereClause}
@@ -144,7 +144,7 @@ async function getMovieById(movieId) {
     `SELECT 
       m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
       m.duration_minutes, m.language, m.director, m.average_rating,
-      m.total_reviews, m.view_count, m.added_date,
+      m.total_reviews, m.view_count, m.added_date, m.trailer_url,
       a.admin_id, a.name as added_by_name
     FROM Movie m
     LEFT JOIN Admin a ON m.added_by_admin = a.admin_id
@@ -202,7 +202,7 @@ async function getTopRatedMovies(limit = 10) {
     `SELECT 
       m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
       m.duration_minutes, m.language, m.director, m.average_rating,
-      m.total_reviews, m.view_count
+      m.total_reviews, m.view_count, m.trailer_url
     FROM Movie m
     WHERE m.total_reviews >= 1
     ORDER BY m.average_rating DESC, m.total_reviews DESC
@@ -248,7 +248,7 @@ async function getTrendingMovies(limit = 10) {
     `SELECT 
       m.movie_id, m.title, m.synopsis, m.release_year, m.poster,
       m.duration_minutes, m.language, m.director, m.average_rating,
-      m.total_reviews, m.view_count,
+      m.total_reviews, m.view_count, m.trailer_url,
       (SELECT COUNT(*) FROM Watchlist w WHERE w.movie_id = m.movie_id) as watchlist_count
     FROM Movie m
     ORDER BY m.view_count DESC, watchlist_count DESC, m.average_rating DESC

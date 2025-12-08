@@ -2,6 +2,30 @@
 
 A comprehensive full-stack web application that brings movie enthusiasts together in a vibrant social platform. Users can discover movies, share reviews, connect with friends, organize watch events, and engage in meaningful discussions about cinema.
 
+## 🎉 Recent Updates (December 2025)
+
+### ✅ YouTube Trailer Integration
+- **Netflix-style trailer player** embedded on movie detail pages
+- Supports all 13 movies in the catalog with official trailers
+- Responsive 16:9 video player with full-screen support
+- Admin panel support for adding/editing trailer URLs
+- Automatic YouTube video ID extraction from URLs
+
+### 🔧 Bug Fixes & Improvements
+- Fixed admin password hashing (bcrypt) during registration
+- Fixed user name display issues across dashboard and navigation
+- Fixed review count display in user dashboard
+- Added forgot password links to login pages
+- Restricted admin registration to Super Admin only
+- Replaced text logo with movie camera icon
+- Added debugging tools and utility scripts
+
+### 🛠️ Infrastructure Updates
+- Enhanced Content Security Policy (CSP) for YouTube embeds
+- Added database maintenance scripts
+- Improved error handling and validation
+- Updated admin forms with trailer URL input fields
+
 ## 📋 Table of Contents
 
 - [Project Overview](#-project-overview)
@@ -90,6 +114,7 @@ This project was developed as part of a **Database Management Systems** course t
 ### 🎥 Movie Management
 - Browse extensive movie catalog with search and filtering
 - View detailed movie information (cast, crew, genres, ratings)
+- **Watch official trailers embedded from YouTube** on movie detail pages
 - Advanced search by title, genre, release year
 - Trending and top-rated movie sections
 - Movie rating system (1-10 scale)
@@ -127,13 +152,13 @@ This project was developed as part of a **Database Management Systems** course t
 
 ### 👨‍💼 Admin Panel
 - **User Management**: View, activate/deactivate user accounts
-- **Admin Management**: Create and manage admin accounts
-- **Movie Management**: Add, edit, and delete movies from catalog
+- **Admin Management**: Create and manage admin accounts (Super Admin only)
+- **Movie Management**: Add, edit, and delete movies from catalog (with trailer URL support)
 - **Genre Management**: Manage movie genres
 - **Content Moderation**: Review and moderate user posts/reviews
 - **Restricted Words**: Filter inappropriate content
 - **Audit Logs**: Track admin actions and system events
-- **Reports & Analytics**: User statistics and system metrics
+- **Reports & Analytics**: User statistics, content metrics, and exportable reports
 
 ### 🔒 Security Features
 - Password hashing with bcrypt (10 salt rounds)
@@ -664,7 +689,7 @@ Content-Type: application/json
 2. **External API Integration**
    - TMDB/IMDB API for automatic movie data population
    - Streaming availability checker (Netflix, Prime, etc.)
-   - Trailer embedding from YouTube
+   - ✅ **Trailer embedding from YouTube** (IMPLEMENTED)
 
 3. **Advanced Social Features**
    - User-created movie lists (e.g., "Top 10 Sci-Fi")

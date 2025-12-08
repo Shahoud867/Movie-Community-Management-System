@@ -552,12 +552,12 @@ async function deleteGenre(genreId) {
  * Create movie (admin)
  */
 async function createMovie(adminId, movieData) {
-    const { title, synopsis, release_year, poster, duration_minutes, language, director, genres } = movieData;
+    const { title, synopsis, release_year, poster, duration_minutes, language, director, genres, trailer_url } = movieData;
 
     const [result] = await pool.query(
-        `INSERT INTO Movie (title, synopsis, release_year, poster, duration_minutes, language, director, added_by_admin)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, synopsis, release_year, poster, duration_minutes, language, director, adminId]
+        `INSERT INTO Movie (title, synopsis, release_year, poster, duration_minutes, language, director, trailer_url, added_by_admin)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, synopsis, release_year, poster, duration_minutes, language, director, trailer_url || null, adminId]
     );
 
     const movieId = result.insertId;
@@ -585,7 +585,7 @@ async function updateMovie(movieId, updates) {
     const fields = [];
     const values = [];
 
-    const allowedFields = ['title', 'synopsis', 'release_year', 'poster', 'duration_minutes', 'language', 'director'];
+    const allowedFields = ['title', 'synopsis', 'release_year', 'poster', 'duration_minutes', 'language', 'director', 'trailer_url'];
 
     allowedFields.forEach(field => {
         if (updates[field] !== undefined) {

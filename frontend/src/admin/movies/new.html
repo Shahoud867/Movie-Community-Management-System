@@ -42,6 +42,11 @@
           <input type="url" id="poster_url" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="https://example.com/poster.jpg"/>
         </div>
         <div>
+          <label class="block text-sm font-medium mb-1">Trailer URL (YouTube)</label>
+          <input type="text" id="trailer_url" class="w-full bg-slate-800/60 border border-slate-700 rounded px-3 py-2 text-sm" placeholder="YouTube video ID (e.g., dQw4w9WgXcQ) or full URL"/>
+          <p class="text-xs text-slate-400 mt-1">💡 Paste YouTube video ID or full URL (e.g., https://youtu.be/dQw4w9WgXcQ)</p>
+        </div>
+        <div>
           <label class="block text-sm font-medium mb-2">Genres</label>
           <div id="genreList" class="grid grid-cols-2 gap-2 p-3 bg-slate-800/60 border border-slate-700 rounded max-h-40 overflow-y-auto">
             <p class="text-slate-500 col-span-2 text-sm">Loading genres...</p>
@@ -89,6 +94,32 @@
       document.getElementById('movieForm').addEventListener('submit', async function(e){
         e.preventDefault();
         
+        // Helper function to extract YouTube video ID
+        function extractYouTubeID(input) {
+          if (!input) return null;
+          
+          // If already just an ID (11 characters, alphanumeric with dashes/underscores)
+          if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+            return input;
+          }
+          
+          // Try to extract from various YouTube URL formats
+          const patterns = [
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+            /[?&]v=([a-zA-Z0-9_-]{11})/
+          ];
+          
+          for (const pattern of patterns) {
+            const match = input.match(pattern);
+            if (match) return match[1];
+          }
+          
+          return input; // Return as-is if no pattern matches
+        }
+        
+        const trailerInput = document.getElementById('trailer_url').value.trim();
+        const trailerVideoId = extractYouTubeID(trailerInput);
+        
         const formData = {
           title: document.getElementById('title').value,
           synopsis: document.getElementById('description').value,
@@ -97,6 +128,7 @@
           duration_minutes: document.getElementById('runtime_minutes').value ? parseInt(document.getElementById('runtime_minutes').value) : null,
           language: 'English', // Default language
           director: document.getElementById('director').value,
+          trailer_url: trailerVideoId,
           genres: Array.from(document.querySelectorAll('input[name="genres"]:checked')).map(cb => parseInt(cb.value))
         };
         
