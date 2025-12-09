@@ -277,7 +277,8 @@
         return;
       }
       try {
-        CURRENT_USER = await apiFetch('/api/auth/me');
+        const userData = await apiFetch('/api/auth/me');
+        CURRENT_USER = userData.user || userData;
       } catch {}
       const evt = await apiFetch(`/api/events/${EVENT_ID}`);
       CURRENT_EVENT = evt;
