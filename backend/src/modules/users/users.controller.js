@@ -3,6 +3,8 @@ const {
   updateUserProfile,
   updateUserPassword,
   updateUserEmail,
+  searchUsers,
+  browseUsers,
 } = require('./users.service');
 const { getFriends } = require('../friends/friends.service');
 const { getUserWatchlist } = require('../watchlist/watchlist.service');
@@ -157,6 +159,37 @@ async function getUserReviewsById(req, res, next) {
   }
 }
 
+async function searchUsersController(req, res, next) {
+  try {
+    const { q, limit } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const users = await searchUsers(q.trim(), req.user.user_id, limit ? parseInt(limit) : 20);
+    res.json(users);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function browseUsersController(req, res, next) {
+  try {
+    const { page, limit } = req.query;
+    
+    const result = await browseUsers(
+      req.user.user_id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20
+    );
+    
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getMe,
   getUserById,
@@ -166,4 +199,6 @@ module.exports = {
   getUserFriends,
   getUserWatchlistById,
   getUserReviewsById,
+  searchUsersController,
+  browseUsersController,
 };

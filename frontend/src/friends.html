@@ -33,7 +33,11 @@
     <div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
       <div class="flex items-center justify-between flex-wrap gap-4">
         <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Friends</h1>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+          <a href="./find-friends.html" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="fas fa-user-plus"></i>
+            Find Friends
+          </a>
           <span id="friendCount" class="px-4 py-2 bg-slate-800/60 rounded-md text-sm border border-slate-700/60">
             <span class="font-semibold text-brand-400" id="friendCountNum">0</span> friends
           </span>
@@ -349,6 +353,22 @@
           const friendId = btn.dataset.friendId;
           const friendName = btn.dataset.friendName;
           removeFriend(friendId, friendName);
+        }
+      });
+      
+      // Event delegation for accept/decline buttons
+      document.getElementById('requestsList').addEventListener('click', (e) => {
+        const acceptBtn = e.target.closest('.accept-request-btn');
+        const declineBtn = e.target.closest('.decline-request-btn');
+        
+        if (acceptBtn) {
+          const friendshipId = acceptBtn.dataset.friendshipId;
+          const senderId = acceptBtn.dataset.senderId;
+          respondToRequest(friendshipId, senderId, 'accept');
+        } else if (declineBtn) {
+          const friendshipId = declineBtn.dataset.friendshipId;
+          const senderId = declineBtn.dataset.senderId;
+          respondToRequest(friendshipId, senderId, 'decline');
         }
       });
       

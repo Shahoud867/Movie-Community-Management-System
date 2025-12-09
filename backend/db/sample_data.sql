@@ -17,7 +17,7 @@ CREATE TABLE Users (
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     fav_genre VARCHAR(50),
-    profile_picture VARCHAR(255),
+    profile_picture MEDIUMTEXT,
     bio TEXT,
     joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
@@ -48,9 +48,8 @@ CREATE TABLE Friendship (
     FOREIGN KEY (sender_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     CONSTRAINT chk_no_self_request CHECK (sender_id != receiver_id),
-    -- enforce canonical ordering at insert time: sender_id < receiver_id
-    CONSTRAINT chk_sender_less_receiver CHECK (sender_id < receiver_id),
-    CONSTRAINT unique_friend_pair_ordered UNIQUE (sender_id, receiver_id),
+    -- Track actual sender/receiver without normalization
+    CONSTRAINT unique_friendship_pair UNIQUE (sender_id, receiver_id),
     INDEX idx_friendship_sender (sender_id),
     INDEX idx_friendship_receiver (receiver_id)
 );
@@ -229,7 +228,7 @@ CREATE TABLE Notification (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
     recipient_id INT NOT NULL,
     sender_id INT,
-    notification_type ENUM('like', 'comment', 'friend_request', 'friend_accept', 'event_invite', 'review_reply') NOT NULL,
+    notification_type ENUM('like', 'comment', 'friend_request', 'friend_accept', 'event_invite', 'review_reply', 'message') NOT NULL,
     reference_id INT,
     message TEXT,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -408,9 +407,9 @@ INSERT INTO Users (name, email, password, fav_genre, bio, profile_picture) VALUE
 ('Ayesha Karim', 'ayesha.karim@pakmail.com', '$2a$10$dN0vIGxFPQ1swowZ2CVKgOA7ozU/Jz8pLu0LEjQKz3nelnylXeHqi', 'Romance', 'Bollywood and Lollywood lover.', 'images/avatars/female-avatar.svg'),
 ('Marcus Chen', 'marcus.chen@gmail.com', '$2a$10$pyS7uoW6t4r/o/C0ubqJoOwe9sqAHpFVWGyRdJFpIU2odfTNaTdly', 'Sci-Fi', 'Tech enthusiast and film geek.', 'images/avatars/male-avatar.svg'),
 ('Sofia Martinez', 'sofia.martinez@cine.es', '$2a$10$fjGbW3aJWUZhohHWaomoYu44Pmou0Mo0BDJIjaNXisdi64y0sCIAW', 'Drama', 'Film student from Madrid.', 'images/avatars/female-avatar.svg'),
-('Ali Hassan', 'ali.hassan@pakmail.com', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'Action', 'Pakistani action movie fanatic.', 'ali.jpg'),
-('Emma Thompson', 'emma.thompson@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'Thriller', 'Mystery and suspense lover.', 'emma.jpg'),
-('Reza Abbasi', 'reza.abbasi@iran.ir', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'Drama', 'Iranian film historian.', 'reza.jpg');
+('Ali Hassan', 'ali.hassan@pakmail.com', '$2a$10$dlBIMnoqOl0iqMf0Gzj.CukCEUbSzbbs4zmCV3iixPWw4qL3DWmaS', 'Action', 'Pakistani action movie fanatic.', 'images/avatars/male-avatar.svg'),
+('Emma Thompson', 'emma.thompson@yahoo.com', '$2a$10$MJX4C7nbOiHLeNlA/u6go.VOM80xki8/9tlnzsbmrBtkDAEH7a7JO', 'Thriller', 'Mystery and suspense lover.', 'images/avatars/female-avatar.svg'),
+('Reza Abbasi', 'reza.abbasi@iran.ir', '$2a$10$.5GYHxznXAp8sYWZEcJttOM6T1LMfcYWulfawMG5k64sjV9vbGWae', 'Drama', 'Iranian film historian.', 'images/avatars/male-avatar.svg');
 
 -- 3. Genres (Expanded descriptions)
 INSERT INTO Genre (genre_name, description) VALUES

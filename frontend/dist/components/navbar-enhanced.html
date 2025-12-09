@@ -45,6 +45,9 @@
       <a href="./friends.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
         <i class="fas fa-users mr-2 text-yellow-400"></i>Friends
       </a>
+      <a href="./find-friends.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+        <i class="fas fa-user-plus mr-2 text-orange-400"></i>Find Friends
+      </a>
     </nav>
 
     <!-- Notifications Bell -->
@@ -163,8 +166,35 @@
         div.className = 'px-4 py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/40 cursor-pointer text-sm';
         div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ','T')).toLocaleString()}</p>`;
         div.addEventListener('click', async () => {
-          await fetch(`/api/notifications/${n.notification_id}/seen`, { method: 'POST' });
-          await loadNotifications();
+          // Mark as seen
+          await fetch(`/api/notifications/${n.notification_id}/seen`, { method: 'PATCH' });
+          
+          // Determine redirect URL based on notification type
+          let redirectUrl = './dashboard.html';
+          switch(n.notification_type) {
+            case 'message':
+              redirectUrl = n.sender_id ? `./messages.html?user_id=${n.sender_id}` : './messages.html';
+              break;
+            case 'friend_request':
+              redirectUrl = './friends.html';
+              break;
+            case 'friend_accept':
+              redirectUrl = n.sender_id ? `./profile.html?id=${n.sender_id}` : './friends.html';
+              break;
+            case 'comment':
+            case 'review_reply':
+              redirectUrl = n.reference_id ? `./post.html?id=${n.reference_id}` : './dashboard.html';
+              break;
+            case 'like':
+              redirectUrl = n.reference_id ? `./post.html?id=${n.reference_id}` : './dashboard.html';
+              break;
+            case 'event_invite':
+              redirectUrl = n.reference_id ? `./event.html?id=${n.reference_id}` : './events.html';
+              break;
+          }
+          
+          // Redirect to the appropriate page
+          window.location.href = redirectUrl;
         });
         list.appendChild(div);
       });

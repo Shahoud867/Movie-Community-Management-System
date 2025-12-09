@@ -8,6 +8,8 @@ const {
   getUserFriends,
   getUserWatchlistById,
   getUserReviewsById,
+  searchUsersController,
+  browseUsersController,
 } = require('./users.controller');
 const { authenticate } = require('../../middleware/auth');
 
@@ -15,6 +17,8 @@ const router = express.Router();
 
 // All user routes require authentication
 router.get('/me', authenticate, getMe);
+router.get('/search', authenticate, searchUsersController);
+router.get('/browse', authenticate, browseUsersController);
 router.get('/:id', authenticate, getUserById);
 router.get('/:id/friends', authenticate, getUserFriends);
 router.get('/:id/watchlist', authenticate, getUserWatchlistById);

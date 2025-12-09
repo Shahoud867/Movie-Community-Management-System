@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard • Movie Community</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         .movie-card:hover { transform: translateY(-5px); }
         .movie-card { transition: all 0.3s ease; }
@@ -15,96 +14,8 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100 antialiased">
-    <!-- Navigation -->
-    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800/60">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-            <a href="./dashboard.html" class="flex items-center gap-2 shrink-0 group">
-                <div class="h-10 w-10 bg-gradient-to-br from-brand-600 to-purple-600 rounded-lg flex items-center justify-center text-white group-hover:from-brand-500 group-hover:to-purple-500 transition shadow-lg">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
-                    </svg>
-                </div>
-                <span class="hidden sm:inline font-semibold">Movie Community</span>
-            </a>
-            
-            <!-- Search -->
-            <div class="flex-1 max-w-md relative">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input id="globalSearch" type="search" placeholder="Search movies, events, friends..." 
-                    class="w-full rounded-lg bg-slate-800/60 border border-slate-700 pl-10 pr-4 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
-                <div id="searchResults" class="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-700 rounded-lg shadow-xl hidden max-h-80 overflow-y-auto"></div>
-            </div>
-            
-            <!-- Nav Links -->
-            <nav class="hidden lg:flex items-center gap-1 text-sm">
-                <a href="./movies.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-film mr-2 text-purple-400"></i>Movies
-                </a>
-                <a href="./watchlist.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-bookmark mr-2 text-blue-400"></i>Watchlist
-                </a>
-                <a href="./events.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-calendar mr-2 text-green-400"></i>Events
-                </a>
-                <a href="./analytics.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-chart-line mr-2 text-cyan-400"></i>Analytics
-                </a>
-                <a href="./messages.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-envelope mr-2 text-pink-400"></i>Messages
-                </a>
-                <a href="./friends.html" class="px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-users mr-2 text-yellow-400"></i>Friends
-                </a>
-            </nav>
-            
-            <!-- Notifications -->
-            <div class="relative">
-                <button id="notifBtn" class="relative p-2 rounded-lg hover:bg-slate-800 transition">
-                    <i class="fas fa-bell text-slate-300"></i>
-                    <span id="notifBadge" class="hidden absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center">0</span>
-                </button>
-                <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
-                    <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-slate-800/80">
-                        <span class="font-semibold">Notifications</span>
-                        <a href="./notifications.html" class="text-xs text-brand-400 hover:text-brand-300">View All</a>
-                    </div>
-                    <div id="notifList" class="max-h-80 overflow-y-auto">
-                        <div class="px-4 py-3 text-sm text-slate-400">Loading...</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Profile -->
-            <div class="relative">
-                <button id="profileBtn" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800 transition">
-                    <div id="profileAvatar" class="h-9 w-9 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-sm font-bold">U</div>
-                    <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
-                </button>
-                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
-                    <div class="px-4 py-3 border-b border-slate-700 bg-slate-800/80">
-                        <p id="profileName" class="font-medium">User</p>
-                        <p id="profileEmail" class="text-xs text-slate-400">user@example.com</p>
-                    </div>
-                    <div class="py-1">
-                        <a href="./profile.html?id=me" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
-                            <i class="fas fa-user text-slate-400 w-5"></i>
-                            <span class="text-sm">My Profile</span>
-                        </a>
-                        <a href="./settings.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition">
-                            <i class="fas fa-cog text-slate-400 w-5"></i>
-                            <span class="text-sm">Settings</span>
-                        </a>
-                        <hr class="border-slate-700 my-1">
-                        <button id="logoutBtn" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700/60 transition w-full text-left text-red-400">
-                            <i class="fas fa-sign-out-alt w-5"></i>
-                            <span class="text-sm">Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+<body class="min-h-screen bg-slate-900 text-slate-100">
+    <div id="navbar-container"></div>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
@@ -667,7 +578,26 @@
         }
 
         // Event listeners
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load navbar component
+            try {
+                const response = await fetch('/components/navbar-enhanced.html');
+                const html = await response.text();
+                document.getElementById('navbar-container').innerHTML = html;
+
+                const navbarScript = document.querySelector('#navbar-container script');
+                if (navbarScript) {
+                    const script = document.createElement('script');
+                    script.textContent = navbarScript.textContent;
+                    document.head.appendChild(script);
+                }
+            } catch (error) {
+                console.error('Failed to load navbar:', error);
+            }
+
+            // Wait a bit for navbar to load
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             loadDashboard();
 
             // Refresh buttons
@@ -676,95 +606,6 @@
                 loadFriendActivity();
             });
             document.getElementById('refreshRecommended')?.addEventListener('click', loadDashboard);
-
-            // Dropdowns
-            const notifBtn = document.getElementById('notifBtn');
-            const notifDropdown = document.getElementById('notifDropdown');
-            const profileBtn = document.getElementById('profileBtn');
-            const profileDropdown = document.getElementById('profileDropdown');
-            const searchInput = document.getElementById('globalSearch');
-            const searchResults = document.getElementById('searchResults');
-
-            let searchTimer = null;
-
-            notifBtn?.addEventListener('click', async () => {
-                notifDropdown.classList.toggle('hidden');
-                profileDropdown.classList.add('hidden');
-                if (!notifDropdown.classList.contains('hidden')) {
-                    try {
-                        const res = await fetch('/api/notifications?unread=true', { credentials: 'include' });
-                        const notifs = await res.json();
-                        const list = document.getElementById('notifList');
-                        if (!notifs.length) {
-                            list.innerHTML = '<div class="px-4 py-4 text-sm text-slate-400 text-center">No new notifications</div>';
-                            document.getElementById('notifBadge').classList.add('hidden');
-                        } else {
-                            const badge = document.getElementById('notifBadge');
-                            badge.textContent = Math.min(notifs.length, 9);
-                            badge.classList.remove('hidden');
-                            list.innerHTML = notifs.slice(0, 5).map(n => `
-                                <div class="px-4 py-3 hover:bg-slate-700/50 cursor-pointer border-b border-slate-700/50 last:border-0">
-                                    <p class="text-sm">${n.message}</p>
-                                    <p class="text-xs text-slate-500 mt-1">${formatTime(n.created_date)}</p>
-                                </div>
-                            `).join('');
-                        }
-                    } catch {}
-                }
-            });
-
-            profileBtn?.addEventListener('click', () => {
-                profileDropdown.classList.toggle('hidden');
-                notifDropdown.classList.add('hidden');
-            });
-
-            searchInput?.addEventListener('input', (e) => {
-                const term = e.target.value.trim();
-                if (searchTimer) clearTimeout(searchTimer);
-                if (!term) {
-                    searchResults.classList.add('hidden');
-                    return;
-                }
-                searchTimer = setTimeout(async () => {
-                    try {
-                        const res = await fetch('/api/movies/search?query=' + encodeURIComponent(term));
-                        const movies = await res.json();
-                        if (!movies.length) {
-                            searchResults.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No movies found</div>';
-                        } else {
-                            searchResults.innerHTML = movies.map(m => `
-                                <a href="./movie.html?id=${m.id}" class="flex items-center gap-3 px-4 py-2 hover:bg-slate-700/60">
-                                    <i class="fas fa-film text-slate-500"></i>
-                                    <span class="text-sm">${m.title}</span>
-                                    <span class="text-xs text-slate-500">(${m.release_year || ''})</span>
-                                </a>
-                            `).join('');
-                        }
-                        searchResults.classList.remove('hidden');
-                    } catch {}
-                }, 300);
-            });
-
-            document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-                try {
-                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                } catch {}
-                localStorage.clear();
-                window.location.href = './login.html';
-            });
-
-            // Close dropdowns on outside click
-            document.addEventListener('click', (e) => {
-                if (!notifBtn?.contains(e.target) && !notifDropdown?.contains(e.target)) {
-                    notifDropdown?.classList.add('hidden');
-                }
-                if (!profileBtn?.contains(e.target) && !profileDropdown?.contains(e.target)) {
-                    profileDropdown?.classList.add('hidden');
-                }
-                if (!searchInput?.contains(e.target) && !searchResults?.contains(e.target)) {
-                    searchResults?.classList.add('hidden');
-                }
-            });
         });
     </script>
 </body>

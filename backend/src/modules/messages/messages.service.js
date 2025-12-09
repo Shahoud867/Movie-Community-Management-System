@@ -4,12 +4,12 @@ const { pool } = require('../../config/db');
  * Helper to check if two users are friends
  */
 async function areFriends(userId1, userId2) {
-  const senderId = userId1 < userId2 ? userId1 : userId2;
-  const receiverId = userId1 < userId2 ? userId2 : userId1;
-
+  // Check both directions since we removed normalization
   const [rows] = await pool.query(
-    'SELECT status FROM Friendship WHERE sender_id = ? AND receiver_id = ? AND status = \'accepted\'',
-    [senderId, receiverId]
+    `SELECT status FROM Friendship 
+     WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+       AND status = 'accepted'`,
+    [userId1, userId2, userId2, userId1]
   );
 
   return rows.length > 0;
@@ -88,7 +88,7 @@ async function sendMessage(senderId, receiverId, content) {
 
   // Check if receiver exists
   const [users] = await pool.query(
-    'SELECT user_id FROM Users WHERE user_id = ? AND is_active = TRUE',
+    'SELECT user_id, name FROM Users WHERE user_id = ? AND is_active = TRUE',
     [receiverId]
   );
 
@@ -107,11 +107,30 @@ async function sendMessage(senderId, receiverId, content) {
     throw new Error('Message content cannot be empty');
   }
 
+  // Get sender name for notification
+  const [senders] = await pool.query(
+    'SELECT name FROM Users WHERE user_id = ?',
+    [senderId]
+  );
+
   // Insert message
   const [result] = await pool.query(
     'INSERT INTO Message (sender_id, receiver_id, content) VALUES (?, ?, ?)',
     [senderId, receiverId, content.trim()]
   );
+
+  // Create notification for the receiver
+  try {
+    const senderName = senders[0]?.name || 'Someone';
+    await pool.query(
+      `INSERT INTO Notification (recipient_id, sender_id, notification_type, reference_id, message)
+       VALUES (?, ?, 'message', ?, ?)`,
+      [receiverId, senderId, result.insertId, `${senderName} sent you a message`]
+    );
+  } catch (notifError) {
+    console.error('Failed to create message notification:', notifError);
+    // Don't fail the message send if notification fails
+  }
 
   // Return the created message
   const [messages] = await pool.query(

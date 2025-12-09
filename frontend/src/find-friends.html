@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Find Friends — Movie Community</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100">
+  <div id="navbar-container"></div>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">Find Friends</h1>
+      <p class="text-slate-400">Search for users and connect with other movie enthusiasts</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6 mb-6">
+      <div class="flex gap-3">
+        <div class="flex-1 relative">
+          <input 
+            type="search" 
+            id="searchInput" 
+            placeholder="Search users by name or email..." 
+            class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            autocomplete="off"
+          />
+          <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        </div>
+        <button 
+          id="browseAllBtn"
+          class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
+          <i class="fas fa-users"></i>
+          Browse All
+        </button>
+      </div>
+      <div id="searchStatus" class="mt-3 text-sm text-slate-400 hidden"></div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="bg-slate-800/60 backdrop-blur rounded-xl border border-slate-700/60 p-6">
+      <div id="resultsHeader" class="mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-semibold">
+          <span id="resultsTitle">Browse Users</span>
+          <span id="resultsCount" class="text-slate-400 text-sm ml-2"></span>
+        </h2>
+        <div id="paginationTop" class="hidden">
+          <div class="flex items-center gap-2 text-sm">
+            <button id="prevPageTop" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="pageInfoTop" class="text-slate-300 min-w-[80px] text-center"></span>
+            <button id="nextPageTop" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Grid -->
+      <div id="usersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- Loading skeleton -->
+        <div class="animate-pulse">
+          <div class="bg-slate-700/50 rounded-lg h-64"></div>
+        </div>
+        <div class="animate-pulse hidden sm:block">
+          <div class="bg-slate-700/50 rounded-lg h-64"></div>
+        </div>
+        <div class="animate-pulse hidden lg:block">
+          <div class="bg-slate-700/50 rounded-lg h-64"></div>
+        </div>
+      </div>
+
+      <!-- Pagination Bottom -->
+      <div id="paginationBottom" class="hidden mt-6 flex justify-center">
+        <div class="flex items-center gap-2">
+          <button id="prevPageBottom" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-left mr-2"></i>Previous
+          </button>
+          <span id="pageInfoBottom" class="text-slate-300 px-4"></span>
+          <button id="nextPageBottom" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Next<i class="fas fa-chevron-right ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let isSearchMode = false;
+    let searchQuery = '';
+
+    // Utility function for API calls
+    async function apiFetch(url, options = {}) {
+      const res = await fetch(url, { ...options, credentials: 'include' });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error(error.error || 'Request failed');
+      }
+      return res.json();
+    }
+
+    // Get user initials
+    function getInitials(name) {
+      if (!name) return 'U';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    }
+
+    // Send friend request
+    async function sendFriendRequest(userId, buttonElement) {
+      try {
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        await apiFetch('/api/friends/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friend_id: userId })
+        });
+
+        buttonElement.innerHTML = '<i class="fas fa-clock"></i> Request Sent';
+        buttonElement.className = 'w-full px-4 py-2 bg-slate-700 text-slate-400 rounded-lg font-medium cursor-not-allowed';
+      } catch (err) {
+        console.error(err);
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = '<i class="fas fa-user-plus"></i> Add Friend';
+        alert(err.message || 'Failed to send friend request');
+      }
+    }
+
+    // Render user card
+    function renderUserCard(user) {
+      const initials = getInitials(user.name);
+      const joinDate = formatDate(user.joined_date);
+
+      let actionButton = '';
+      if (user.friendship_status === 'friend') {
+        actionButton = `
+          <button class="w-full px-4 py-2 bg-green-600/20 text-green-400 rounded-lg font-medium cursor-default">
+            <i class="fas fa-check"></i> Friends
+          </button>
+        `;
+      } else if (user.friendship_status === 'request_sent') {
+        actionButton = `
+          <button class="w-full px-4 py-2 bg-slate-700 text-slate-400 rounded-lg font-medium cursor-not-allowed">
+            <i class="fas fa-clock"></i> Request Sent
+          </button>
+        `;
+      } else if (user.friendship_status === 'request_received') {
+        actionButton = `
+          <a href="/friends.html" class="w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium text-center inline-block">
+            <i class="fas fa-user-check"></i> Respond to Request
+          </a>
+        `;
+      } else {
+        actionButton = `
+          <button data-user-id="${user.user_id}" class="add-friend-btn w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">
+            <i class="fas fa-user-plus"></i> Add Friend
+          </button>
+        `;
+      }
+
+      return `
+        <div class="bg-slate-900/60 backdrop-blur rounded-lg border border-slate-700/60 p-5 hover:border-brand-500/50 transition-all">
+          <a href="/profile.html?id=${user.user_id}" class="block mb-4">
+            <div class="flex flex-col items-center text-center">
+              ${user.profile_picture ? 
+                `<img src="${user.profile_picture}" alt="${user.name}" class="w-20 h-20 rounded-full object-cover mb-3">` :
+                `<div class="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center text-2xl font-bold mb-3">${initials}</div>`
+              }
+              <h3 class="text-lg font-semibold text-slate-100 hover:text-brand-400 transition-colors">${user.name}</h3>
+              <p class="text-sm text-slate-400 truncate max-w-full">${user.email}</p>
+            </div>
+          </a>
+          
+          ${user.bio ? `<p class="text-sm text-slate-400 mb-3 line-clamp-2">${user.bio}</p>` : ''}
+          
+          <div class="space-y-2 mb-4 text-xs text-slate-400">
+            ${user.fav_genre ? `
+              <div class="flex items-center gap-2">
+                <i class="fas fa-film"></i>
+                <span>${user.fav_genre}</span>
+              </div>
+            ` : ''}
+            <div class="flex items-center gap-2">
+              <i class="fas fa-calendar"></i>
+              <span>Joined ${joinDate}</span>
+            </div>
+          </div>
+          
+          ${actionButton}
+        </div>
+      `;
+    }
+
+    // Load users (browse or search)
+    async function loadUsers(page = 1) {
+      const usersGrid = document.getElementById('usersGrid');
+      const resultsTitle = document.getElementById('resultsTitle');
+      const resultsCount = document.getElementById('resultsCount');
+      const searchStatus = document.getElementById('searchStatus');
+
+      try {
+        usersGrid.innerHTML = '<div class="col-span-full text-center py-12"><i class="fas fa-spinner fa-spin text-3xl text-slate-400"></i></div>';
+        searchStatus.classList.add('hidden');
+
+        let data;
+        if (isSearchMode && searchQuery) {
+          data = await apiFetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}&limit=50`);
+          resultsTitle.textContent = `Search Results for "${searchQuery}"`;
+          resultsCount.textContent = `(${data.length} users found)`;
+          
+          if (data.length === 0) {
+            usersGrid.innerHTML = `
+              <div class="col-span-full text-center py-12">
+                <i class="fas fa-users-slash text-5xl text-slate-600 mb-4"></i>
+                <p class="text-slate-400">No users found matching "${searchQuery}"</p>
+              </div>
+            `;
+            return;
+          }
+
+          usersGrid.innerHTML = data.map(user => renderUserCard(user)).join('');
+          document.getElementById('paginationTop').classList.add('hidden');
+          document.getElementById('paginationBottom').classList.add('hidden');
+        } else {
+          data = await apiFetch(`/api/users/browse?page=${page}&limit=20`);
+          resultsTitle.textContent = 'Browse Users';
+          resultsCount.textContent = `(${data.pagination.total} total users)`;
+          currentPage = data.pagination.page;
+          totalPages = data.pagination.totalPages;
+
+          if (data.users.length === 0) {
+            usersGrid.innerHTML = `
+              <div class="col-span-full text-center py-12">
+                <i class="fas fa-users-slash text-5xl text-slate-600 mb-4"></i>
+                <p class="text-slate-400">No users found</p>
+              </div>
+            `;
+            return;
+          }
+
+          usersGrid.innerHTML = data.users.map(user => renderUserCard(user)).join('');
+
+          // Update pagination
+          if (totalPages > 1) {
+            document.getElementById('paginationTop').classList.remove('hidden');
+            document.getElementById('paginationBottom').classList.remove('hidden');
+            updatePaginationButtons();
+          } else {
+            document.getElementById('paginationTop').classList.add('hidden');
+            document.getElementById('paginationBottom').classList.add('hidden');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        usersGrid.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <i class="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i>
+            <p class="text-red-400">${err.message || 'Failed to load users'}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Update pagination buttons
+    function updatePaginationButtons() {
+      const pageText = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('pageInfoTop').textContent = pageText;
+      document.getElementById('pageInfoBottom').textContent = pageText;
+
+      const prevButtons = [document.getElementById('prevPageTop'), document.getElementById('prevPageBottom')];
+      const nextButtons = [document.getElementById('nextPageTop'), document.getElementById('nextPageBottom')];
+
+      prevButtons.forEach(btn => btn.disabled = currentPage === 1);
+      nextButtons.forEach(btn => btn.disabled = currentPage === totalPages);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load navbar
+      try {
+        const response = await fetch('/components/navbar-enhanced.html');
+        const html = await response.text();
+        document.getElementById('navbar-container').innerHTML = html;
+
+        const navbarScript = document.querySelector('#navbar-container script');
+        if (navbarScript) {
+          const script = document.createElement('script');
+          script.textContent = navbarScript.textContent;
+          document.head.appendChild(script);
+        }
+      } catch (error) {
+        console.error('Failed to load navbar:', error);
+      }
+
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      let searchTimeout;
+
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+
+        if (query.length === 0) {
+          isSearchMode = false;
+          searchQuery = '';
+          loadUsers(1);
+          return;
+        }
+
+        if (query.length < 2) {
+          return;
+        }
+
+        searchTimeout = setTimeout(() => {
+          isSearchMode = true;
+          searchQuery = query;
+          loadUsers(1);
+        }, 500);
+      });
+
+      // Browse all button
+      document.getElementById('browseAllBtn').addEventListener('click', () => {
+        searchInput.value = '';
+        isSearchMode = false;
+        searchQuery = '';
+        loadUsers(1);
+      });
+
+      // Pagination buttons
+      document.getElementById('prevPageTop').addEventListener('click', () => {
+        if (currentPage > 1) loadUsers(currentPage - 1);
+      });
+      document.getElementById('nextPageTop').addEventListener('click', () => {
+        if (currentPage < totalPages) loadUsers(currentPage + 1);
+      });
+      document.getElementById('prevPageBottom').addEventListener('click', () => {
+        if (currentPage > 1) loadUsers(currentPage - 1);
+      });
+      document.getElementById('nextPageBottom').addEventListener('click', () => {
+        if (currentPage < totalPages) loadUsers(currentPage + 1);
+      });
+
+      // Event delegation for Add Friend buttons
+      document.getElementById('usersGrid').addEventListener('click', (e) => {
+        const btn = e.target.closest('.add-friend-btn');
+        if (btn) {
+          const userId = parseInt(btn.dataset.userId);
+          sendFriendRequest(userId, btn);
+        }
+      });
+
+      // Initial load
+      loadUsers(1);
+    });
+  </script>
+</body>
+</html>

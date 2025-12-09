@@ -120,9 +120,96 @@ async function updateUserEmail(userId, { password, newEmail }) {
   return { message: 'Email updated successfully', email: newEmail };
 }
 
+/**
+ * Search users by name or email
+ */
+async function searchUsers(query, currentUserId, limit = 20) {
+  const searchPattern = `%${query}%`;
+  
+  const [users] = await pool.query(
+    `SELECT 
+      u.user_id,
+      u.name,
+      u.email,
+      u.profile_picture,
+      u.bio,
+      u.fav_genre,
+      u.joined_date,
+      CASE 
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'accepted' THEN 'friend'
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'pending' AND f.sender_id = ? THEN 'request_sent'
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'pending' AND f.receiver_id = ? THEN 'request_received'
+        ELSE 'none'
+      END as friendship_status
+    FROM Users u
+    LEFT JOIN Friendship f ON 
+      (f.sender_id = ? AND f.receiver_id = u.user_id) OR
+      (f.receiver_id = ? AND f.sender_id = u.user_id)
+    WHERE (u.name LIKE ? OR u.email LIKE ?)
+      AND u.user_id != ?
+      AND u.is_active = 1
+    ORDER BY u.name ASC
+    LIMIT ?`,
+    [currentUserId, currentUserId, currentUserId, currentUserId, searchPattern, searchPattern, currentUserId, limit]
+  );
+
+  return users;
+}
+
+/**
+ * Browse all users with pagination
+ */
+async function browseUsers(currentUserId, page = 1, limit = 20) {
+  const offset = (page - 1) * limit;
+  
+  const [users] = await pool.query(
+    `SELECT 
+      u.user_id,
+      u.name,
+      u.email,
+      u.profile_picture,
+      u.bio,
+      u.fav_genre,
+      u.joined_date,
+      CASE 
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'accepted' THEN 'friend'
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'pending' AND f.sender_id = ? THEN 'request_sent'
+        WHEN f.friendship_id IS NOT NULL AND f.status = 'pending' AND f.receiver_id = ? THEN 'request_received'
+        ELSE 'none'
+      END as friendship_status
+    FROM Users u
+    LEFT JOIN Friendship f ON 
+      (f.sender_id = ? AND f.receiver_id = u.user_id) OR
+      (f.receiver_id = ? AND f.sender_id = u.user_id)
+    WHERE u.user_id != ?
+      AND u.is_active = 1
+    ORDER BY u.joined_date DESC
+    LIMIT ? OFFSET ?`,
+    [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId, limit, offset]
+  );
+
+  // Get total count for pagination
+  const [countResult] = await pool.query(
+    'SELECT COUNT(*) as total FROM Users WHERE user_id != ? AND is_active = 1',
+    [currentUserId]
+  );
+
+  return {
+    users,
+    pagination: {
+      page,
+      limit,
+      total: countResult[0].total,
+      totalPages: Math.ceil(countResult[0].total / limit)
+    }
+  };
+}
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
   updateUserPassword,
   updateUserEmail,
+  searchUsers,
+  browseUsers,
 };

@@ -20,9 +20,12 @@ async function listFriends(req, res, next) {
 async function listRequests(req, res, next) {
   try {
     const userId = req.user.user_id;
+    console.log('[DEBUG] Getting pending requests for user:', userId);
     const requests = await getPendingRequests(userId);
+    console.log('[DEBUG] Found pending requests:', requests.length, requests);
     res.json(requests);
   } catch (err) {
+    console.error('[ERROR] listRequests failed:', err);
     next(err);
   }
 }
@@ -52,9 +55,12 @@ async function sendRequest(req, res, next) {
       return res.status(400).json({ error: 'friend_id is required' });
     }
 
+    console.log('[DEBUG] Sending friend request from', senderId, 'to', friend_id);
     const result = await sendFriendRequest(senderId, parseInt(friend_id));
+    console.log('[DEBUG] Friend request result:', result);
     res.json(result);
   } catch (err) {
+    console.error('[ERROR] sendRequest failed:', err);
     if (err.message === 'Cannot send friend request to yourself' ||
         err.message === 'Already friends' ||
         err.message === 'Friend request already pending' ||

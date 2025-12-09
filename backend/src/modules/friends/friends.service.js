@@ -80,18 +80,20 @@ async function getFriendshipStatus(userId1, userId2) {
     return { status: 'self' };
   }
 
-  const { senderId, receiverId } = normalizeFriendshipIds(userId1, userId2);
-
+  // Check both directions since we're not normalizing anymore
   const [rows] = await pool.query(
-    'SELECT status FROM Friendship WHERE sender_id = ? AND receiver_id = ?',
-    [senderId, receiverId]
+    `SELECT status, sender_id, receiver_id 
+     FROM Friendship 
+     WHERE (sender_id = ? AND receiver_id = ?) 
+        OR (sender_id = ? AND receiver_id = ?)`,
+    [userId1, userId2, userId2, userId1]
   );
 
   if (rows.length === 0) {
     return { status: 'none' };
   }
 
-  return { status: rows[0].status };
+  return { status: rows[0].status, sender_id: rows[0].sender_id, receiver_id: rows[0].receiver_id };
 }
 
 /**
@@ -113,14 +115,13 @@ async function sendFriendRequest(senderId, receiverId) {
     throw new Error('User not found');
   }
 
-  // Normalize IDs
-  const { senderId: normSenderId, receiverId: normReceiverId } = 
-    normalizeFriendshipIds(senderId, receiverId);
-
-  // Check if friendship already exists
+  // Check if friendship already exists in EITHER direction
   const [existing] = await pool.query(
-    'SELECT friendship_id, status FROM Friendship WHERE sender_id = ? AND receiver_id = ?',
-    [normSenderId, normReceiverId]
+    `SELECT friendship_id, status, sender_id, receiver_id 
+     FROM Friendship 
+     WHERE (sender_id = ? AND receiver_id = ?) 
+        OR (sender_id = ? AND receiver_id = ?)`,
+    [senderId, receiverId, receiverId, senderId]
   );
 
   if (existing.length > 0) {
@@ -129,7 +130,7 @@ async function sendFriendRequest(senderId, receiverId) {
     } else if (existing[0].status === 'pending') {
       throw new Error('Friend request already pending');
     } else if (existing[0].status === 'declined') {
-      // Update declined request to pending
+      // Update declined request to pending - keep original sender/receiver
       await pool.query(
         'UPDATE Friendship SET status = \'pending\', request_date = CURRENT_TIMESTAMP, response_date = NULL WHERE friendship_id = ?',
         [existing[0].friendship_id]
@@ -138,10 +139,10 @@ async function sendFriendRequest(senderId, receiverId) {
     }
   }
 
-  // Insert new friendship request
+  // Insert new friendship request with actual sender and receiver (no normalization)
   const [result] = await pool.query(
     'INSERT INTO Friendship (sender_id, receiver_id, status) VALUES (?, ?, \'pending\')',
-    [normSenderId, normReceiverId]
+    [senderId, receiverId]
   );
 
   return { message: 'Friend request sent', friendship_id: result.insertId };
