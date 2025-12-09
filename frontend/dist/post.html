@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Discussion — Movie Community</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
   <link rel="stylesheet" href="/css/styles.css" />
   
 </head>
@@ -157,11 +159,11 @@
         const res = await fetch('/api/posts/'+postId);
         if(!res.ok) throw new Error('Not found');
         const p = await res.json();
-        postUserEl.textContent = p.user?.name || 'Unknown';
+        postUserEl.textContent = p.user_name || 'Unknown';
         postDateEl.textContent = p.created_date ? new Date(p.created_date.replace(' ','T')).toLocaleString() : '';
         postContentEl.textContent = p.content || '';
         likePostBtn.textContent = 'Like ('+(p.like_count||0)+')';
-        renderAvatar(postAvatarEl, p.user?.name, p.user?.profile_picture);
+        renderAvatar(postAvatarEl, p.user_name, p.user_profile_picture);
       } catch(err){
         postUserEl.textContent='Error';
         postContentEl.textContent='Failed to load post.';
@@ -331,8 +333,12 @@
     })();
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        alert('Logout functionality - redirect to login page');
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch {}
+        localStorage.clear();
+        window.location.href = './login.html';
       });
     }
     document.addEventListener('click', (e) => {

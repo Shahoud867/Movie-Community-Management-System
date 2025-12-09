@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Friends — Movie Community</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
   <meta name="description" content="Manage your friends list and friend requests." />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -96,35 +98,7 @@
       return res.json();
     }
 
-    // Load current user for profile dropdown
-    // User info and notifications are now handled by the navbar component
-
-    // Notifications handling (same as other pages)
-    async function loadNotifications() {
-      const list = document.getElementById('notifList');
-      try {
-        const notifs = await apiFetch('/api/notifications?unread=true');
-        list.innerHTML = '';
-        if (!notifs.length) {
-          list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No new notifications</div>';
-          document.getElementById('notifBadge').classList.add('hidden');
-          return;
-        }
-        const badge = document.getElementById('notifBadge');
-        badge.textContent = Math.min(notifs.length, 9);
-        badge.classList.remove('hidden');
-        notifs.slice(0, 5).forEach(n => {
-          const div = document.createElement('div');
-          div.className = 'px-4 py-3 hover:bg-slate-700/40 cursor-pointer text-sm';
-          div.innerHTML = `<p>${n.message}</p><p class="text-xs text-slate-400 mt-1">${new Date(n.created_date.replace(' ', 'T')).toLocaleString()}</p>`;
-          div.addEventListener('click', async () => {
-            await fetch(`/api/notifications/${n.id}/seen`, { method: 'POST' });
-            await loadNotifications();
-          });
-          list.appendChild(div);
-        });
-      } catch (e) { console.error('Notifications error', e); }
-    }
+    // User info and notifications are handled by the navbar component
 
     // Global search (same as other pages)
     let searchTimer = null;
@@ -338,16 +312,7 @@
       tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
     }
 
-    // Global click handler to close dropdowns
-    document.addEventListener('click', e => {
-      const notifBtn = document.getElementById('notifBtn');
-      const notifDropdown = document.getElementById('notifDropdown');
-      const profileBtn = document.getElementById('profileBtn');
-      const profileDropdown = document.getElementById('profileDropdown');
-      if (notifBtn && notifDropdown && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) notifDropdown.classList.add('hidden');
-      if (profileBtn && profileDropdown && !profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) profileDropdown.classList.add('hidden');
-      if (searchInput && searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
-    });
+    // Global click handler to close dropdowns is handled by navbar component
 
     // Initialize everything
     document.addEventListener('DOMContentLoaded', async () => {
@@ -387,15 +352,6 @@
         }
       });
       
-      // Notification button
-      const notifBtn = document.getElementById('notifBtn');
-      const notifDropdown = document.getElementById('notifDropdown');
-      if (notifBtn) {
-        notifBtn.addEventListener('click', async () => {
-          notifDropdown.classList.toggle('hidden');
-          if (!notifDropdown.classList.contains('hidden')) await loadNotifications();
-        });
-      }
       // Expose functions for inline handlers (if any)
       window.removeFriend = removeFriend;
       window.respondToRequest = respondToRequest;

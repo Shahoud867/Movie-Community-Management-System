@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Browse Movies — Movie Community</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -52,9 +54,11 @@
           <h3 class="text-sm font-medium tracking-wide">Sort</h3>
           <select id="sortSelect"
             class="w-full rounded-md bg-slate-800 border border-slate-700 text-sm px-2 py-1 focus:border-brand-600">
-            <option value="popularity">Popularity</option>
+            <option value="popular">Popularity</option>
             <option value="rating">Highest Rated</option>
-            <option value="newest">Newest</option>
+            <option value="recent">Newest</option>
+            <option value="title">Title (A-Z)</option>
+            <option value="year">Release Year</option>
           </select>
         </div>
         <div class="flex gap-2 pt-2">
@@ -196,20 +200,22 @@
         const res = await fetch(`/api/movies?${query}`);
         if (!res.ok) throw new Error('Failed to load movies');
         const data = await res.json();
-        const items = data.items || data.movies || [];
+        const items = data.movies || [];
+        const pagination = data.pagination || {};
+        
         moviesGrid.innerHTML = '';
         if (!items.length) {
           moviesGrid.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No movies match filters.</p>';
         } else {
           items.forEach(m => moviesGrid.appendChild(createMovieCard(m)));
         }
-        currentPage = data.page || 1;
-        totalPages = data.totalPages || 1;
+        currentPage = pagination.page || 1;
+        totalPages = pagination.totalPages || 1;
         pageIndicator.textContent = `${currentPage} / ${totalPages}`;
         prevPageBtn.disabled = currentPage <= 1;
         nextPageBtn.disabled = currentPage >= totalPages;
         paginationWrapper.hidden = totalPages <= 1;
-        resultsMeta.textContent = `${data.total || items.length} result(s)`;
+        resultsMeta.textContent = `${pagination.total || items.length} result(s)`;
       } catch (e) {
         console.error(e);
         moviesGrid.innerHTML = '<p class="text-sm text-red-400 col-span-full">Failed to load movies.</p>';
@@ -222,7 +228,7 @@
       [...genreFiltersEl.querySelectorAll('input[type=checkbox]')].forEach(c => c.checked = false);
       minYear.value = '2000'; maxYear.value = '2025';
       minRating.value = '0'; maxRating.value = '10';
-      sortSelect.value = 'popularity';
+      sortSelect.value = 'popular';
       currentPage = 1;
       updateRangeDisplays();
       fetchMovies();
@@ -313,21 +319,19 @@
     // Logout
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
-        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch (e) { console.error(e); }
+        try {
+          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+          localStorage.clear();
+        } catch (e) {
+          console.error(e);
+        }
         window.location.href = '/login.html';
       });
     }
 
-    // Load user info & notifications on start
+    // Load notifications on start (profile loaded by navbar component)
     (async () => {
       try {
-        const res = await fetch('/api/auth/me');
-        const user = await res.json();
-        document.getElementById('profileName').textContent = user.name || 'User';
-        document.getElementById('profileEmail').textContent = user.email || '';
-        const avatar = document.getElementById('profileAvatar');
-        const initials = (user.name || 'U').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        avatar.textContent = initials;
         await loadNotifications();
       } catch { }
     })();

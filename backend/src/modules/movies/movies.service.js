@@ -49,7 +49,7 @@ async function getMovies({
       INNER JOIN Genre g ON mg.genre_id = g.genre_id
     `;
     const genrePlaceholders = genres.map(() => '?').join(',');
-    conditions.push(`g.genre_name IN (${genrePlaceholders})`);
+    conditions.push(`g.genre_id IN (${genrePlaceholders})`);
     params.push(...genres);
   }
 
