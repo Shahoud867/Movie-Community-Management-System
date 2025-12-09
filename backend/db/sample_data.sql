@@ -902,24 +902,24 @@ INSERT INTO Restricted_Word (word, severity, added_by_admin) VALUES
 
 -- 19. Moderation Actions (Expanded to show various content moderation)
 INSERT INTO Moderation (admin_id, content_type, content_id, action, reason) VALUES
-(2,'post',5,'approved','Clean and relevant post'),
-(3,'comment',2,'approved','No violations'),
-(1,'review',1,'flagged','Possible spoiler detected'),
-(1,'post',1,'approved','Engaging discussion about the movie'),
-(2,'post',2,'approved','Valid critique and opinion'),
-(3,'comment',5,'approved','Constructive feedback'),
-(1,'comment',7,'flagged','Contains minor spoiler warning needed'),
-(2,'review',3,'approved','Well-written review'),
-(3,'post',6,'approved','Encourages community discussion'),
-(1,'comment',10,'approved','Positive community engagement'),
-(2,'post',8,'approved','Promotes Pakistani cinema'),
-(1,'review',5,'approved','Detailed and thoughtful analysis'),
-(3,'comment',12,'approved','Respectful disagreement'),
-(2,'post',11,'approved','Shares personal movie experience'),
-(1,'comment',15,'flagged','Check for excessive caps usage'),
-(3,'review',8,'approved','Balanced critique'),
-(2,'post',14,'approved','Celebrates film achievement'),
-(1,'comment',18,'approved','Adds value to discussion');
+(2, 'post',5,'approved','Clean and relevant post'),
+(3, 'comment',2,'approved','No violations'),
+(1, 'review',1,'flagged','Possible spoiler detected'),
+(1, 'post',1,'approved','Engaging discussion about the movie'),
+(2, 'post',2,'approved','Valid critique and opinion'),
+(3, 'comment',5,'approved','Constructive feedback'),
+(1, 'comment',7,'flagged','Contains minor spoiler warning needed'),
+(2, 'review',3,'approved','Well-written review'),
+(3, 'post',6,'approved','Encourages community discussion'),
+(1, 'comment',10,'approved','Positive community engagement'),
+(2, 'post',8,'approved','Promotes Pakistani cinema'),
+(1, 'review',5,'approved','Detailed and thoughtful analysis'),
+(3, 'comment',12,'approved','Respectful disagreement'),
+(2, 'post',11,'approved','Shares personal movie experience'),
+(1, 'comment',15,'flagged','Check for excessive caps usage'),
+(3, 'review',8,'approved','Balanced critique'),
+(2, 'post',14,'approved','Celebrates film achievement'),
+(1, 'comment',18,'approved','Adds value to discussion');
 
 -- 20. Reports (Expanded with various analytics reports)
 INSERT INTO Report (report_type, generated_by_admin, report_data, date_range_start, date_range_end) VALUES
@@ -1545,6 +1545,96 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Trigger 9: Auto-flag posts with restricted words
+DROP TRIGGER IF EXISTS trg_check_post_restricted_words;
+DELIMITER //
+CREATE TRIGGER trg_check_post_restricted_words
+AFTER INSERT ON Post
+FOR EACH ROW
+BEGIN
+    DECLARE restricted_found BOOLEAN DEFAULT FALSE;
+    DECLARE found_word VARCHAR(100);
+    
+    -- Check if content contains any restricted words
+    SELECT EXISTS(
+        SELECT 1 FROM Restricted_Word 
+        WHERE LOWER(NEW.content) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1
+    ) INTO restricted_found;
+    
+    IF restricted_found THEN
+        -- Get the first restricted word found
+        SELECT word INTO found_word
+        FROM Restricted_Word
+        WHERE LOWER(NEW.content) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1;
+        
+        -- Auto-flag the post (use system admin_id = 1)
+        INSERT INTO Moderation (admin_id, content_type, content_id, action, reason)
+        VALUES (1, 'post', NEW.post_id, 'flagged', 
+                CONCAT('Automatic: Contains restricted word "', found_word, '"'));
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger 10: Auto-flag reviews with restricted words
+DROP TRIGGER IF EXISTS trg_check_review_restricted_words;
+DELIMITER //
+CREATE TRIGGER trg_check_review_restricted_words
+AFTER INSERT ON Review
+FOR EACH ROW
+BEGIN
+    DECLARE restricted_found BOOLEAN DEFAULT FALSE;
+    DECLARE found_word VARCHAR(100);
+    
+    SELECT EXISTS(
+        SELECT 1 FROM Restricted_Word 
+        WHERE LOWER(NEW.review_text) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1
+    ) INTO restricted_found;
+    
+    IF restricted_found THEN
+        SELECT word INTO found_word
+        FROM Restricted_Word
+        WHERE LOWER(NEW.review_text) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1;
+        
+        INSERT INTO Moderation (admin_id, content_type, content_id, action, reason)
+        VALUES (1, 'review', NEW.review_id, 'flagged', 
+                CONCAT('Automatic: Contains restricted word "', found_word, '"'));
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger 11: Auto-flag comments with restricted words
+DROP TRIGGER IF EXISTS trg_check_comment_restricted_words;
+DELIMITER //
+CREATE TRIGGER trg_check_comment_restricted_words
+AFTER INSERT ON Comment
+FOR EACH ROW
+BEGIN
+    DECLARE restricted_found BOOLEAN DEFAULT FALSE;
+    DECLARE found_word VARCHAR(100);
+    
+    SELECT EXISTS(
+        SELECT 1 FROM Restricted_Word 
+        WHERE LOWER(NEW.content) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1
+    ) INTO restricted_found;
+    
+    IF restricted_found THEN
+        SELECT word INTO found_word
+        FROM Restricted_Word
+        WHERE LOWER(NEW.content) LIKE CONCAT('%', LOWER(word), '%')
+        LIMIT 1;
+        
+        INSERT INTO Moderation (admin_id, content_type, content_id, action, reason)
+        VALUES (1, 'comment', NEW.comment_id, 'flagged', 
+                CONCAT('Automatic: Contains restricted word "', found_word, '"'));
+    END IF;
+END //
+DELIMITER ;
+
 
 -- =====================================================
 -- PART 12: SAMPLE QUERY USAGE EXAMPLES
@@ -1646,3 +1736,7 @@ DELIMITER ;
 select * from users;
 select * from admin;
 select * from movie;
+
+
+ALTER TABLE Moderation MODIFY COLUMN admin_id INT NULL;
+

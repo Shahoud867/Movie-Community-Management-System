@@ -377,7 +377,8 @@ async function getFlaggedContent() {
  */
 async function getModerationHistory(limit = 50) {
     const [history] = await pool.query(`
-    SELECT m.*, a.name as admin_name
+    SELECT m.*, 
+           a.name as admin_name
     FROM Moderation m
     LEFT JOIN Admin a ON m.admin_id = a.admin_id
     ORDER BY m.action_date DESC

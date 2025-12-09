@@ -81,7 +81,9 @@
                 <p id="postUser" class="text-sm font-medium">Loading...</p>
                 <p id="postDate" class="text-xs text-slate-400">—</p>
               </div>
-              <button id="likePostBtn" class="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600">Like (0)</button>
+              <div class="flex items-center gap-2">
+                <button id="likePostBtn" class="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600">Like (0)</button>
+              </div>
             </div>
             <p id="postContent" class="mt-3 text-sm leading-relaxed">Fetching post...</p>
           </div>
@@ -249,6 +251,7 @@
     document.addEventListener('DOMContentLoaded', ()=>{
       likePostBtn.addEventListener('click', likePost);
       commentForm.addEventListener('submit', submitComment);
+      
       loadPost();
       loadComments();
     });
