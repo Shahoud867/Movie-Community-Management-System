@@ -21,8 +21,18 @@ const { eventsRouter } = require('./modules/events/events.routes');
 const { adminRouter } = require('./modules/admin/admin.routes');
 const { analyticsRouter } = require('./modules/analytics/analytics.routes');
 const { notFound, errorHandler } = require('./middleware/error');
+const { apiLimiter } = require('./middleware/rateLimit');
 
 const app = express();
+
+// Origins allowed to make credentialed cross-origin requests. Same-origin
+// requests (the frontend served below, curl, server-to-server calls) have no
+// Origin header and are always allowed; anything else must be explicitly
+// listed via CORS_ALLOWED_ORIGINS or FRONTEND_URL.
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -37,10 +47,19 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
+app.use('/api', apiLimiter);
 
 // Serve static files from frontend/dist
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
