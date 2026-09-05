@@ -3,13 +3,14 @@ const router = express.Router();
 const adminController = require('./admin.controller');
 const eventsRouter = require('./events.routes');
 const { requireAdmin, requireSuperAdmin } = require('../../middleware/adminAuth');
+const { authLimiter } = require('../../middleware/rateLimit');
 
 // ========================================
 // PUBLIC ROUTES (No Auth Required)
 // ========================================
 
 // Admin login
-router.post('/login', adminController.login);
+router.post('/login', authLimiter, adminController.login);
 
 // ========================================
 // PROTECTED ROUTES (Admin Auth Required)
