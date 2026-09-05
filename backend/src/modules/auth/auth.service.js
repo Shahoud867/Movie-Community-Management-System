@@ -81,9 +81,9 @@ async function loginAdmin({ email, password }) {
 
   const admin = admins[0];
 
-  // For now, compare plaintext (you should hash admin passwords too in production)
-  // TODO: Hash admin passwords during seed and use bcrypt here
-  if (admin.password !== password) {
+  // Compare against the bcrypt hash stored in Admin.password
+  const isValid = await comparePassword(password, admin.password);
+  if (!isValid) {
     throw new Error('Invalid email or password');
   }
 
